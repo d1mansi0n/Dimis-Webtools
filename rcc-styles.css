@@ -8,6 +8,8 @@ body {
   background-image: url('1000026617.png');
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   padding: 20px;
   box-sizing: border-box;
 }
@@ -59,13 +61,15 @@ label {
 }
 
 input {
-  width: 200px;
+  width: 100%;
+  max-width: 300px;
   padding: 10px;
   margin: 0 auto 20px auto;
   border: 1px solid #ccc;
   border-radius: 4px;
   text-align: center;
   display: block;
+  box-sizing: border-box;
 }
 
 #result {
