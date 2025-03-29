@@ -46,7 +46,7 @@ function adjustContainerForKeyboard() {
 
     // nur verschieben, wenn Viewport deutlich kleiner ist (also Tastatur sichtbar)
     if (visualViewportHeight < layoutViewportHeight - 150) {
-      container.style.transform = 'translateY(-50px)';
+      container.style.transform = 'translateY(-10px)';
     } else {
       container.style.transform = 'translateY(0)';
     }
