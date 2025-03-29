@@ -9,9 +9,9 @@ const saveRatioButton = document.getElementById('saveRatio');
 let ratio = parseFloat(localStorage.getItem('waterToRiceRatio')) || 1.2;
 ratioInput.value = ratio;
 
-// Toggle settings tab visibility
+// Toggle settings tab visibility (with slide effect)
 settingsToggle.addEventListener('click', () => {
-  settingsTab.classList.toggle('hidden');
+  settingsTab.classList.toggle('show');
 });
 
 // Save the ratio to local storage
@@ -41,19 +41,13 @@ riceInput.addEventListener('input', () => {
 function adjustContainerForKeyboard() {
   const container = document.querySelector('.container');
   if (window.visualViewport) {
-    // Get the height of the visual viewport (visible area)
     const visualViewportHeight = window.visualViewport.height;
-    // Get the height of the layout viewport (full page)
     const layoutViewportHeight = window.innerHeight;
-
-    // If the visual viewport is smaller than the layout viewport, the keyboard is open
+    
     if (visualViewportHeight < layoutViewportHeight) {
-      // Calculate how much the viewport has shrunk
       const offset = layoutViewportHeight - visualViewportHeight * 1.5;
-      // Move the container up by the offset
       container.style.transform = `translateY(-${offset}px)`;
     } else {
-      // Reset the container position if the keyboard is closed
       container.style.transform = 'translateY(0)';
     }
   }
@@ -64,12 +58,10 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', adjustContainerForKeyboard);
 }
 
-// Prevent default behavior on input focus (optional, to avoid viewport resizing)
 riceInput.addEventListener('focus', () => {
   adjustContainerForKeyboard();
 });
 
-// Reset the container position when the input loses focus
 riceInput.addEventListener('blur', () => {
   const container = document.querySelector('.container');
   container.style.transform = 'translateY(0)';
