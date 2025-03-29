@@ -8,6 +8,8 @@ body {
   background-image: url('1000026617.png');
   background-size: cover;
   background-position: center;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .back-link {
@@ -47,6 +49,7 @@ body {
 
 h1 {
   margin-bottom: 20px;
+  font-size: 2em;
 }
 
 label {
@@ -93,7 +96,6 @@ button:hover,
   transform: scale(1.05);
 }
 
-/* Settings Tab Slide Effect */
 #settingsTab {
   margin-top: 20px;
   max-height: 0;
@@ -103,42 +105,44 @@ button:hover,
 }
 
 #settingsTab.show {
-  max-height: 500px; /* Adjust based on content height */
+  max-height: 500px;
   opacity: 1;
 }
 
-.hidden {
-  display: none;
-}
-
 @media (max-width: 480px) {
-  body {
-    padding: 10px;
-    justify-content: flex-start;
+  html, body {
     height: auto;
+    padding: 10px;
   }
-  
-  .back-link,
+
   .container {
     width: 100%;
     max-width: 100%;
-  }
-  
-  .container {
-    margin-top: 20px;
     box-shadow: none;
-    border-radius: 0;
+    border-radius: 10px;
     padding: 15px;
+    margin: 0;
   }
-  
-  input,
-  button {
+
+  .back-link {
+    padding: 10px;
+  }
+
+  input, button {
     width: 100%;
-    max-width: 100%;
     font-size: 1em;
   }
-  
+
   #result {
     font-size: 2.5em;
+    word-wrap: break-word;
+  }
+
+  h1 {
+    font-size: 1.5em;
+  }
+
+  label {
+    font-size: 0.95em;
   }
 }

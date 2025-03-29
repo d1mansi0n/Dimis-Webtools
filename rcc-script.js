@@ -4,12 +4,13 @@ const settingsToggle = document.getElementById('settingsToggle');
 const settingsTab = document.getElementById('settingsTab');
 const ratioInput = document.getElementById('ratioInput');
 const saveRatioButton = document.getElementById('saveRatio');
+const container = document.querySelector('.container');
 
 // Load saved ratio from local storage or use default (1.2)
 let ratio = parseFloat(localStorage.getItem('waterToRiceRatio')) || 1.2;
 ratioInput.value = ratio;
 
-// Toggle settings tab visibility (with slide effect)
+// Toggle settings tab visibility (slide effect)
 settingsToggle.addEventListener('click', () => {
   settingsTab.classList.toggle('show');
 });
@@ -37,32 +38,27 @@ riceInput.addEventListener('input', () => {
   }
 });
 
-// Function to adjust the container when the keyboard appears
+// Adjust container on keyboard open/close
 function adjustContainerForKeyboard() {
-  const container = document.querySelector('.container');
   if (window.visualViewport) {
     const visualViewportHeight = window.visualViewport.height;
     const layoutViewportHeight = window.innerHeight;
     
     if (visualViewportHeight < layoutViewportHeight) {
-      const offset = layoutViewportHeight - visualViewportHeight * 1.5;
-      container.style.transform = `translateY(-${offset}px)`;
+      const offset = layoutViewportHeight - visualViewportHeight;
+      container.style.transform = `translateY(-${offset / 2}px)`;
     } else {
       container.style.transform = 'translateY(0)';
     }
   }
 }
 
-// Listen for visual viewport changes (keyboard open/close)
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', adjustContainerForKeyboard);
 }
 
-riceInput.addEventListener('focus', () => {
-  adjustContainerForKeyboard();
-});
-
-riceInput.addEventListener('blur', () => {
-  const container = document.querySelector('.container');
-  container.style.transform = 'translateY(0)';
+['focus', 'blur'].forEach((eventName) => {
+  document.addEventListener(eventName, () => {
+    setTimeout(adjustContainerForKeyboard, 50);
+  });
 });
