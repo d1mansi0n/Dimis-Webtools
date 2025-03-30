@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="de"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zuckerrechner</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #333;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 1rem;
+      margin: 5px 0;
+    }
+    #vergleichsListe ul {
+      list-style: none;
+      padding: 0;
+    }
+    #vergleichsListe li::before {
+      content: "\2022 ";
+      color: #888;
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Zuckerrechner</h1>
+  <p>Gib eine Menge Zucker in Gramm ein:</p>
+  <input id="zuckerInput" type="number" placeholder="z.B. 15">
+  <button onclick="berechne()">Berechnen</button>  <p id="ausgabeText"></p>
+  <div id="vergleichsListe"></div>  <script>const zuckerListe = [
+  { name: "Wasser", sugar: 0.0 },
+  { name: "Schwarzer Kaffee (ohne Zucker)", sugar: 0.0 },
+  { name: "Bier (Pils)", sugar: 0.0 },
+  { name: "Spinat (frisch)", sugar: 0.5 },
+  { name: "Avocado", sugar: 0.7 },
+  { name: "Gurke", sugar: 1.5 },
+  { name: "Zucchini", sugar: 1.7 },
+  { name: "Paprika (grün)", sugar: 2.4 },
+  { name: "Zitrone", sugar: 2.5 },
+  { name: "Tomate", sugar: 2.6 },
+  { name: "Brombeere", sugar: 2.7 },
+  { name: "Pizza Margherita (Tiefkühl)", sugar: 3.1 },
+  { name: "Zwiebel", sugar: 4.3 },
+  { name: "Karotte (Möhre)", sugar: 4.7 },
+  { name: "Himbeere", sugar: 4.8 },
+  { name: "Vollmilch (3.5% Fett)", sugar: 4.9 },
+  { name: "Erdbeere", sugar: 4.9 },
+  { name: "Toastbrot (Weißbrot)", sugar: 3.5 },
+  { name: "Johannisbeere (rot)", sugar: 7.3 },
+  { name: "Heidelbeere (Blaubeere)", sugar: 7.4 },
+  { name: "Aprikose", sugar: 8.5 },
+  { name: "Pfirsich", sugar: 8.9 },
+  { name: "Grapefruit", sugar: 8.9 },
+  { name: "Orange", sugar: 9.2 },
+  { name: "Mandarine", sugar: 10.1 },
+  { name: "Pflaume", sugar: 10.2 },
+  { name: "Cola (normal)", sugar: 10.6 },
+  { name: "Sauerkirsche", sugar: 11.0 },
+  { name: "Energy-Drink (Red Bull)", sugar: 11.0 },
+  { name: "Apfel", sugar: 11.4 },
+  { name: "Apfelsaft (100% Fruchtsaft)", sugar: 11.7 },
+  { name: "Banane", sugar: 12.2 },
+  { name: "Birne", sugar: 12.4 },
+  { name: "Nektarine", sugar: 12.4 },
+  { name: "Mango", sugar: 12.8 },
+  { name: "Ananas", sugar: 13.1 },
+  { name: "Süßkirsche", sugar: 13.3 },
+  { name: "Maracuja (Passionsfrucht)", sugar: 13.4 },
+  { name: "Mirabelle", sugar: 14.0 },
+  { name: "Weintraube", sugar: 15.6 },
+  { name: "Granatapfel", sugar: 16.7 },
+  { name: "Ketchup", sugar: 22.8 },
+  { name: "Zartbitterschokolade (70%)", sugar: 29.7 },
+  { name: "Gummibärchen", sugar: 46.0 },
+  { name: "Milchschokolade", sugar: 47.0 },
+  { name: "Nuss-Nougat-Creme", sugar: 56.3 },
+  { name: "Rosinen", sugar: 59.2 },
+  { name: "Marmelade (Konfitüre)", sugar: 62.0 },
+  { name: "Honig", sugar: 80.0 },
+  { name: "Haushaltszucker (Saccharose)", sugar: 99.8 }
+];
+
+function berechne() {
+  const input = parseFloat(document.getElementById("zuckerInput").value);
+  if (isNaN(input) || input <= 0) {
+    alert("Bitte eine gültige Menge eingeben.");
+    return;
+  }
+
+  const wuerfel = Math.round(input / 3);
+  document.getElementById("ausgabeText").innerText = 
+    `Das entspricht ca. ${wuerfel} Zuckerwürfeln (1 Würfel = 3g Zucker).`;
+
+  const sorted = [...zuckerListe].sort((a, b) => a.sugar - b.sugar);
+  const closestIndex = sorted.findIndex(p => p.sugar >= input);
+  const start = Math.max(0, closestIndex - 5);
+  const end = Math.min(sorted.length, start + 11);
+  const vergleich = sorted.slice(start, end).map((p, i) => {
+    if (i === 5) {
+      return `<li><strong>${p.name} – ${p.sugar.toFixed(1)}g</strong></li>`;
+    }
+    return `<li>${p.name} – ${p.sugar.toFixed(1)}g</li>`;
+  }).join("");
+
+  document.getElementById("vergleichsListe").innerHTML = 
+    `<h3>Ähnliche Lebensmittel nach Zuckergehalt pro 100 g:</h3><ul>${vergleich}</ul>`;
+}
+
+</script></body>
+
+</html>
