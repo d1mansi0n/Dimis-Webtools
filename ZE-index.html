@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Tracking Table</title>
+  <link rel="stylesheet" href="ZE-style.css">
+</head>
+<body>
+  <div class="controls">
+    <button class="new-entry-btn" onclick="addNewEntry()">+ New Entry</button>
+    <button class="export-btn" onclick="exportToExcel()">Export to Excel</button>
+    
+    <!-- Container für Voice-Button und Dropdown -->
+    <div class="voice-container">
+      <button id="voiceBtn"
+              onmousedown="startVoiceRecognitionPush()"
+              onmouseup="stopVoiceRecognitionPush()"
+              ontouchstart="startVoiceRecognitionPush()"
+              ontouchend="stopVoiceRecognitionPush()">
+        🎤 Push to Talk
+      </button>
+      
+      <!-- Sprachwahl-Dropdown: Wird per CSS absolut positioniert -->
+      <select id="languageSelect" onchange="updateLanguage()">
+        <option value="en-US">English</option>
+        <option value="de-DE">Deutsch</option>
+      </select>
+      
+      <!-- Command-Feedback (optional) -->
+      <div id="commandFeedback"></div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Timer Controls</th>
+        <th>Elapsed Time</th>
+        <th>Date</th>
+        <th>Comment</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="timeEntries"></tbody>
+  </table>
+
+  <div class="total-hours">
+    Total Elapsed Hours: <span id="totalElapsedHours">00:00:00</span>
+  </div>
+
+  <div class="comment-section">
+    <div class="comment-actions">
+      <button onclick="toggleComments()">Show/Hide Stored Comments</button>
+      <button id="clearCommentsBtn" onclick="clearAllComments()">Clear All Comments</button>
+    </div>
+    <div id="commentsList"></div>
+  </div>
+
+  <datalist id="commentSuggestions"></datalist>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="ZE-script.js"></script>
+</body>
+</html>
