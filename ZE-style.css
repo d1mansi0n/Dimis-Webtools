@@ -1,199 +1,117 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
+body { font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }
+
+.controls { margin-bottom: 40px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.voice-container { position: relative; display: inline-flex; flex-direction: column; align-items: stretch; gap: 5px; min-width: 120px; align-self: center; }
+
+button { padding: 8px 15px; cursor: pointer; border: none; border-radius: 4px; transition: all 0.2s ease-in-out; font-size: 14px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+button:disabled { cursor: not-allowed; opacity: 0.6; box-shadow: none; }
+
+/* --- Button Colors & Glow (Swapped Toggle/Export) --- */
+.new-entry-btn { background-color: #2196F3; color: white; --glow-color: #64B5F6; }
+/* Export Button now has Teal color */
+.export-btn { background-color: #009688; color: white; --glow-color: #4DB6AC; }
+/* Toggle Format Button now has Purple color */
+.toggle-format-btn { background-color: #673AB7; color: white; --glow-color: #9575CD; }
+.clear-entries-btn { background-color: #E53935; color: white; --glow-color: #EF5350; }
+.start-btn { background-color: #4CAF50; color: white; --glow-color: #81C784; }
+.pause-btn { background-color: #ff9800; color: white; --glow-color: #FFB74D; }
+.stop-btn { background-color: #f44336; color: white; --glow-color: #E57373; }
+.delete-btn, .delete-comment-btn { background-color: #757575; color: white; --glow-color: #BDBDBD; }
+
+/* Active State Button Styles & Glow */
+.start-btn.active { background-color: #66BB6A; --glow-color: #A5D6A7; animation: glow 1.2s infinite alternate; }
+.pause-btn.active { background-color: #FFA726; --glow-color: #FFCC80; animation: glow 1.2s infinite alternate; }
+
+.delete-comment-btn { padding: 0; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; line-height: 22px; text-align: center; box-shadow: none; }
+.delete-btn-hold { transform: scale(0.95); filter: brightness(85%); transition: transform 0.1s ease-out, filter 0.1s ease-out; }
+
+.no-entries-message { text-align: center; padding: 20px; background-color: #fff; border: 1px dashed #ccc; color: #777; margin-top: 20px; border-radius: 4px; }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden; }
+th, td { border: 1px solid #e0e0e0; padding: 10px 12px; text-align: left; vertical-align: middle; }
+th { background-color: #f5f5f5; font-weight: 600; font-size: 14px; }
+tbody tr:nth-child(odd) { background-color: #fcfcfc; }
+.timer-controls { display: flex; gap: 8px; }
+
+/* Elapsed Time Section */
+.elapsed-time div { font-size: 0.9em; color: #555; line-height: 1.4; }
+.elapsed-time .live-session { color: #4CAF50; font-style: italic; }
+.elapsed-time .total-elapsed-display { font-weight: bold; color: #333; margin-top: 4px; }
+.pure-elapsed { font-family: 'Courier New', Courier, monospace; }
+
+/* Comment Section */
+.comment-section { margin: 30px 0; padding: 15px; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.comment-actions button { margin-right: 10px; background-color: #eee; color: #333; --glow-color: #ccc; }
+#clearCommentsBtn { display: none; background-color: #ef9a9a; color: #d32f2f; --glow-color: #ef5350; }
+#commentsList { margin-top: 15px; max-height: 200px; overflow-y: auto; border-top: 1px solid #eee; padding-top: 10px; }
+.stored-comment { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 1px solid #f5f5f5; }
+.stored-comment:last-child { border-bottom: none; }
+.stored-comment span { flex-grow: 1; margin-right: 10px; word-break: break-word; }
+
+.total-hours { margin-top: 25px; font-weight: bold; font-size: 1.1em; text-align: right; padding-right: 10px; }
+
+/* Voice Controls */
+#voiceBtn { background-color: #FFEB3B; color: black; transition: background-color 0.3s ease, box-shadow 0.3s ease; position: relative; --glow-color: #FFF176; order: 1; }
+#voiceBtn.active { background-color: #FDD835; }
+#commandFeedback { order: 3; width: 100%; margin-top: 0; padding: 6px 12px; background-color: #e3f2fd; border: 1px solid #90caf9; border-radius: 3px; font-size: 0.9em; font-weight: bold; display: none; text-align: left; white-space: normal; box-sizing: border-box; opacity: 0; color: #1976D2; flex-basis: 100%; }
+#languageSelect { order: 2; padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: auto; flex-shrink: 0; box-sizing: border-box; }
+
+/* General Glow Animation & Application */
+@keyframes glow { from { box-shadow: 0 0 5px var(--glow-color), 0 0 10px var(--glow-color); } to { box-shadow: 0 0 15px var(--glow-color), 0 0 25px var(--glow-color); } }
+button:not(:disabled):active, button:not(:disabled).active { animation: glow 1.2s infinite alternate; }
+button:not(:disabled):focus-visible { outline: none; box-shadow: 0 0 0 3px var(--glow-color); }
+
+/* Comment Input */
+.comment-input { width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 3px; box-sizing: border-box; transition: border-color 0.2s ease-in-out; }
+.comment-input:focus { outline: none; border-color: #2196F3; }
+.comment-input:disabled { background-color: #f5f5f5; cursor: not-allowed; }
+
+/* =================================== */
+/* --- Mobile Layout Adjustments --- */
+/* =================================== */
+
+/* Portrait / Narrow View Styling ONLY */
+@media (max-width: 768px) {
+    .controls { flex-direction: column; align-items: stretch; margin-bottom: 20px; }
+    .controls button { display: block; width: 100%; box-sizing: border-box; margin-bottom: 5px; }
+    .voice-container { width: 100%; flex-direction: column; /* Ensure column */ align-items: stretch; /* Ensure stretch */ }
+    .voice-container #languageSelect { width: 100%; } /* Full width select */
+    .voice-container #commandFeedback { text-align: center; } /* Center feedback text */
+    #languageSelect { text-align: center; text-align-last: center; -moz-text-align-last: center; }
+
+    .no-entries-message { margin-top: 10px; }
+    table, thead, tbody, th, td, tr { display: block; }
+    thead tr { position: absolute; top: -9999px; left: -9999px; }
+    tr { border: 1px solid #ccc; margin-bottom: 15px; background-color: #fff; padding: 10px; border-radius: 4px; }
+    tbody tr:nth-child(odd) { background-color: #fff; }
+    td { border: none; border-bottom: 1px solid #eee; position: relative; padding: 12px 0; text-align: center; display: block; min-height: 30px; width: 100% !important; box-sizing: border-box; }
+    td:last-child { border-bottom: 0; }
+    td:before { content: ""; display: none; }
+    td[data-label="Timer Controls"] .timer-controls { justify-content: center; flex-wrap: wrap; }
+    td[data-label="Elapsed Time"] { text-align: center; }
+    .elapsed-time div { margin-bottom: 4px; }
+    .elapsed-time .total-elapsed-display { margin-top: 8px; font-size: 1.1em; }
+    td[data-label="Date"] { text-align: center; }
+    td[data-label="Comment"] { text-align: center; }
+    .comment-input { text-align: left; &::placeholder { text-align: center; opacity: 0.8; } }
+    td[data-label="Action"] { text-align: center; padding-bottom: 0; }
+    td[data-label="Action"] .delete-btn { display: inline-block; }
+    .total-hours { text-align: center; width: 100%; box-sizing: border-box; }
+    .comment-actions { text-align: center; }
+    .comment-actions button { display: block; width: 100%; box-sizing: border-box; margin-right: 0; margin-bottom: 5px; }
+    .comment-actions button:last-child { margin-bottom: 0; }
+    .comment-actions button#clearCommentsBtn { margin-left: 0; }
 }
 
-.controls {
-    margin-bottom: 20px;
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-}
-
-/* Container für Voice-Button, Dropdown und Feedback */
-.voice-container {
-    position: relative;
-    display: inline-block;
-    margin-left: 10px;
-}
-
-button {
-    padding: 5px 10px;
-    cursor: pointer;
-    border: none;
-    border-radius: 3px;
-    transition: all 0.3s ease;
-}
-
-/* Button-Farben und eigene Glow-Farbe */
-.new-entry-btn { 
-    background-color: #2196F3; 
-    color: white; 
-    --glow-color: #2196F3;
-}
-.export-btn { 
-    background-color: #9C27B0; 
-    color: white; 
-    margin-left: 10px; 
-    --glow-color: #9C27B0;
-}
-.start-btn { 
-    background-color: #4CAF50; 
-    color: white; 
-    --glow-color: #4CAF50;
-}
-.start-btn.active {
-    background-color: #76ff7a;
-    color: white;
-    --glow-color: #76ff7a;
-}
-.pause-btn { 
-    background-color: #ff9800; 
-    color: white; 
-    --glow-color: #ff9800;
-}
-.pause-btn.active {
-    background-color: #ffcc80;
-    color: white;
-    --glow-color: #ffcc80;
-}
-.stop-btn { 
-    background-color: #f44336; 
-    color: white; 
-    --glow-color: #f44336;
-}
-.delete-btn { 
-    background-color: #9e9e9e; 
-    color: white; 
-    --glow-color: #9e9e9e;
-}
-
-/* Tabelle */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-th {
-    background-color: #f2f2f2;
-}
-
-.timer-controls {
-    display: flex;
-    gap: 5px;
-}
-
-.comment-section {
-    margin: 20px 0;
-}
-
-.comment-actions {
-    margin-top: 10px;
-}
-
-#clearCommentsBtn {
-    display: none;
-    margin-left: 10px;
-}
-
-#commentsList {
-    margin-top: 20px;
-}
-
-.stored-comment {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-}
-
-.stored-comment button {
-    background-color: #f44336;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    --glow-color: #f44336;
-}
-
-.total-hours {
-    margin-top: 20px;
-    font-weight: bold;
-}
-
-/* Push-to-Talk-Button innerhalb des Containers */
-#voiceBtn {
-    background-color: #FFEB3B;
-    color: black;
-    transition: all 0.3s ease;
-    position: relative;
-    display: block;
-    margin: 0 auto;
-    --glow-color: #FFEB3B;
-}
-
-#voiceBtn.active {
-    background-color: #FFEB3B;
-    animation: glow 1.5s infinite alternate;
-}
-
-@keyframes glow {
-    from {
-        box-shadow: 0 0 10px var(--glow-color);
-    }
-    to {
-        box-shadow: 0 0 20px var(--glow-color);
-    }
-}
-
-/* Command Feedback erscheint rechts neben den Controls */
-#commandFeedback {
-    position: absolute;
-    top: 50%;
-    left: 100%;
-    transform: translate(10px, -50%);
-    padding: 5px 10px;
-    background-color: #f2f2f2;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    font-weight: bold;
-    display: none;
-    white-space: nowrap;
-}
-
-/* Sprachwahl-Dropdown: Direkt unter dem Push-to-Talk-Button, zentriert im .voice-container */
-#languageSelect {
-    position: absolute;
-    top: calc(100% + 10px);
-    left: 50%;
-    transform: translateX(-50%);
-    min-width: 100px;
-}
-
-/* Alle Buttons: Glow in der eigenen Farbe bei :active oder .active */
-button:active, button.active {
-    box-shadow: 0 0 15px var(--glow-color);
-    animation: glow 1.5s infinite alternate;
-}
-
-/* Kommentar-Eingabefeld: Breiter und dynamisch in der Breite */
-.comment-input {
-    width: 100%;
-    min-width: 300px;
-    max-width: 100%;
-    padding: 5px;
-    font-size: 16px;
-    box-sizing: border-box;
+/* --- Wider View / Landscape Enhancements --- */
+@media (min-width: 769px) {
+     .voice-container { flex-direction: row; align-items: center; gap: 8px; min-width: auto; flex-wrap: wrap; }
+     .voice-container #languageSelect { width: auto; order: 2; flex-shrink: 0; }
+     .voice-container #voiceBtn { order: 1; flex-shrink: 0; }
+     .voice-container #commandFeedback { order: 3; flex-basis: 100%; text-align: left; margin-top: 0; }
+     .comment-actions { text-align: center; }
+     .comment-actions button { display: inline-block; width: auto; margin-bottom: 0; }
+     .comment-actions button#clearCommentsBtn { display: none; margin-left: 10px; }
+     .total-hours { text-align: right; }
 }

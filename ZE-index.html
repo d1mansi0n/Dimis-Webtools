@@ -8,38 +8,36 @@
 </head>
 <body>
   <div class="controls">
-    <button class="new-entry-btn" onclick="addNewEntry()">+ New Entry</button>
-    <button class="export-btn" onclick="exportToExcel()">Export to Excel</button>
-    
-    <!-- Container für Voice-Button und Dropdown -->
+    <button class="new-entry-btn" id="newEntryBtn">+ New Entry</button>
+    <!-- Added Toggle Time Format Button -->
+    <button class="toggle-format-btn" id="toggleFormatBtn" title="Toggle time display format">Show Decimal</button>
+    <button class="export-btn" id="exportBtn">Export to Excel</button>
+    <button class="clear-entries-btn" id="clearEntriesBtn">Clear All Entries</button>
+
     <div class="voice-container">
-      <button id="voiceBtn"
-              onmousedown="startVoiceRecognitionPush()"
-              onmouseup="stopVoiceRecognitionPush()"
-              ontouchstart="startVoiceRecognitionPush()"
-              ontouchend="stopVoiceRecognitionPush()">
+      <button id="voiceBtn">
         🎤 Push to Talk
       </button>
-      
-      <!-- Sprachwahl-Dropdown: Wird per CSS absolut positioniert -->
-      <select id="languageSelect" onchange="updateLanguage()">
+      <select id="languageSelect">
         <option value="en-US">English</option>
         <option value="de-DE">Deutsch</option>
       </select>
-      
-      <!-- Command-Feedback (optional) -->
       <div id="commandFeedback"></div>
     </div>
+  </div>
+
+  <div id="noEntriesMessage" class="no-entries-message" style="display: none;">
+    No time entries yet. Click '+ New Entry' to start.
   </div>
 
   <table>
     <thead>
       <tr>
-        <th>Timer Controls</th>
-        <th>Elapsed Time</th>
-        <th>Date</th>
-        <th>Comment</th>
-        <th>Action</th>
+        <th scope="col">Timer Controls</th>
+        <th scope="col">Elapsed Time</th>
+        <th scope="col">Date</th>
+        <th scope="col">Comment</th>
+        <th scope="col">Action</th>
       </tr>
     </thead>
     <tbody id="timeEntries"></tbody>
@@ -51,8 +49,8 @@
 
   <div class="comment-section">
     <div class="comment-actions">
-      <button onclick="toggleComments()">Show/Hide Stored Comments</button>
-      <button id="clearCommentsBtn" onclick="clearAllComments()">Clear All Comments</button>
+      <button id="toggleCommentsBtn">Show/Hide Stored Comments</button>
+      <button id="clearCommentsBtn">Clear All Comments</button>
     </div>
     <div id="commentsList"></div>
   </div>
@@ -60,6 +58,6 @@
   <datalist id="commentSuggestions"></datalist>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="ZE-script.js"></script>
+  <script src="ZE-script.js" defer></script>
 </body>
 </html>
