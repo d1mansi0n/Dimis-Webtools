@@ -14,30 +14,6 @@ body {
   box-sizing: border-box;
 }
 
-.back-link {
-  text-align: center;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  max-width: 600px;
-  width: 100%;
-}
-
-.back-link a {
-  display: inline-block;
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: #fff;
-  border-radius: 4px;
-  text-decoration: none;
-  font-size: 1em;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.back-link a:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
-}
-
 .container {
   background-color: rgba(255, 255, 255, 0.8);
   padding: 20px;
