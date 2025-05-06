@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picture Counter</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align items to the top */
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 95%; /* Increased max width slightly */
+            width: 900px; /* Increased max container width */
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap; /* Allow controls to wrap */
+            justify-content: center;
+            gap: 10px; /* Space between control elements */
+            align-items: center; /* Vertically align items */
+        }
+
+        .controls div {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .controls label {
+            margin-right: 0; /* Adjusted margin */
+        }
+
+        button, input[type="file"], input[type="color"], input[type="checkbox"], input[type="range"], input[type="number"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em; /* Adjust font size for controls */
+            box-sizing: border-box; /* Include padding and border in element's total width and height */
+            height: 38px; /* Consistent height for buttons/inputs */
+             vertical-align: middle; /* Align items nicely in flex containers */
+        }
+
+        input[type="checkbox"] {
+            height: auto; /* Allow checkbox native size */
+            padding: 5px; /* Adjust padding */
+        }
+         .controls label {
+            font-size: 0.9em;
+         }
+
+        input[type="range"] {
+            padding: 0; /* Adjust padding for slider */
+            height: 38px; /* Match height */
+        }
+
+        input[type="number"] {
+            width: 60px; /* Set a fixed width for the number input */
+            text-align: center;
+            padding: 10px 5px; /* Adjust padding */
+        }
+
+
+        button {
+            background-color: #5cb85c;
+            color: white;
+            border-color: #4cae4c;
+        }
+
+        button:hover {
+            background-color: #4cae4c;
+        }
+
+        button#deleteLast {
+            background-color: #f0ad4e;
+            border-color: #ec971f;
+        }
+
+        button#deleteLast:hover {
+            background-color: #ec971f;
+        }
+
+        button#clearAll {
+            background-color: #d9534f;
+            border-color: #d43f3a;
+        }
+
+        button#clearAll:hover {
+            background-color: #d43f3a;
+        }
+
+         button#saveImage {
+             background-color: #0275d8;
+             border-color: #025aa5;
+        }
+         button#saveImage:hover {
+             background-color: #025aa5;
+        }
+
+        button#zoomInBtn, button#zoomOutBtn {
+            width: 38px; /* Fixed width for +/- buttons */
+            padding: 0; /* Remove padding */
+            font-size: 1.2em; /* Make symbols larger */
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px; /* Max width for the canvas area */
+            margin: 20px auto; /* Center the canvas container */
+            border: 1px solid #ddd;
+            background-color: #eee; /* Background when no image */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px; /* Ensure some height even without image */
+            overflow: hidden; /* Hide parts of the canvas/image outside the container */
+        }
+
+        canvas {
+            display: block; /* Remove extra space below canvas */
+            max-width: none; /* Allow canvas to exceed container width when zoomed */
+            max-height: none; /* Allow canvas to exceed container height when zoomed */
+            /* Prevent selection issues, especially on mobile */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            touch-action: none; /* Disable default touch actions like scroll/pan on the canvas itself */
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666;
+            font-size: 1.2em;
+            pointer-events: none; /* Allow clicks to pass through to canvas */
+        }
+
+        p {
+            margin-top: 20px;
+            color: #555;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Picture Counter</h1>
+
+        <div class="controls">
+            <input type="file" id="imageUpload" accept="image/*">
+            <div>
+                <label for="numberColor">Marker Color:</label>
+                <input type="color" id="numberColor" value="#ff0000"> </div>
+            <div>
+                <label for="sizeSlider">Marker Size:</label>
+                <input type="range" id="sizeSlider" min="10" max="100" value="20" step="1">
+                <input type="number" id="sizeInput" min="10" max="100" value="20">
+            </div>
+            <div>
+                 <label>Zoom:</label>
+                 <button id="zoomOutBtn">-</button>
+                 <button id="zoomInBtn">+</button>
+            </div>
+             <div>
+                 <input type="checkbox" id="zoomLockCheckbox">
+                 <label for="zoomLockCheckbox">Lock Zoom/Pan</label>
+             </div>
+            <button id="deleteLast">Delete Last Marker</button>
+            <button id="clearAll">Clear All Markers</button>
+            <button id="saveImage">Save Image</button>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="imageCanvas"></canvas>
+            <div id="overlay-text" class="overlay">Upload an image to start</div>
+        </div>
+    </div>
+
+    <script>
+        const imageUpload = document.getElementById('imageUpload');
+        const canvas = document.getElementById('imageCanvas');
+        const ctx = canvas.getContext('2d');
+        const deleteLastBtn = document.getElementById('deleteLast');
+        const clearAllBtn = document.getElementById('clearAll');
+        const colorPicker = document.getElementById('numberColor');
+        const overlayText = document.getElementById('overlay-text');
+        const saveImageBtn = document.getElementById('saveImage');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const zoomLockCheckbox = document.getElementById('zoomLockCheckbox');
+        const sizeSlider = document.getElementById('sizeSlider'); // New
+        const sizeInput = document.getElementById('sizeInput');   // New
+
+
+        let uploadedImage = new Image();
+        // Markers store position (x, y) in original image pixel space
+        // baseSize is the size in image pixels (not scaled by zoom)
+        let markers = []; // { x, y, number, color, baseSize }
+        let nextNumber = 1;
+        let selectedColor = colorPicker.value;
+        let selectedSize = parseInt(sizeSlider.value, 10); // New: Initial size from slider
+
+
+        // --- Zoom and Pan Variables ---
+        let zoomLevel = 1.0;
+        // viewOffsetX, viewOffsetY represent the top-left corner of the *canvas view*
+        // in the coordinate system of the *original, unscaled image*.
+        let viewOffsetX = 0;
+        let viewOffsetY = 0;
+        const ZOOM_FACTOR = 1.1; // How much to zoom in/out by
+        let minZoom = 0.1; // Calculated based on image size to fit
+        const maxZoom = 20.0; // Increased max zoom
+
+        // --- Interaction State Variables ---
+        // Using a state machine for clearer interaction handling
+        const STATE = {
+            IDLE: 0,
+            PENDING_ACTION: 1, // Pointer down, could be marker drag/add or pan (waiting for move/up)
+            DRAGGING_MARKER: 2,
+            PANNING: 3,
+            PINCHING: 4        // Multi-touch pinch gesture active
+             // HOLDING_MARKER_GROWING state is removed
+        };
+        let currentState = STATE.IDLE;
+        let isZoomLocked = false; // Toggle state for zoom/pan lock
+
+
+        let heldMarkerIndex = -1; // Index of the marker being held or dragged
+        let startCanvasX = 0; // Starting X coordinate for current action (canvas pixels)
+        let startCanvasY = 0; // Starting Y coordinate for current action (canvas pixels)
+        let dragOffsetX = 0; // Offset from marker image position to pointer canvas position when drag starts
+        let dragOffsetY = 0; // Offset from marker image position to pointer canvas position when drag starts
+        let initialViewOffsetX = 0; // View offset when pan started
+        let initialViewOffsetY = 0; // View offset when pan started
+
+        // --- Multi-touch & Timers ---
+        let activePointers = {}; // Map pointerId to { x, y, event }
+        let lastPinchDistance = 0; // Distance between two touch points
+        // holdTimerId and related logic are removed
+
+        // --- Animation ---
+        // Growth animation variables are removed
+
+
+        const DRAG_THRESHOLD = 8; // Minimum distance (canvas pixels) to move to trigger drag/pan
+
+
+        // --- Event Listeners ---
+        imageUpload.addEventListener('change', handleImageUpload);
+
+        // Use 'pointerdown' for unified mouse/touch start
+        canvas.addEventListener('pointerdown', handlePointerDown);
+        // Use 'pointermove' and 'pointerup' on window/document to handle interactions outside canvas
+        window.addEventListener('pointermove', handlePointerMove);
+        window.addEventListener('pointerup', handlePointerUp);
+
+        // Zoom listeners
+        zoomInBtn.addEventListener('click', () => adjustZoom(ZOOM_FACTOR));
+        zoomOutBtn.addEventListener('click', () => adjustZoom(1 / ZOOM_FACTOR));
+        canvas.addEventListener('wheel', handleWheelZoom); // Mouse wheel zoom
+
+        deleteLastBtn.addEventListener('click', deleteLastMarker);
+        clearAllBtn.addEventListener('click', clearAllMarkers);
+        colorPicker.addEventListener('change', handleColorChange);
+        saveImageBtn.addEventListener('click', saveImage);
+
+        // Zoom lock toggle listener
+        zoomLockCheckbox.addEventListener('change', handleZoomLockToggle);
+
+        // Size selector listeners (New)
+        sizeSlider.addEventListener('input', handleSizeSliderChange);
+        sizeInput.addEventListener('input', handleSizeInputChange);
+        // Consider 'change' event for sizeInput for final value after typing
+        sizeInput.addEventListener('change', handleSizeInputChange);
+
+
+        // Prevent context menu on long press
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+
+        // --- Functions ---
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Check if it's an image file
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload an image file.');
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                uploadedImage.onload = () => {
+                    // Set canvas dimensions - these determine the *visible area*
+                    // We use fixed or max size for the canvas container and let CSS handle responsiveness
+                    // The internal drawing surface size is set here.
+                    const canvasContainer = canvas.parentElement;
+                    canvas.width = canvasContainer.clientWidth;
+                    canvas.height = canvasContainer.clientHeight;
+
+                    // Calculate initial zoom level to fit the image
+                    minZoom = Math.min(canvas.width / uploadedImage.width, canvas.height / uploadedImage.height);
+                    zoomLevel = minZoom; // Start by fitting the image
+
+                    // Calculate initial pan offset to center the image
+                    viewOffsetX = (uploadedImage.width - canvas.width / zoomLevel) / 2;
+                    viewOffsetY = (uploadedImage.height - canvas.height / zoomLevel) / 2;
+
+                    // Clamp initial offsets
+                    clampViewOffset();
+
+                    // Reset markers and interaction state
+                    markers = [];
+                    nextNumber = 1;
+                    resetInteractionState();
+
+                    drawCanvas(); // Draw the image initially
+                    overlayText.style.display = 'none'; // Hide overlay text
+                    canvas.style.display = 'block'; // Show canvas
+                }
+                uploadedImage.src = e.target.result;
+            }
+
+            reader.readAsDataURL(file);
+        }
+
+        function drawCanvas() {
+            if (!uploadedImage.src) {
+                // Clear canvas and show overlay if no image
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                overlayText.style.display = 'flex';
+                canvas.style.display = 'none';
+                return;
+            }
+
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Calculate the portion of the image to draw (source rectangle)
+            const sourceX = viewOffsetX;
+            const sourceY = viewOffsetY;
+            const sourceWidth = canvas.width / zoomLevel;
+            const sourceHeight = canvas.height / zoomLevel;
+
+            // Ensure the source rectangle doesn't go outside the image dimensions
+            const clampedSourceX = Math.max(0, sourceX);
+            const clampedSourceY = Math.max(0, sourceY);
+            const clampedSourceWidth = Math.min(uploadedImage.width - clampedSourceX, sourceWidth + (sourceX - clampedSourceX)); // Adjust width if sourceX was clamped
+            const clampedSourceHeight = Math.min(uploadedImage.height - clampedSourceY, sourceHeight + (sourceY - clampedSourceY)); // Adjust height if sourceY was clamped
+
+
+             // Adjust destination X/Y based on clamping (if we clamped sourceX/Y)
+             const destX = (clampedSourceX - sourceX) * zoomLevel;
+             const destY = (clampedSourceY - sourceY) * zoomLevel;
+
+             // Adjust destination width/height based on how much source we could actually get
+             const destWidth = clampedSourceWidth * zoomLevel;
+             const destHeight = clampedSourceHeight * zoomLevel;
+
+
+            // Draw the image slice onto the canvas
+            ctx.drawImage(
+                uploadedImage,
+                clampedSourceX, clampedSourceY, clampedSourceWidth, clampedSourceHeight, // Source (image)
+                destX, destY, destWidth, destHeight // Destination (canvas)
+            );
+
+
+            // Draw all markers
+            markers.forEach(marker => {
+                // Calculate marker position on the canvas based on current zoom and pan
+                const canvasX = (marker.x - viewOffsetX) * zoomLevel;
+                const canvasY = (marker.y - viewOffsetY) * zoomLevel;
+
+                // Only draw if the marker is roughly within the visible canvas area
+                // This is a performance optimization
+                 const markerScreenSize = marker.baseSize * zoomLevel; // Approx size on screen
+                 const buffer = markerScreenSize; // Add buffer around marker
+                if (canvasX + buffer > 0 && canvasX - buffer < canvas.width &&
+                    canvasY + buffer > 0 && canvasY - buffer < canvas.height) {
+
+                    // Scale the marker base size by the current zoom level for drawing
+                    const currentMarkerSize = marker.baseSize * zoomLevel;
+
+                    ctx.font = `${currentMarkerSize}px Arial`;
+                    ctx.fillStyle = marker.color;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(marker.number, canvasX, canvasY);
+                }
+            });
+        }
+
+        // Get pointer coordinates relative to the canvas drawing buffer
+        function getCanvasCoordinates(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+            const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+            return { x, y };
+        }
+
+        // Convert canvas coordinates (relative to canvas top-left) to image coordinates (relative to image top-left)
+        function canvasToImageCoordinates(canvasX, canvasY) {
+            const imageX = viewOffsetX + canvasX / zoomLevel;
+            const imageY = viewOffsetY + canvasY / zoomLevel;
+            return { x: imageX, y: imageY };
+        }
+
+
+        // Find marker index at given canvas coordinates
+        function findMarkerAtCanvasCoords(canvasX, canvasY) {
+            // Convert canvas coordinates to image coordinates first
+            const { x: imageX, y: imageY } = canvasToImageCoordinates(canvasX, canvasY);
+
+            // Check if the calculated image coordinates are near an existing marker's image coordinates
+            const hitRadius = 25 / zoomLevel; // Hit radius in image space (scales inversely with zoom)
+
+            for (let i = 0; i < markers.length; i++) {
+                const marker = markers[i];
+                const distance = Math.sqrt(Math.pow(imageX - marker.x, 2) + Math.pow(imageY - marker.y, 2));
+
+                if (distance < hitRadius) {
+                    return i; // Return the index of the found marker
+                }
+            }
+            return -1; // No marker found
+        }
+
+
+        function handlePointerDown(event) {
+            if (!uploadedImage.src) {
+                return; // Do nothing if no image is loaded
+            }
+
+            // Add pointer to active pointers map
+            activePointers[event.pointerId] = {
+                x: event.clientX,
+                y: event.clientY,
+                canvasX: getCanvasCoordinates(event).x,
+                canvasY: getCanvasCoordinates(event).y,
+                event: event // Store event for later access
+            };
+
+            const pointerCount = Object.keys(activePointers).length;
+
+            // If it's the first pointer down, store starting canvas coordinates
+            if (pointerCount === 1) {
+                 startCanvasX = getCanvasCoordinates(event).x;
+                 startCanvasY = getCanvasCoordinates(event).y;
+            }
+
+
+            // Handle pinch start (exactly 2 touch pointers)
+            if (pointerCount === 2 && activePointers[event.pointerId].event.pointerType === 'touch' && Object.values(activePointers).every(p => p.event.pointerType === 'touch') && !isZoomLocked) {
+                 resetInteractionState(false); // Reset except for active pointers
+                 currentState = STATE.PINCHING;
+                 lastPinchDistance = getPinchDistance(activePointers);
+                 event.preventDefault(); // Prevent default browser action (e.g., scroll/pan)
+                 return; // Exit early, handle pinch in move/up
+            }
+
+            // Prevent default browser action unless it's the right mouse button
+            if (event.button === 0 || event.pointerType === 'touch') {
+                event.preventDefault();
+            }
+
+
+            // If not pinching, proceed with single pointer logic
+            if (currentState === STATE.IDLE) {
+                heldMarkerIndex = findMarkerAtCanvasCoords(startCanvasX, startCanvasY);
+
+                if (heldMarkerIndex !== -1) {
+                     // Started on a marker - potential drag
+                     currentState = STATE.PENDING_ACTION; // Use PENDING_ACTION for both marker/pan pending
+                     const marker = markers[heldMarkerIndex];
+                     const { x: markerImageX, y: markerImageY } = marker;
+
+                     // Calculate offset from marker's image position to the pointer's canvas position
+                     // This offset is used in pointermove to position the marker correctly relative to the pointer
+                     dragOffsetX = startCanvasX - (markerImageX - viewOffsetX) * zoomLevel;
+                     dragOffsetY = startCanvasY - (markerImageY - viewOffsetY) * zoomLevel;
+
+                } else {
+                    // Started on empty space - potential pan or add marker
+                    currentState = STATE.PENDING_ACTION; // Use PENDING_ACTION
+                    initialViewOffsetX = viewOffsetX; // Store current view offset for panning
+                    initialViewOffsetY = viewOffsetY;
+                }
+            }
+        }
+
+        function handlePointerMove(event) {
+            if (!uploadedImage.src || currentState === STATE.IDLE) {
+                return; // Do nothing if no image or not in an active state
+            }
+
+             const currentPointer = activePointers[event.pointerId];
+             if (!currentPointer) return; // Should not happen if pointerdown was captured
+
+             // Update pointer coordinates in map
+             currentPointer.x = event.clientX;
+             currentPointer.y = event.clientY;
+             currentPointer.canvasX = getCanvasCoordinates(event).x;
+             currentPointer.canvasY = getCanvasCoordinates(event).y;
+
+             const pointerCount = Object.keys(activePointers).length;
+
+
+             // Handle pinch move
+             if (currentState === STATE.PINCHING && pointerCount === 2) {
+                  const currentPinchDistance = getPinchDistance(activePointers);
+                  if (lastPinchDistance === 0) { // First move after pinch start
+                      lastPinchDistance = currentPinchDistance;
+                      return; // Don't zoom on the very first move
+                  }
+                 if (currentPinchDistance !== 0) {
+                     const factor = currentPinchDistance / lastPinchDistance;
+                     const midpoint = getPinchMidpoint(activePointers);
+                     adjustZoom(factor, midpoint.canvasX, midpoint.canvasY);
+                     lastPinchDistance = currentPinchDistance; // Store for next move
+                 }
+                  event.preventDefault(); // Prevent default browser action (e.g., scroll/pan)
+                  return; // Exit early, handled by pinch
+             }
+
+
+            // Prevent default browser action if in an active state and not right mouse
+            if ((event.button === 0 || event.pointerType === 'touch')) {
+                 if (currentState !== STATE.IDLE) {
+                      event.preventDefault();
+                 }
+             }
+
+
+             const currentCanvasX = currentPointer.canvasX;
+             const currentCanvasY = currentPointer.canvasY;
+
+
+            // Calculate distance moved from the initial pointer down position (in canvas pixels)
+            const moveDistance = Math.sqrt(Math.pow(currentCanvasX - startCanvasX, 2) + Math.pow(currentCanvasY - startCanvasY, 2));
+
+
+            // Check for drag/pan threshold if pending
+            if (currentState === STATE.PENDING_ACTION && moveDistance > DRAG_THRESHOLD) {
+                if (heldMarkerIndex !== -1) {
+                     currentState = STATE.DRAGGING_MARKER;
+                } else if (!isZoomLocked) { // Only pan if not locked
+                     currentState = STATE.PANNING;
+                }
+            }
+
+
+            // Perform drag or pan if active
+            if (currentState === STATE.DRAGGING_MARKER && heldMarkerIndex !== -1) {
+                // Calculate the new image position for the marker
+                const newMarkerImageX = viewOffsetX + (currentCanvasX - dragOffsetX) / zoomLevel;
+                const newMarkerImageY = viewOffsetY + (currentCanvasY - dragOffsetY) / zoomLevel;
+
+                // Update marker position
+                markers[heldMarkerIndex].x = newMarkerImageX;
+                markers[heldMarkerIndex].y = newMarkerImageY;
+
+                drawCanvas(); // Redraw to show marker movement
+
+            } else if (currentState === STATE.PANNING) {
+                // Calculate the change in view offset based on pointer movement (in image pixels)
+                // dx/dy are change in canvas coords, divide by zoomLevel to get change in image coords
+                const dx = (currentCanvasX - startCanvasX) / zoomLevel;
+                const dy = (currentCanvasY - startCanvasY) / zoomLevel;
+
+                // Update the view offset (subtract because dragging right moves view left)
+                viewOffsetX = initialViewOffsetX - dx;
+                viewOffsetY = initialViewOffsetY - dy;
+
+                // Clamp the view offset to stay within image bounds
+                clampViewOffset();
+
+                drawCanvas(); // Redraw to show panning
+            }
+        }
+
+        function handlePointerUp(event) {
+             if (!uploadedImage.src) {
+                 resetInteractionState();
+                 return;
+             }
+
+            // Remove pointer from active pointers map
+            delete activePointers[event.pointerId];
+            const pointerCount = Object.keys(activePointers).length;
+
+            // If pinch was active and pointer count drops below 2, stop pinch
+            if (currentState === STATE.PINCHING && pointerCount < 2) {
+                 resetInteractionState(); // Resets state to IDLE
+                 lastPinchDistance = 0; // Reset pinch distance
+                 event.preventDefault(); // Prevent default browser action
+                 return;
+            }
+
+             // If it's the last pointer up for a non-pinch action
+             if (pointerCount === 0) {
+
+                if (currentState === STATE.PENDING_ACTION) {
+                     // Pointer down, but didn't move enough to trigger drag or pan
+                    if (heldMarkerIndex !== -1) {
+                        // Tapped on a marker - do nothing special
+                    } else {
+                         // Tapped on empty space - add a marker
+                         const { x: canvasX, y: canvasY } = getCanvasCoordinates(event);
+                         addMarkerAtCanvasCoords(canvasX, canvasY);
+                    }
+                } else if (currentState === STATE.DRAGGING_MARKER) {
+                    // Finished dragging marker - position updated in move
+                } else if (currentState === STATE.PANNING) {
+                    // Finished panning - position updated in move
+                }
+                // HOLDING_MARKER_GROWING state is removed
+
+                // Reset state to IDLE after the action is processed
+                 resetInteractionState();
+            }
+             // If pointer count is > 0, the interaction is potentially ongoing with other pointers (e.g., multi-touch)
+             // The state machine handles transitions in pointermove/down based on pointer count.
+        }
+
+        // Reset all interaction state variables to IDLE
+        function resetInteractionState(resetActivePointers = true) {
+             currentState = STATE.IDLE;
+             heldMarkerIndex = -1;
+             // Growth related state removed
+             // Timers removed
+
+             if (resetActivePointers) {
+                activePointers = {};
+                lastPinchDistance = 0;
+             }
+        }
+
+
+        // Add marker at given canvas coordinates (converts to image coords)
+        function addMarkerAtCanvasCoords(canvasX, canvasY) {
+             if (!uploadedImage.src) {
+                return; // Do nothing if no image is loaded
+            }
+            const { x: imageX, y: imageY } = canvasToImageCoordinates(canvasX, canvasY);
+
+            const newMarker = {
+                x: imageX, // Store position in image coordinate space
+                y: imageY,
+                number: nextNumber,
+                color: selectedColor,
+                baseSize: selectedSize // Use the currently selected size (New)
+            };
+            markers.push(newMarker);
+            nextNumber++;
+            drawCanvas();
+        }
+
+        function deleteLastMarker() {
+             if (!uploadedImage.src || markers.length === 0) {
+                return; // Do nothing if no image or no markers
+            }
+            // Stop any active interaction if the target marker is being deleted
+            if (heldMarkerIndex === markers.length - 1) {
+                 resetInteractionState();
+            } else if (heldMarkerIndex !== -1 && heldMarkerIndex < markers.length - 1) {
+                // If deleting a marker *before* the held one, adjust the held index
+                heldMarkerIndex--;
+            }
+
+            markers.pop(); // Remove the last marker
+            if (nextNumber > 1) {
+                nextNumber--; // Decrement the number for the next marker
+            }
+            drawCanvas();
+        }
+
+        function clearAllMarkers() {
+             if (!uploadedImage.src || markers.length === 0) {
+                return; // Do nothing if no image or no markers
+            }
+            resetInteractionState(); // Stop any active interaction
+            markers = []; // Empty the markers array
+            nextNumber = 1; // Reset the number counter
+            drawCanvas();
+        }
+
+        function handleColorChange(event) {
+            selectedColor = event.target.value;
+        }
+
+        function saveImage() {
+             if (!uploadedImage.src) {
+                alert('Please upload an image first.');
+                return; // Do nothing if no image
+            }
+
+             // Temporarily set canvas size to image original size for higher resolution save
+             const originalCanvasWidth = canvas.width;
+             const originalCanvasHeight = canvas.height;
+             const originalZoom = zoomLevel;
+             const originalViewOffsetX = viewOffsetX;
+             const originalViewOffsetY = viewOffsetY;
+             const originalCurrentState = currentState; // Preserve state
+             const originalHeldMarkerIndex = heldMarkerIndex;
+             const originalActivePointers = { ...activePointers }; // Clone active pointers if needed (though state should be IDLE)
+
+
+             // Calculate zoom and offset to fit the *entire* original image onto a canvas of original image size
+             canvas.width = uploadedImage.width;
+             canvas.height = uploadedImage.height;
+             zoomLevel = 1.0;
+             viewOffsetX = 0;
+             viewOffsetY = 0;
+
+             // Redraw at full resolution (or image resolution)
+             drawCanvas();
+
+            // Create a temporary link element
+            const link = document.createElement('a');
+            link.download = 'marked_image.png'; // Suggested filename
+            link.href = canvas.toDataURL('image/png'); // Get data URL from canvas
+
+            // Programmatically click the link to trigger download
+            link.click();
+
+            // Restore canvas size, zoom, and pan
+            canvas.width = originalCanvasWidth;
+            canvas.height = originalCanvasHeight;
+            zoomLevel = originalZoom;
+            viewOffsetX = originalViewOffsetX;
+            viewOffsetY = originalViewOffsetY;
+            currentState = originalCurrentState; // Restore state
+            heldMarkerIndex = originalHeldMarkerIndex;
+            activePointers = originalActivePointers; // Restore pointers
+
+
+             // Redraw at the restored view
+            drawCanvas();
+        }
+
+        // --- Zoom and Pan Functions ---
+
+        // factor > 1 to zoom in, factor < 1 to zoom out
+        function adjustZoom(factor, centerX, centerY) {
+             if (!uploadedImage.src) return;
+
+             // Prevent wheel zoom and pinch zoom when locked by checking centerX/Y presence
+             // Allow +/- button zoom even when locked (centerX/Y are undefined for buttons)
+             const isInteractionZoom = centerX !== undefined || centerY !== undefined; // True for wheel or pinch
+             if (isZoomLocked && isInteractionZoom) {
+                 return;
+             }
+
+
+             const oldZoom = zoomLevel;
+             let newZoom = zoomLevel * factor;
+
+             // Clamp zoom level
+             newZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
+
+             if (newZoom === oldZoom) return; // No change
+
+             // If zoom center is not provided, use the center of the canvas (for buttons)
+             if (centerX === undefined) centerX = canvas.width / 2;
+             if (centerY === undefined) centerY = canvas.height / 2;
+
+             // Calculate the image coordinates at the zoom center *before* zooming
+             const imgX = viewOffsetX + centerX / oldZoom;
+             const imgY = viewOffsetY + centerY / oldZoom;
+
+             // Update zoom level
+             zoomLevel = newZoom;
+
+             // Calculate the new view offset so the image coordinates at the center remain at the canvas center
+             viewOffsetX = imgX - centerX / zoomLevel;
+             viewOffsetY = imgY - centerY / zoomLevel;
+
+             // Clamp the new view offset
+             clampViewOffset();
+
+             drawCanvas(); // Redraw with new zoom and pan
+        }
+
+        // Mouse wheel zoom handler
+        function handleWheelZoom(event) {
+             if (isZoomLocked || !uploadedImage.src) return; // Disable wheel zoom when locked or no image
+
+             event.preventDefault(); // Prevent page scrolling
+
+             // Determine zoom factor based on wheel direction
+             const factor = event.deltaY < 0 ? ZOOM_FACTOR : (1 / ZOOM_FACTOR);
+
+             // Get mouse position relative to canvas for zooming into that point
+             const { x: canvasX, y: canvasY } = getCanvasCoordinates(event);
+
+             adjustZoom(factor, canvasX, canvasY);
+        }
+
+        // Clamp view offset to keep it within image bounds
+        function clampViewOffset() {
+            // Ensure viewOffsetX is within bounds (0 to imageWidth - viewableImageWidth)
+            const viewableImageWidth = canvas.width / zoomLevel;
+            const viewableImageHeight = canvas.height / zoomLevel;
+
+             // If viewable area is larger than the image, center the image
+             if (viewableImageWidth >= uploadedImage.width) { // Use >= in case of floating point
+                 viewOffsetX = (uploadedImage.width - viewableImageWidth) / 2;
+             } else {
+                 viewOffsetX = Math.max(0, Math.min(uploadedImage.width - viewableImageWidth, viewOffsetX));
+             }
+
+             if (viewableImageHeight >= uploadedImage.height) { // Use >= in case of floating point
+                 viewOffsetY = (uploadedImage.height - viewableImageHeight) / 2;
+             } else {
+                 viewOffsetY = Math.max(0, Math.min(uploadedImage.height - viewableImageHeight, viewOffsetY));
+             }
+        }
+
+        // --- Multi-touch Pinch Zoom Helpers ---
+
+        // Calculate distance between the first two active pointers
+        function getPinchDistance(pointers) {
+            const pointerIds = Object.keys(pointers);
+            if (pointerIds.length < 2) return 0;
+            const p1 = pointers[pointerIds[0]];
+            const p2 = pointers[pointerIds[1]];
+            return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+        }
+
+        // Calculate midpoint between the first two active pointers (canvas coordinates)
+        function getPinchMidpoint(pointers) {
+             const pointerIds = Object.keys(pointers);
+            if (pointerIds.length < 2) return { canvasX: 0, canvasY: 0 };
+            const p1 = pointers[pointerIds[0]];
+            const p2 = pointers[pointerIds[1]];
+
+            const canvasX = (p1.canvasX + p2.canvasX) / 2;
+            const canvasY = (p1.canvasY + p2.canvasY) / 2;
+
+            return { canvasX, canvasY };
+        }
+
+
+        // --- Marker Growth Animation (Removed) ---
+        // startGrowth, growMarker, stopGrowth functions are removed.
+
+
+        // --- Zoom Lock Toggle ---
+        function handleZoomLockToggle(event) {
+            isZoomLocked = event.target.checked;
+            // Reset interaction state to avoid weird behavior if locking mid-pan/drag/pinch
+            resetInteractionState();
+            // Optionally, provide user feedback (e.g., change cursor style on canvas)
+             canvas.style.cursor = isZoomLocked ? 'crosshair' : 'grab'; // Example cursor change
+        }
+
+        // --- Size Selector Handlers (New) ---
+        function handleSizeSliderChange(event) {
+            selectedSize = parseInt(event.target.value, 10);
+            sizeInput.value = selectedSize; // Sync input field
+        }
+
+        function handleSizeInputChange(event) {
+            let size = parseInt(event.target.value, 10);
+            const min = parseInt(sizeInput.min, 10);
+            const max = parseInt(sizeInput.max, 10);
+
+            // Clamp the value
+            if (isNaN(size)) {
+                size = selectedSize; // Revert to last valid size if input is not a number
+            } else {
+                 size = Math.max(min, Math.min(max, size));
+            }
+
+            selectedSize = size;
+            sizeInput.value = selectedSize; // Update input field value with clamped value
+            sizeSlider.value = selectedSize; // Sync slider
+
+            // Optionally redraw if you want existing markers to visually update their size based on selection
+            // drawCanvas(); // Uncomment if you want this visual feedback
+        }
+
+
+        // --- Initial Setup ---
+        canvas.style.display = 'none'; // Hide canvas initially
+        overlayText.style.display = 'flex'; // Show overlay text initially
+
+        // Disable default browser touch actions like pan/zoom on the canvas itself.
+        canvas.style.touchAction = 'none';
+
+        // Initial draw to show overlay
+        drawCanvas();
+         // Set initial cursor style
+         canvas.style.cursor = 'grab'; // Indicate it's initially draggable
+    </script>
+</body>
+</html>
