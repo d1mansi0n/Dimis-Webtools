@@ -7,7 +7,7 @@
     <style>
         /* CSS Custom Properties for easy theming */
         :root {
-            --background-color: #f0f2f5;
+            --background-color: #ffffff;
             --container-bg-color: #ffffff;
             --grid-border-color: #333;
             --cell-border-color: #ccc;
@@ -23,30 +23,48 @@
             --button-border-color: #000;
             --win-color-gold: #FFD700;
             --box-shadow-light: 0 4px 8px rgba(0,0,0,0.1);
+            --pause-overlay-bg: rgba(255, 255, 255, 0.85);
+        }
+
+        body.dark-mode {
+            --background-color: #121212;
+            --container-bg-color: #121212;
+            --grid-border-color: #e0e0e0;
+            --cell-border-color: #444;
+            --cell-bg-color: #2a2a2a;
+            --cell-initial-bg-color: #3c3c3c;
+            --cell-selected-bg-color: #005f5f;
+            --font-color-dark: #f0f0f0;
+            --font-color-light: #121212;
+            --font-color-error: #ff7b7b;
+            --font-color-note: #48d1cc;
+            --font-color-success: #76c7c0;
+            --button-bg-color: #f0f0f0;
+            --button-border-color: #f0f0f0;
+            --pause-overlay-bg: rgba(0, 0, 0, 0.7);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             display: flex;
+            flex-direction: column; 
+            align-items: center;
             min-height: 100vh;
             background-color: var(--background-color);
-            flex-direction: column; 
+            color: var(--font-color-dark);
             padding: 15px;
             box-sizing: border-box;
             overflow-x: hidden; 
             margin: 0;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .sudoku-container {
             display: flex;
             flex-direction: column;
             align-items: center; 
-            margin: 20px auto;
-            max-width: 100%; 
-            padding: 20px;
-            background-color: var(--container-bg-color);
-            border-radius: 10px;
-            box-shadow: var(--box-shadow-light);
+            width: 100%;
+            max-width: 550px; /* Begrenzt die Breite auf großen Bildschirmen */
         }
 
         h1 {
@@ -66,13 +84,10 @@
             color: var(--win-color-gold);
             animation: headline-pulse 1.5s infinite ease-in-out;
         }
-
-        /* --- KORREKTUR-START --- */
-        /* Diese Regel wurde hinzugefügt, um das Pausen-Overlay korrekt zu positionieren. */
+        
         .grid-wrapper {
-            position: relative; /* Stellt sicher, dass das absolute #pause-overlay innerhalb dieses Containers bleibt. */
+            position: relative;
         }
-        /* --- KORREKTUR-ENDE --- */
 
         /* Grid Styling */
         .sudoku-grid {
@@ -89,7 +104,7 @@
             position: relative; 
             touch-action: none;
             border-collapse: collapse; 
-            transition: border-width 0.3s ease-in-out;
+            transition: border-color 0.3s, box-shadow 0.3s, border-width 0.3s;
         }
         
         @keyframes rainbow-border-pulse { 
@@ -167,6 +182,7 @@
         /* Controls Area */
         .status-bar {
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
             width: 90%;
@@ -174,6 +190,7 @@
             margin-bottom: 15px;
             font-size: 1rem;
             color: var(--font-color-dark);
+            gap: 10px;
         }
         #difficulty-select label { margin-right: 5px; }
 
@@ -220,15 +237,15 @@
             transition: background-color 0.2s ease, color 0.2s ease; 
         }
         .controls button:disabled { background-color: #aaa; border-color: #999; cursor: not-allowed; opacity: 0.7; }
-        @media (hover: hover) { .controls button:not(:disabled):hover { background-color: var(--font-color-light); color: var(--button-bg-color); } }
-        #settings-btn.active { background-color: var(--font-color-light); color: var(--button-bg-color); }
+        @media (hover: hover) { .controls button:not(:disabled):hover { background-color: var(--font-color-dark); color: var(--button-bg-color); } }
+        #settings-btn.active { background-color: var(--font-color-dark); color: var(--button-bg-color); }
         @media (hover: hover) { #settings-btn.active:hover { background-color: #eee; } }
 
         /* Radial Menu */
         #radial-menu { position: fixed; width: 180px; height: 180px; border-radius: 50%; background-color: rgba(200, 200, 200, 0.85); box-shadow: 0 0 15px rgba(0,0,0,0.3); display: none; justify-content: center; align-items: center; z-index: 1000; pointer-events: none; transform: translate(-50%, -50%); user-select: none; touch-action: none; }
         #radial-menu.visible { display: flex; pointer-events: auto; }
         .radial-item { position: absolute; width: 40px; height: 40px; background-color: var(--button-bg-color); border: 1px solid #555; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: all 0.15s ease-out; color: var(--font-color-light); pointer-events: auto; user-select: none; touch-action: none; transform: scale(0.95); }
-        @media (hover: hover) { .radial-item:hover { background-color: var(--font-color-light); color: var(--button-bg-color); border-color: var(--button-bg-color); transform: scale(1.15); z-index: 1; } }
+        @media (hover: hover) { .radial-item:hover { background-color: var(--font-color-dark); color: var(--button-bg-color); border-color: var(--button-bg-color); transform: scale(1.15); z-index: 1; } }
         .radial-item.longpress-active { box-shadow: 0 0 8px 3px #00cccc; transform: scale(1.4); z-index: 2; }
 
         /* Overlays & Modals */
@@ -269,7 +286,7 @@
         }
         .modal button.btn-secondary { background-color: #6c757d; border-color: #6c757d; }
         @media (hover: hover) {
-            .modal button:hover { background-color: var(--font-color-light); color: var(--button-bg-color); }
+            .modal button:hover { background-color: var(--font-color-dark); color: var(--button-bg-color); }
             .modal button.btn-secondary:hover { background-color: #5a6268; border-color: #545b62; color: var(--font-color-light); }
         }
 
@@ -278,7 +295,7 @@
             margin-top: 20px;
             margin-bottom: 10px;
             text-transform: capitalize;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--cell-border-color);
             padding-bottom: 5px;
         }
         #best-times-modal ol { list-style-position: inside; padding-left: 0; }
@@ -320,7 +337,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--cell-border-color);
         }
          .saved-game-item:last-child {
             border-bottom: none;
@@ -344,7 +361,7 @@
 
         #pause-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(255, 255, 255, 0.85);
+            background-color: var(--pause-overlay-bg);
             border-radius: 0; 
             display: none; justify-content: center; align-items: center;
             font-size: 2rem; font-weight: bold; color: var(--font-color-dark);
@@ -401,7 +418,8 @@
             <button id="reset-btn" title="Aktuelles Puzzle zurücksetzen">Reset</button>
             <button id="undo-btn" title="Letzten Zug rückgängig machen" disabled>&#8617;</button> 
             <button id="validate-btn" title="Aktuelle Lösung prüfen">Prüfen</button>
-            <button id="settings-btn" title="Sofortige Validierung umschalten">⚙️</button> 
+            <button id="settings-btn" title="Sofortige Validierung umschalten">⚙️</button>
+            <button id="theme-toggle-btn" title="Modus wechseln">🌙</button> 
         </div>
 
         <div id="message-area" class="message-area"></div>
@@ -830,6 +848,7 @@
         const undoBtn = document.getElementById('undo-btn');
         const validateBtn = document.getElementById('validate-btn');
         const settingsBtn = document.getElementById('settings-btn');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
         const radialMenuElement = document.getElementById('radial-menu');
         const headingElement = document.getElementById('main-headline');
         const confettiContainer = document.getElementById('confetti-container');
@@ -1204,6 +1223,7 @@
                 else displayMessage('Es wurden Fehler gefunden.', false);
             });
             settingsBtn.addEventListener('click', toggleInstantValidation);
+            themeToggleBtn.addEventListener('click', toggleTheme);
             pauseBtn.addEventListener('click', togglePause);
             gridElement.addEventListener('click', handleCellClick);
             radialMenuElement.addEventListener('pointerdown', handleMenuPointerDown);
@@ -1220,6 +1240,31 @@
                 hideSaveTimeModalAndWin();
             });
             saveTimeNoBtn.addEventListener('click', hideSaveTimeModalAndWin);
+        }
+
+        // --- Theme Toggle ---
+        function applyInitialTheme() {
+            const savedTheme = localStorage.getItem('sudokuTheme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.body.classList.add('dark-mode');
+                themeToggleBtn.innerHTML = '☀️';
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeToggleBtn.innerHTML = '🌙';
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('sudokuTheme', 'dark');
+                themeToggleBtn.innerHTML = '☀️';
+            } else {
+                localStorage.setItem('sudokuTheme', 'light');
+                themeToggleBtn.innerHTML = '🌙';
+            }
         }
         
         // --- Modals ---
@@ -1465,6 +1510,7 @@
             createGrid();
             createRadialMenuItems();
             setupEventListeners();
+            applyInitialTheme();
             updateSettingsButtonVisual();
             updateLoadButtonState();
             startNewGame();
@@ -1474,4 +1520,5 @@
     </script>
 </body>
 </html>
+
 
