@@ -67,6 +67,13 @@
             animation: headline-pulse 1.5s infinite ease-in-out;
         }
 
+        /* --- KORREKTUR-START --- */
+        /* Diese Regel wurde hinzugefügt, um das Pausen-Overlay korrekt zu positionieren. */
+        .grid-wrapper {
+            position: relative; /* Stellt sicher, dass das absolute #pause-overlay innerhalb dieses Containers bleibt. */
+        }
+        /* --- KORREKTUR-ENDE --- */
+
         /* Grid Styling */
         .sudoku-grid {
             display: grid;
@@ -1467,5 +1474,4 @@
     </script>
 </body>
 </html>
-
 
