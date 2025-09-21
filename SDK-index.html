@@ -404,6 +404,7 @@
     <div id="radial-menu-overlay"></div>
     <div id="confetti-container"></div>
     
+    <!-- Modals -->
     <div id="save-time-modal" class="overlay">
         <div class="modal">
             <h2>Glückwunsch!</h2>
@@ -1137,6 +1138,25 @@
 
         function showRadialMenu(x, y, cell) {
             if (Date.now() - gameState.lastMenuCloseTime < REOPEN_DELAY) return;
+
+            const radius = RADIAL_MENU_DIAMETER / 2;
+            const padding = 10; // A little space from the edge
+
+            // Adjust X coordinate
+            if (x + radius > window.innerWidth) {
+                x = window.innerWidth - radius - padding;
+            }
+            if (x - radius < 0) {
+                x = radius + padding;
+            }
+
+            // Adjust Y coordinate
+            if (y + radius > window.innerHeight) {
+                y = window.innerHeight - radius - padding;
+            }
+            if (y - radius < 0) {
+                y = radius + padding;
+            }
             
             radialMenuOverlay.style.display = 'block';
             cell.classList.add('selected');
@@ -1210,3 +1230,5 @@
     </script>
 </body>
 </html>
+
+
