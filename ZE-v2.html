@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Tracking Tool 2.0</title>
+<style>
+  :root {
+    --bg: #f4f5fb; --card: #ffffff; --text: #1f2333; --muted: #6b7186;
+    --accent: #4f46e5; --accent-soft: #eef0ff; --border: #e3e5f0;
+    --ok: #16a34a; --ok-soft: #e7f7ec; --warn: #d97706; --warn-soft: #fdf3e3;
+    --danger: #dc2626; --danger-soft: #fdecec; --shadow: 0 6px 18px rgba(31,35,51,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14151d; --card: #1e2029; --text: #eceef6; --muted: #9aa0b4;
+      --accent: #818cf8; --accent-soft: #2a2c44; --border: #32354a;
+      --ok: #4ade80; --ok-soft: #17301f; --warn: #fbbf24; --warn-soft: #33290f;
+      --danger: #f87171; --danger-soft: #3a1a1a; --shadow: 0 6px 18px rgba(0,0,0,.4);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; padding: 1.25rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text);
+  }
+  .appbar { max-width: 760px; margin: 0 auto .9rem; display: flex; align-items: center; gap: .6rem; font-size: .85rem; }
+  .appbar a { color: var(--muted); text-decoration: none; }
+  .appbar a:hover { color: var(--accent); }
+  .vtag { margin-left: auto; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: .2rem .6rem; font-size: .72rem; }
+  main { max-width: 760px; margin: 0 auto; display: grid; gap: 1rem; }
+  h1 { margin: 0; font-size: 1.45rem; letter-spacing: -.02em; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem 1.25rem; box-shadow: var(--shadow); }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+  button {
+    font: inherit; font-size: .88rem; font-weight: 600; padding: .5rem .9rem;
+    border-radius: 10px; border: 1px solid var(--border); background: var(--bg);
+    color: var(--text); cursor: pointer; transition: filter .15s;
+  }
+  button:hover:not(:disabled) { filter: brightness(.96); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-danger  { color: var(--danger); border-color: var(--danger); background: transparent; }
+  .voice { display: flex; gap: .5rem; align-items: center; margin-left: auto; }
+  #voiceBtn.active { background: var(--danger); border-color: var(--danger); color: #fff; }
+  select {
+    font: inherit; font-size: .88rem; padding: .45rem .6rem; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text);
+  }
+  #feedback { width: 100%; font-size: .85rem; font-weight: 600; min-height: 1.2em; }
+  #feedback.err { color: var(--danger); }
+  #feedback.ok { color: var(--accent); }
+
+  .empty { text-align: center; color: var(--muted); padding: 1.5rem 0; }
+  .entries { display: grid; gap: .75rem; }
+  .entry {
+    display: grid; grid-template-columns: auto 1fr auto; gap: .75rem 1rem; align-items: start;
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: .9rem 1rem; box-shadow: var(--shadow);
+  }
+  .entry.running { border-color: var(--ok); }
+  .entry .controls { display: flex; flex-direction: column; gap: .35rem; }
+  .entry .controls button { padding: .35rem .8rem; font-size: .8rem; min-width: 72px; }
+  .start-btn.active { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+  .pause-btn.active { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+  .entry .mid { min-width: 0; }
+  .entry .date { font-size: .78rem; color: var(--muted); }
+  .entry .elapsed { font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .entry.running .elapsed { color: var(--ok); }
+  .sessions { font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .sessions .live { color: var(--ok); font-weight: 600; }
+  .comment-input {
+    width: 100%; margin-top: .45rem; font: inherit; font-size: .85rem; padding: .4rem .6rem;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text);
+  }
+  .comment-input:disabled { opacity: .6; }
+  .delete-btn { position: relative; overflow: hidden; color: var(--danger); border-color: transparent; background: var(--danger-soft); }
+  .delete-btn.hold::after {
+    content: ""; position: absolute; inset: 0; background: var(--danger); opacity: .35;
+    animation: fill 1s linear forwards; transform-origin: left;
+  }
+  @keyframes fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  .totalbar { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+  .totalbar .num { font-size: 1.5rem; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .totalbar .lbl { color: var(--muted); font-size: .85rem; }
+
+  .comments-head { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  #commentsList { margin-top: .75rem; display: none; }
+  .stored-comment {
+    display: flex; justify-content: space-between; align-items: center; gap: .75rem;
+    padding: .4rem .55rem; border-radius: 8px; font-size: .88rem;
+  }
+  .stored-comment:nth-child(odd) { background: var(--bg); }
+  .stored-comment button { padding: .15rem .55rem; font-size: .75rem; color: var(--danger); }
+
+  @media (max-width: 560px) {
+    .entry { grid-template-columns: 1fr; }
+    .entry .controls { flex-direction: row; }
+    .voice { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<nav class="appbar">
+  <a href="index.html">&larr; Dimis Webtools</a>
+  <span class="vtag">2.0</span>
+  <a href="ZE-index.html" onclick="localStorage.setItem('dwt-version','1')">Switch to 1.0</a>
+</nav>
+<main>
+  <div class="card toolbar">
+    <h1 style="width:100%">Time Tracking Tool</h1>
+    <button id="newEntryBtn" class="btn-primary">+ New Entry</button>
+    <button id="toggleFormatBtn" title="Toggle time display format">Show Decimal</button>
+    <button id="exportBtn">Export to Excel</button>
+    <button id="clearEntriesBtn" class="btn-danger">Clear All Entries</button>
+    <div class="voice">
+      <button id="voiceBtn" title="Hold to speak">🎤 Push to Talk</button>
+      <select id="languageSelect" aria-label="Voice language">
+        <option value="en-US">English</option>
+        <option value="de-DE">Deutsch</option>
+      </select>
+    </div>
+    <div id="feedback" role="status"></div>
+  </div>
+
+  <div id="noEntriesMessage" class="card empty">No time entries yet. Click “+ New Entry” to start.</div>
+  <div id="entries" class="entries"></div>
+
+  <div class="card totalbar">
+    <span class="lbl">Total elapsed:</span>
+    <span class="num" id="totalElapsed">00:00:00</span>
+  </div>
+
+  <div class="card">
+    <div class="comments-head">
+      <button id="toggleCommentsBtn">Show/Hide Stored Comments</button>
+      <button id="clearCommentsBtn" class="btn-danger" style="display:none">Clear All Comments</button>
+    </div>
+    <div id="commentsList"></div>
+  </div>
+</main>
+<datalist id="commentSuggestions"></datalist>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function () {
+"use strict";
+
+// --- Constants ---
+const LS_ENTRIES_V2 = "timeTrackerEntriesV2";
+const LS_ENTRIES_V1 = "timeTrackerEntries";
+const LS_COMMENTS = "comments";          // shared with version 1.0
+const LS_DECIMAL = "timeTrackerDecimal";
+const LONG_PRESS_MS = 1000;
+const DEBOUNCE_MS = 300;
+const CMDS = {
+  newEntry: ["new entry", "neuer eintrag", "eintrag hinzufügen"],
+  start: ["start", "begin", "los", "anfangen", "timer starten", "starte timer"],
+  pause: ["pause", "anhalten", "unterbrechen", "pausieren", "timer pausieren"],
+  stop: ["stop", "stopp", "beenden", "ende", "timer stoppen"],
+  comment: ["comment", "kommentar", "notiz"]
+};
+
+// --- State ---
+// entry: { id, date, comment, accumulated(ms), runningSince(ts|null), isStopped, sessions:[{from,to}] }
+let entries = [];
+let comments = [];
+let isDecimal = localStorage.getItem(LS_DECIMAL) === "1";
+let recognition = null;
+let lastCommandTime = 0;
+let holdTimeout = null;
+let holdTarget = null;
+let feedbackTimeout = null;
+
+// --- DOM ---
+const $ = id => document.getElementById(id);
+const entriesEl = $("entries"), noEntriesEl = $("noEntriesMessage"), totalEl = $("totalElapsed"),
+      feedbackEl = $("feedback"), voiceBtn = $("voiceBtn"), languageSelect = $("languageSelect"),
+      formatBtn = $("toggleFormatBtn"), commentsListEl = $("commentsList"),
+      clearCommentsBtn = $("clearCommentsBtn"), datalistEl = $("commentSuggestions");
+
+// --- Helpers ---
+const escapeHTML = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+const pad = n => String(n).padStart(2, "0");
+const timeStr = d => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+const todayStr = () => { const n = new Date(); return `${pad(n.getDate())}.${pad(n.getMonth() + 1)}.${String(n.getFullYear()).slice(-2)}`; };
+const elapsedOf = e => e.accumulated + (e.runningSince ? Date.now() - e.runningSince : 0);
+const runningEntry = () => entries.find(e => e.runningSince);
+function formatTime(ms, decimal) {
+  if (!isFinite(ms) || ms < 0) ms = 0;
+  if (decimal) return (ms / 3600000).toFixed(2) + " hrs";
+  const t = Math.floor(ms / 1000);
+  return `${pad(Math.floor(t / 3600))}:${pad(Math.floor((t % 3600) / 60))}:${pad(t % 60)}`;
+}
+
+// --- Persistence ---
+function save() {
+  try { localStorage.setItem(LS_ENTRIES_V2, JSON.stringify(entries)); }
+  catch (err) { console.error("Save failed:", err); }
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(LS_ENTRIES_V2);
+    if (raw) { entries = JSON.parse(raw); return; }
+    // One-time migration from version 1.0 (v1 data is left in place)
+    const v1 = JSON.parse(localStorage.getItem(LS_ENTRIES_V1) || "null");
+    if (Array.isArray(v1)) {
+      entries = v1.map(e => ({
+        id: e.id, date: e.date || todayStr(), comment: e.comment || "",
+        accumulated: e.elapsed || 0, runningSince: null,
+        isStopped: !!e.isStopped, sessions: Array.isArray(e.sessions) ? e.sessions : []
+      }));
+      save();
+    }
+  } catch (err) { console.error("Load failed:", err); entries = []; }
+  entries = entries.filter(e => e && typeof e.id === "number");
+}
+function loadComments() {
+  try { comments = JSON.parse(localStorage.getItem(LS_COMMENTS)) || []; }
+  catch { comments = []; }
+}
+const saveComments = () => localStorage.setItem(LS_COMMENTS, JSON.stringify(comments));
+
+// --- Entry actions ---
+function addEntry() {
+  entries.push({ id: Date.now(), date: todayStr(), comment: "",
+    accumulated: 0, runningSince: null, isStopped: false, sessions: [] });
+  save(); render();
+}
+function startEntry(id) {
+  const other = runningEntry();
+  if (other && other.id !== id) { showFeedback("Another timer is already running.", true); return; }
+  const e = entries.find(x => x.id === id);
+  if (!e || e.isStopped || e.runningSince) return;
+  e.runningSince = Date.now();
+  save(); render();
+}
+function pauseEntry(id) {
+  const e = entries.find(x => x.id === id);
+  if (!e || !e.runningSince || e.isStopped) return;
+  closeSession(e);
+  save(); render();
+}
+function stopEntry(id) {
+  const e = entries.find(x => x.id === id);
+  if (!e || e.isStopped) return;
+  if (e.runningSince) closeSession(e);
+  e.isStopped = true;
+  if (e.comment && !comments.includes(e.comment)) { comments.push(e.comment); saveComments(); renderSuggestions(); }
+  save(); render();
+}
+function closeSession(e) {
+  e.sessions.push({ from: timeStr(new Date(e.runningSince)), to: timeStr(new Date()) });
+  e.accumulated += Date.now() - e.runningSince;
+  e.runningSince = null;
+}
+function deleteEntry(id) {
+  entries = entries.filter(e => e.id !== id);
+  save(); render();
+}
+function clearAllEntries() {
+  if (!entries.length || !confirm("Are you sure you want to clear ALL time entries?")) return;
+  entries = [];
+  localStorage.removeItem(LS_ENTRIES_V2);
+  render();
+}
+
+// --- Rendering ---
+function render() {
+  noEntriesEl.style.display = entries.length ? "none" : "block";
+  entriesEl.innerHTML = entries.map(e => {
+    const running = !!e.runningSince;
+    return `
+    <div class="entry ${running ? "running" : ""}" id="entry-${e.id}">
+      <div class="controls">
+        <button class="start-btn ${running ? "active" : ""}" ${e.isStopped || running ? "disabled" : ""}>Start</button>
+        <button class="pause-btn ${!running && !e.isStopped ? "active" : ""}" ${e.isStopped || !running ? "disabled" : ""}>Pause</button>
+        <button class="stop-btn" ${e.isStopped ? "disabled" : ""}>Stop</button>
+      </div>
+      <div class="mid">
+        <div class="date">${escapeHTML(e.date)}${e.isStopped ? " · finished" : ""}</div>
+        <div class="elapsed" data-elapsed></div>
+        <div class="sessions" data-sessions></div>
+        <input type="text" class="comment-input" placeholder="Add comment"
+          list="commentSuggestions" value="${escapeHTML(e.comment)}" ${e.isStopped ? "disabled" : ""}>
+      </div>
+      <button class="delete-btn" title="Hold for 1 second to delete">Delete</button>
+    </div>`;
+  }).join("");
+  tick();
+}
+function tick() {
+  let total = 0;
+  entries.forEach(e => {
+    total += elapsedOf(e);
+    const row = document.getElementById(`entry-${e.id}`);
+    if (!row) return;
+    row.querySelector("[data-elapsed]").textContent = formatTime(elapsedOf(e), isDecimal);
+    const live = e.runningSince
+      ? `<div class="live">${timeStr(new Date(e.runningSince))} – ${timeStr(new Date())} (running)</div>` : "";
+    row.querySelector("[data-sessions]").innerHTML =
+      live + e.sessions.slice().reverse().map(s => `<div>${escapeHTML(s.from)} – ${escapeHTML(s.to)}</div>`).join("");
+  });
+  totalEl.textContent = formatTime(total, isDecimal);
+}
+function renderSuggestions() {
+  datalistEl.innerHTML = comments.map(c => `<option value="${escapeHTML(c)}"></option>`).join("");
+}
+function renderStoredComments() {
+  commentsListEl.innerHTML = comments.length
+    ? comments.map((c, i) => `<div class="stored-comment"><span>${escapeHTML(c)}</span><button data-i="${i}" title="Delete comment">✕</button></div>`).join("")
+    : `<div class="empty">No stored comments.</div>`;
+}
+
+// --- Feedback ---
+function showFeedback(msg, isError = false) {
+  clearTimeout(feedbackTimeout);
+  feedbackEl.textContent = msg;
+  feedbackEl.className = isError ? "err" : "ok";
+  feedbackTimeout = setTimeout(() => { feedbackEl.textContent = ""; }, isError ? 4000 : 2500);
+}
+
+// --- Voice recognition ---
+function initVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { voiceBtn.disabled = true; languageSelect.disabled = true; voiceBtn.title = "Speech recognition not supported"; return; }
+  recognition = new SR();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = languageSelect.value;
+  recognition.onstart = () => voiceBtn.classList.add("active");
+  recognition.onend = () => voiceBtn.classList.remove("active");
+  recognition.onerror = ev => {
+    const msgs = { "no-speech": "No speech detected.", "audio-capture": "Microphone error.", "not-allowed": "Microphone permission denied." };
+    showFeedback(msgs[ev.error] || `Voice error: ${ev.error}`, true);
+    voiceBtn.classList.remove("active");
+  };
+  recognition.onresult = ev => {
+    let final = "";
+    for (let i = ev.resultIndex; i < ev.results.length; i++)
+      if (ev.results[i].isFinal) final += ev.results[i][0].transcript;
+    if (final.trim()) handleVoiceCommand(final.trim());
+  };
+}
+const normalize = t => t.toLowerCase().replace(/[^\p{L}\d\s]/gu, " ").replace(/\s+/g, " ").trim();
+const matches = (text, cmds) => cmds.some(c =>
+  new RegExp("\\b" + c.split(/\s+/).join("\\s+") + "\\b", "i").test(text));
+function handleVoiceCommand(cmd) {
+  const now = Date.now();
+  if (now - lastCommandTime < DEBOUNCE_MS) return;
+  lastCommandTime = now;
+  const text = normalize(cmd);
+  if (matches(text, CMDS.newEntry)) { addEntry(); showFeedback("New entry added."); return; }
+  const target = runningEntry() || entries.slice().reverse().find(e => !e.isStopped);
+  if (!target) { showFeedback("No active entry for command.", true); return; }
+  if (matches(text, CMDS.comment)) {
+    let t = text;
+    CMDS.comment.forEach(kw => { t = t.replace(new RegExp("\\b" + kw.split(/\s+/).join("\\s+") + "\\b", "gi"), ""); });
+    t = t.trim();
+    if (t) { target.comment = t; save(); render(); showFeedback(`Comment "${t}" added.`); }
+    else showFeedback("No comment text heard.", true);
+    return;
+  }
+  if (matches(text, CMDS.start)) { startEntry(target.id); showFeedback("Timer started."); return; }
+  if (matches(text, CMDS.pause)) { pauseEntry(target.id); showFeedback("Timer paused."); return; }
+  if (matches(text, CMDS.stop)) { stopEntry(target.id); showFeedback("Timer stopped."); return; }
+}
+
+// --- Excel / CSV export ---
+function exportEntries() {
+  if (!entries.length) { showFeedback("No time entries to export.", true); return; }
+  const headers = ["Date", "Start Time", "End Time", "Elapsed (HH:MM:SS)", "Decimal Hours", "Comment", "Sessions (From - To)"];
+  const rows = [headers];
+  let total = 0;
+  entries.forEach(e => {
+    const ms = elapsedOf(e);
+    total += ms;
+    const start = e.sessions[0]?.from ?? "N/A";
+    const end = e.sessions.length ? e.sessions.reduce((l, s) => s.to > l ? s.to : l, e.sessions[0].to) : "N/A";
+    rows.push([e.date, start, end, formatTime(ms, false), +(ms / 3600000).toFixed(2),
+      e.comment || "", e.sessions.map(s => `${s.from} - ${s.to}`).join("; ")]);
+  });
+  rows.push(["", "", "Total", formatTime(total, false), +(total / 3600000).toFixed(2), "", ""]);
+  const stamp = todayStr().replace(/\./g, "-");
+  try {
+    if (typeof XLSX === "undefined") throw new Error("XLSX library not loaded");
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"] = [{ wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 20 }, { wch: 15 }, { wch: 40 }, { wch: 50 }];
+    for (let r = 1; r < rows.length; r++) {
+      const cell = ws[XLSX.utils.encode_cell({ c: 4, r })];
+      if (cell) cell.z = "0.00";
+    }
+    XLSX.utils.book_append_sheet(wb, ws, "Time Entries");
+    XLSX.writeFile(wb, `time_entries_${stamp}.xlsx`);
+  } catch (err) {
+    // Offline / CDN failure: fall back to CSV so the export still works
+    console.warn("Excel export unavailable, falling back to CSV:", err);
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
+    a.download = `time_entries_${stamp}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showFeedback("Excel unavailable – exported as CSV instead.");
+  }
+}
+
+// --- Event wiring ---
+function entryIdFrom(el) {
+  const row = el.closest(".entry");
+  return row ? Number(row.id.replace("entry-", "")) : null;
+}
+entriesEl.addEventListener("click", ev => {
+  const id = entryIdFrom(ev.target);
+  if (id == null) return;
+  if (ev.target.classList.contains("start-btn")) startEntry(id);
+  else if (ev.target.classList.contains("pause-btn")) pauseEntry(id);
+  else if (ev.target.classList.contains("stop-btn")) stopEntry(id);
+});
+entriesEl.addEventListener("input", ev => {
+  if (!ev.target.classList.contains("comment-input")) return;
+  const e = entries.find(x => x.id === entryIdFrom(ev.target));
+  if (e && !e.isStopped) e.comment = ev.target.value;
+});
+entriesEl.addEventListener("change", ev => {
+  if (ev.target.classList.contains("comment-input")) save();
+});
+// Long-press delete with visual progress
+function holdStart(ev) {
+  const btn = ev.target.closest(".delete-btn");
+  if (!btn) return;
+  const id = entryIdFrom(btn);
+  if (id == null) return;
+  clearTimeout(holdTimeout);
+  holdTarget = btn;
+  btn.classList.add("hold");
+  holdTimeout = setTimeout(() => {
+    if (holdTarget === btn) deleteEntry(id);
+    holdTarget = null;
+  }, LONG_PRESS_MS);
+}
+function holdEnd() {
+  clearTimeout(holdTimeout);
+  holdTimeout = null;
+  if (holdTarget) { holdTarget.classList.remove("hold"); holdTarget = null; }
+}
+entriesEl.addEventListener("pointerdown", holdStart);
+entriesEl.addEventListener("pointerup", holdEnd);
+entriesEl.addEventListener("pointerleave", holdEnd);
+entriesEl.addEventListener("pointercancel", holdEnd);
+
+$("newEntryBtn").addEventListener("click", addEntry);
+$("exportBtn").addEventListener("click", exportEntries);
+$("clearEntriesBtn").addEventListener("click", clearAllEntries);
+formatBtn.addEventListener("click", () => {
+  isDecimal = !isDecimal;
+  localStorage.setItem(LS_DECIMAL, isDecimal ? "1" : "0");
+  updateFormatBtn(); tick();
+});
+function updateFormatBtn() {
+  formatBtn.textContent = isDecimal ? "Show HH:MM:SS" : "Show Decimal";
+}
+$("toggleCommentsBtn").addEventListener("click", () => {
+  const visible = commentsListEl.style.display === "block";
+  commentsListEl.style.display = visible ? "none" : "block";
+  clearCommentsBtn.style.display = visible ? "none" : "inline-block";
+  if (!visible) renderStoredComments();
+});
+clearCommentsBtn.addEventListener("click", () => {
+  if (!confirm("Are you sure you want to clear ALL stored comments?")) return;
+  comments = [];
+  saveComments(); renderSuggestions(); renderStoredComments();
+});
+commentsListEl.addEventListener("click", ev => {
+  const btn = ev.target.closest("button[data-i]");
+  if (!btn) return;
+  comments.splice(Number(btn.dataset.i), 1);
+  saveComments(); renderSuggestions(); renderStoredComments();
+});
+voiceBtn.addEventListener("pointerdown", () => {
+  if (!recognition) return;
+  try { if (!voiceBtn.classList.contains("active")) recognition.start(); }
+  catch (err) { if (err.name !== "InvalidStateError") showFeedback("Microphone start error.", true); }
+});
+["pointerup", "pointerleave", "pointercancel"].forEach(evt =>
+  voiceBtn.addEventListener(evt, () => {
+    if (recognition && voiceBtn.classList.contains("active")) recognition.stop();
+  }));
+languageSelect.addEventListener("change", () => {
+  if (recognition) { recognition.stop(); recognition.lang = languageSelect.value; }
+});
+
+// --- Init ---
+load();
+loadComments();
+updateFormatBtn();
+renderSuggestions();
+render();
+initVoice();
+setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>

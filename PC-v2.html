@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Picture Counter 2.0</title>
+<style>
+  :root {
+    --bg: #f4f5fb; --card: #ffffff; --text: #1f2333; --muted: #6b7186;
+    --accent: #4f46e5; --accent-soft: #eef0ff; --border: #e3e5f0;
+    --danger: #dc2626; --shadow: 0 6px 18px rgba(31,35,51,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14151d; --card: #1e2029; --text: #eceef6; --muted: #9aa0b4;
+      --accent: #818cf8; --accent-soft: #2a2c44; --border: #32354a;
+      --danger: #f87171; --shadow: 0 6px 18px rgba(0,0,0,.4);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; padding: 1.25rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text);
+  }
+  .appbar { max-width: 960px; margin: 0 auto .9rem; display: flex; align-items: center; gap: .6rem; font-size: .85rem; }
+  .appbar a { color: var(--muted); text-decoration: none; }
+  .appbar a:hover { color: var(--accent); }
+  .vtag { margin-left: auto; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: .2rem .6rem; font-size: .72rem; }
+  main { max-width: 960px; margin: 0 auto; display: grid; gap: 1rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem 1.25rem; box-shadow: var(--shadow); }
+  h1 { margin: 0 0 .75rem; font-size: 1.45rem; letter-spacing: -.02em; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: .6rem 1rem; align-items: center; }
+  .group { display: flex; align-items: center; gap: .45rem; }
+  label { font-size: .82rem; color: var(--muted); font-weight: 600; }
+  button, .filebtn {
+    font: inherit; font-size: .85rem; font-weight: 600; padding: .45rem .85rem;
+    border-radius: 10px; border: 1px solid var(--border); background: var(--bg);
+    color: var(--text); cursor: pointer;
+  }
+  button:hover { filter: brightness(.96); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+  input[type=file] { display: none; }
+  input[type=color] { width: 42px; height: 34px; padding: 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); cursor: pointer; }
+  input[type=range] { accent-color: var(--accent); }
+  input[type=number] {
+    width: 62px; font: inherit; font-size: .85rem; padding: .35rem .4rem; text-align: center;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text);
+  }
+  input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; }
+  .count {
+    font-weight: 800; font-size: 1.05rem; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px; padding: .3rem .85rem;
+  }
+  .canvas-container {
+    position: relative; width: 100%; min-height: 320px; height: 62vh;
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    background: repeating-conic-gradient(var(--bg) 0% 25%, var(--card) 0% 50%) 50% / 24px 24px;
+    display: flex; justify-content: center; align-items: center;
+  }
+  canvas { display: block; user-select: none; -webkit-user-select: none; touch-action: none; }
+  .overlay {
+    position: absolute; inset: 0; display: flex; justify-content: center; align-items: center;
+    color: var(--muted); font-size: 1.05rem; pointer-events: none; text-align: center; padding: 1rem;
+  }
+  .help { margin: .75rem 0 0; color: var(--muted); font-size: .8rem; }
+</style>
+</head>
+<body>
+<nav class="appbar">
+  <a href="index.html">&larr; Dimis Webtools</a>
+  <span class="vtag">2.0</span>
+  <a href="PC-index.html" onclick="localStorage.setItem('dwt-version','1')">Switch to 1.0</a>
+</nav>
+<main>
+  <div class="card">
+    <h1>Picture Counter</h1>
+    <div class="toolbar">
+      <label class="filebtn btn-primary" for="imageUpload">📁 Upload image</label>
+      <input type="file" id="imageUpload" accept="image/*">
+      <span class="count" id="countDisplay">0 markers</span>
+      <div class="group"><label for="numberColor">Color</label><input type="color" id="numberColor" value="#ff0000"></div>
+      <div class="group">
+        <label for="sizeSlider">Size</label>
+        <input type="range" id="sizeSlider" min="10" max="100" value="20" step="1">
+        <input type="number" id="sizeInput" min="10" max="100" value="20">
+      </div>
+      <div class="group">
+        <label>Zoom</label>
+        <button id="zoomOutBtn" aria-label="Zoom out">&minus;</button>
+        <button id="zoomInBtn" aria-label="Zoom in">+</button>
+        <button id="fitBtn" title="Fit image to view">Fit</button>
+      </div>
+      <div class="group">
+        <input type="checkbox" id="zoomLockCheckbox">
+        <label for="zoomLockCheckbox">Lock zoom/pan</label>
+      </div>
+      <button id="deleteLast">Undo last</button>
+      <button id="clearAll" class="btn-danger">Clear all</button>
+      <button id="saveImage">💾 Save image</button>
+    </div>
+  </div>
+
+  <div class="card" style="padding:.6rem">
+    <div class="canvas-container" id="canvasContainer">
+      <canvas id="imageCanvas"></canvas>
+      <div id="overlay-text" class="overlay">Upload an image to start counting.<br>Tap to add a marker · drag a marker to move it · drag empty space to pan · pinch or scroll to zoom.</div>
+    </div>
+    <p class="help">Markers are numbered automatically. “Undo last” removes the most recent marker.</p>
+  </div>
+</main>
+<script>
+(function () {
+"use strict";
+const imageUpload = document.getElementById("imageUpload");
+const canvas = document.getElementById("imageCanvas");
+const ctx = canvas.getContext("2d");
+const container = document.getElementById("canvasContainer");
+const overlayText = document.getElementById("overlay-text");
+const countDisplay = document.getElementById("countDisplay");
+const colorPicker = document.getElementById("numberColor");
+const sizeSlider = document.getElementById("sizeSlider");
+const sizeInput = document.getElementById("sizeInput");
+const zoomLockCheckbox = document.getElementById("zoomLockCheckbox");
+
+let uploadedImage = new Image();
+let markers = []; // { x, y, number, color, baseSize } — x/y in original image pixels
+let nextNumber = 1;
+let selectedColor = colorPicker.value;
+let selectedSize = parseInt(sizeSlider.value, 10);
+
+// --- Zoom & pan ---
+let zoomLevel = 1.0, viewOffsetX = 0, viewOffsetY = 0;
+const ZOOM_FACTOR = 1.1, maxZoom = 20.0;
+let minZoom = 0.1;
+
+// --- Interaction state machine ---
+const STATE = { IDLE: 0, PENDING: 1, DRAGGING_MARKER: 2, PANNING: 3, PINCHING: 4 };
+let currentState = STATE.IDLE;
+let isZoomLocked = false;
+let heldMarkerIndex = -1;
+let startCanvasX = 0, startCanvasY = 0;
+let dragOffsetX = 0, dragOffsetY = 0;
+let initialViewOffsetX = 0, initialViewOffsetY = 0;
+let activePointers = {};
+let lastPinchDistance = 0;
+const DRAG_THRESHOLD = 8;
+
+function updateCount() {
+  countDisplay.textContent = `${markers.length} marker${markers.length === 1 ? "" : "s"}`;
+}
+
+function handleImageUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    overlayText.innerHTML = "That file is not an image – please choose an image file.";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    uploadedImage = new Image();
+    uploadedImage.onload = () => {
+      sizeCanvasToContainer();
+      fitImage();
+      markers = [];
+      nextNumber = 1;
+      resetInteractionState();
+      updateCount();
+      overlayText.style.display = "none";
+      canvas.style.display = "block";
+      drawCanvas();
+    };
+    uploadedImage.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function sizeCanvasToContainer() {
+  canvas.width = container.clientWidth;
+  canvas.height = container.clientHeight;
+}
+
+function fitImage() {
+  minZoom = Math.min(canvas.width / uploadedImage.width, canvas.height / uploadedImage.height);
+  zoomLevel = minZoom;
+  viewOffsetX = (uploadedImage.width - canvas.width / zoomLevel) / 2;
+  viewOffsetY = (uploadedImage.height - canvas.height / zoomLevel) / 2;
+  clampViewOffset();
+}
+
+// Keep the canvas working when the window/container is resized (v1 broke here)
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (!uploadedImage.src) return;
+    const centerImg = canvasToImageCoordinates(canvas.width / 2, canvas.height / 2);
+    sizeCanvasToContainer();
+    minZoom = Math.min(canvas.width / uploadedImage.width, canvas.height / uploadedImage.height);
+    zoomLevel = Math.max(minZoom, Math.min(maxZoom, zoomLevel));
+    viewOffsetX = centerImg.x - canvas.width / (2 * zoomLevel);
+    viewOffsetY = centerImg.y - canvas.height / (2 * zoomLevel);
+    clampViewOffset();
+    drawCanvas();
+  }, 100);
+});
+
+function drawCanvas() {
+  if (!uploadedImage.src) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    overlayText.style.display = "flex";
+    canvas.style.display = "none";
+    return;
+  }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const sourceX = viewOffsetX, sourceY = viewOffsetY;
+  const sourceWidth = canvas.width / zoomLevel, sourceHeight = canvas.height / zoomLevel;
+  const cx = Math.max(0, sourceX), cy = Math.max(0, sourceY);
+  const cw = Math.min(uploadedImage.width - cx, sourceWidth + (sourceX - cx));
+  const ch = Math.min(uploadedImage.height - cy, sourceHeight + (sourceY - cy));
+  ctx.drawImage(uploadedImage, cx, cy, cw, ch,
+    (cx - sourceX) * zoomLevel, (cy - sourceY) * zoomLevel, cw * zoomLevel, ch * zoomLevel);
+
+  markers.forEach(m => drawMarker(m, zoomLevel, viewOffsetX, viewOffsetY));
+}
+
+// Badge-style marker: filled circle + white outline + white number (readable on any background)
+function drawMarker(m, zoom, offX, offY) {
+  const x = (m.x - offX) * zoom;
+  const y = (m.y - offY) * zoom;
+  const size = m.baseSize * zoom;
+  const r = size * 0.72;
+  if (x + r < 0 || x - r > canvas.width || y + r < 0 || y - r > canvas.height) return;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = m.color;
+  ctx.fill();
+  ctx.lineWidth = Math.max(1, size * 0.08);
+  ctx.strokeStyle = "#ffffff";
+  ctx.stroke();
+  ctx.font = `700 ${size * (String(m.number).length > 2 ? 0.62 : 0.8)}px -apple-system, Arial, sans-serif`;
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(m.number, x, y);
+}
+
+function getCanvasCoordinates(event) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (event.clientX - rect.left) * (canvas.width / rect.width),
+    y: (event.clientY - rect.top) * (canvas.height / rect.height)
+  };
+}
+function canvasToImageCoordinates(canvasX, canvasY) {
+  return { x: viewOffsetX + canvasX / zoomLevel, y: viewOffsetY + canvasY / zoomLevel };
+}
+function findMarkerAtCanvasCoords(canvasX, canvasY) {
+  const { x, y } = canvasToImageCoordinates(canvasX, canvasY);
+  for (let i = markers.length - 1; i >= 0; i--) {
+    const m = markers[i];
+    const hitRadius = Math.max(m.baseSize * 0.8, 12 / zoomLevel);
+    if (Math.hypot(x - m.x, y - m.y) < hitRadius) return i;
+  }
+  return -1;
+}
+
+function handlePointerDown(event) {
+  if (!uploadedImage.src) return;
+  const c = getCanvasCoordinates(event);
+  activePointers[event.pointerId] = { x: event.clientX, y: event.clientY, canvasX: c.x, canvasY: c.y, type: event.pointerType };
+  const pointerCount = Object.keys(activePointers).length;
+  if (pointerCount === 1) { startCanvasX = c.x; startCanvasY = c.y; }
+
+  if (pointerCount === 2 && Object.values(activePointers).every(p => p.type === "touch") && !isZoomLocked) {
+    resetInteractionState(false);
+    currentState = STATE.PINCHING;
+    lastPinchDistance = getPinchDistance();
+    event.preventDefault();
+    return;
+  }
+  if (event.button === 0 || event.pointerType === "touch") event.preventDefault();
+
+  if (currentState === STATE.IDLE) {
+    heldMarkerIndex = findMarkerAtCanvasCoords(startCanvasX, startCanvasY);
+    currentState = STATE.PENDING;
+    if (heldMarkerIndex !== -1) {
+      const m = markers[heldMarkerIndex];
+      dragOffsetX = startCanvasX - (m.x - viewOffsetX) * zoomLevel;
+      dragOffsetY = startCanvasY - (m.y - viewOffsetY) * zoomLevel;
+    } else {
+      initialViewOffsetX = viewOffsetX;
+      initialViewOffsetY = viewOffsetY;
+    }
+  }
+}
+
+function handlePointerMove(event) {
+  if (!uploadedImage.src || currentState === STATE.IDLE) return;
+  const p = activePointers[event.pointerId];
+  if (!p) return;
+  const c = getCanvasCoordinates(event);
+  p.x = event.clientX; p.y = event.clientY; p.canvasX = c.x; p.canvasY = c.y;
+
+  if (currentState === STATE.PINCHING && Object.keys(activePointers).length === 2) {
+    const dist = getPinchDistance();
+    if (lastPinchDistance && dist) {
+      const mid = getPinchMidpoint();
+      adjustZoom(dist / lastPinchDistance, mid.canvasX, mid.canvasY);
+    }
+    lastPinchDistance = dist;
+    event.preventDefault();
+    return;
+  }
+  if (event.button === 0 || event.pointerType === "touch") event.preventDefault();
+
+  const moveDistance = Math.hypot(c.x - startCanvasX, c.y - startCanvasY);
+  if (currentState === STATE.PENDING && moveDistance > DRAG_THRESHOLD) {
+    if (heldMarkerIndex !== -1) currentState = STATE.DRAGGING_MARKER;
+    else if (!isZoomLocked) currentState = STATE.PANNING;
+  }
+
+  if (currentState === STATE.DRAGGING_MARKER && heldMarkerIndex !== -1) {
+    markers[heldMarkerIndex].x = viewOffsetX + (c.x - dragOffsetX) / zoomLevel;
+    markers[heldMarkerIndex].y = viewOffsetY + (c.y - dragOffsetY) / zoomLevel;
+    drawCanvas();
+  } else if (currentState === STATE.PANNING) {
+    viewOffsetX = initialViewOffsetX - (c.x - startCanvasX) / zoomLevel;
+    viewOffsetY = initialViewOffsetY - (c.y - startCanvasY) / zoomLevel;
+    clampViewOffset();
+    drawCanvas();
+  }
+}
+
+function handlePointerUp(event) {
+  if (!uploadedImage.src) { resetInteractionState(); return; }
+  delete activePointers[event.pointerId];
+  const pointerCount = Object.keys(activePointers).length;
+
+  if (currentState === STATE.PINCHING && pointerCount < 2) {
+    resetInteractionState();
+    return;
+  }
+  if (pointerCount === 0) {
+    if (currentState === STATE.PENDING && heldMarkerIndex === -1) {
+      const c = getCanvasCoordinates(event);
+      addMarkerAtCanvasCoords(c.x, c.y);
+    }
+    resetInteractionState();
+  }
+}
+
+function resetInteractionState(resetPointers = true) {
+  currentState = STATE.IDLE;
+  heldMarkerIndex = -1;
+  if (resetPointers) { activePointers = {}; lastPinchDistance = 0; }
+}
+
+function addMarkerAtCanvasCoords(canvasX, canvasY) {
+  const { x, y } = canvasToImageCoordinates(canvasX, canvasY);
+  markers.push({ x, y, number: nextNumber++, color: selectedColor, baseSize: selectedSize });
+  updateCount();
+  drawCanvas();
+}
+function deleteLastMarker() {
+  if (!markers.length) return;
+  resetInteractionState();
+  markers.pop();
+  if (nextNumber > 1) nextNumber--;
+  updateCount();
+  drawCanvas();
+}
+function clearAllMarkers() {
+  if (!markers.length || !confirm("Remove all markers?")) return;
+  resetInteractionState();
+  markers = [];
+  nextNumber = 1;
+  updateCount();
+  drawCanvas();
+}
+
+function saveImage() {
+  if (!uploadedImage.src) return;
+  // Render at full image resolution on an offscreen canvas (view stays untouched)
+  const out = document.createElement("canvas");
+  out.width = uploadedImage.width;
+  out.height = uploadedImage.height;
+  const octx = out.getContext("2d");
+  octx.drawImage(uploadedImage, 0, 0);
+  markers.forEach(m => {
+    const r = m.baseSize * 0.72;
+    octx.beginPath();
+    octx.arc(m.x, m.y, r, 0, Math.PI * 2);
+    octx.fillStyle = m.color;
+    octx.fill();
+    octx.lineWidth = Math.max(1, m.baseSize * 0.08);
+    octx.strokeStyle = "#ffffff";
+    octx.stroke();
+    octx.font = `700 ${m.baseSize * (String(m.number).length > 2 ? 0.62 : 0.8)}px Arial, sans-serif`;
+    octx.fillStyle = "#ffffff";
+    octx.textAlign = "center";
+    octx.textBaseline = "middle";
+    octx.fillText(m.number, m.x, m.y);
+  });
+  const link = document.createElement("a");
+  const d = new Date();
+  link.download = `counted_${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}_${markers.length}-markers.png`;
+  link.href = out.toDataURL("image/png");
+  link.click();
+}
+
+function adjustZoom(factor, centerX, centerY) {
+  if (!uploadedImage.src) return;
+  const isInteractionZoom = centerX !== undefined || centerY !== undefined;
+  if (isZoomLocked && isInteractionZoom) return;
+  const oldZoom = zoomLevel;
+  const newZoom = Math.max(minZoom, Math.min(maxZoom, zoomLevel * factor));
+  if (newZoom === oldZoom) return;
+  if (centerX === undefined) centerX = canvas.width / 2;
+  if (centerY === undefined) centerY = canvas.height / 2;
+  const imgX = viewOffsetX + centerX / oldZoom;
+  const imgY = viewOffsetY + centerY / oldZoom;
+  zoomLevel = newZoom;
+  viewOffsetX = imgX - centerX / zoomLevel;
+  viewOffsetY = imgY - centerY / zoomLevel;
+  clampViewOffset();
+  drawCanvas();
+}
+function handleWheelZoom(event) {
+  if (isZoomLocked || !uploadedImage.src) return;
+  event.preventDefault();
+  const c = getCanvasCoordinates(event);
+  adjustZoom(event.deltaY < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR, c.x, c.y);
+}
+function clampViewOffset() {
+  const vw = canvas.width / zoomLevel, vh = canvas.height / zoomLevel;
+  viewOffsetX = vw >= uploadedImage.width
+    ? (uploadedImage.width - vw) / 2
+    : Math.max(0, Math.min(uploadedImage.width - vw, viewOffsetX));
+  viewOffsetY = vh >= uploadedImage.height
+    ? (uploadedImage.height - vh) / 2
+    : Math.max(0, Math.min(uploadedImage.height - vh, viewOffsetY));
+}
+function getPinchDistance() {
+  const ps = Object.values(activePointers);
+  return ps.length < 2 ? 0 : Math.hypot(ps[1].x - ps[0].x, ps[1].y - ps[0].y);
+}
+function getPinchMidpoint() {
+  const ps = Object.values(activePointers);
+  return { canvasX: (ps[0].canvasX + ps[1].canvasX) / 2, canvasY: (ps[0].canvasY + ps[1].canvasY) / 2 };
+}
+
+function syncSize(size) {
+  selectedSize = Math.max(10, Math.min(100, size));
+  sizeInput.value = selectedSize;
+  sizeSlider.value = selectedSize;
+}
+
+// --- Wiring ---
+imageUpload.addEventListener("change", handleImageUpload);
+canvas.addEventListener("pointerdown", handlePointerDown);
+window.addEventListener("pointermove", handlePointerMove);
+window.addEventListener("pointerup", handlePointerUp);
+window.addEventListener("pointercancel", handlePointerUp);
+canvas.addEventListener("wheel", handleWheelZoom, { passive: false });
+canvas.addEventListener("contextmenu", e => e.preventDefault());
+document.getElementById("zoomInBtn").addEventListener("click", () => adjustZoom(ZOOM_FACTOR));
+document.getElementById("zoomOutBtn").addEventListener("click", () => adjustZoom(1 / ZOOM_FACTOR));
+document.getElementById("fitBtn").addEventListener("click", () => { if (uploadedImage.src) { fitImage(); drawCanvas(); } });
+document.getElementById("deleteLast").addEventListener("click", deleteLastMarker);
+document.getElementById("clearAll").addEventListener("click", clearAllMarkers);
+document.getElementById("saveImage").addEventListener("click", saveImage);
+colorPicker.addEventListener("input", e => { selectedColor = e.target.value; });
+sizeSlider.addEventListener("input", e => syncSize(parseInt(e.target.value, 10)));
+sizeInput.addEventListener("change", e => {
+  const v = parseInt(e.target.value, 10);
+  syncSize(isNaN(v) ? selectedSize : v);
+});
+zoomLockCheckbox.addEventListener("change", e => {
+  isZoomLocked = e.target.checked;
+  resetInteractionState();
+  canvas.style.cursor = isZoomLocked ? "crosshair" : "grab";
+});
+
+// --- Init ---
+canvas.style.display = "none";
+canvas.style.cursor = "grab";
+updateCount();
+})();
+</script>
+</body>
+</html>
