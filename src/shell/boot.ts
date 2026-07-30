@@ -9,6 +9,7 @@
 import { el, onReady, requireElement } from '../core/dom.js';
 import { isPersistent } from '../core/storage.js';
 import { applyDocumentLanguage, t } from '../i18n/index.js';
+import { applyAccent } from './accent.js';
 import { mountAppBar } from './appbar.js';
 import { applyTheme } from './theme.js';
 
@@ -24,6 +25,7 @@ export function boot(options: BootOptions): void {
      so this still lands before the user sees anything, and waiting would risk a
      flash of the wrong theme. */
   applyTheme();
+  applyAccent();
   applyDocumentLanguage();
 
   onReady(() => {

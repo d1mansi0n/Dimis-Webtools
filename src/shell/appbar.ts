@@ -1,6 +1,6 @@
 /**
- * The bar at the top of every page: a way back to the hub, a theme control and
- * a language switcher.
+ * The bar at the top of every page: a way back to the hub, a theme control, an
+ * accent colour control and a language switcher.
  *
  * Rendered from script rather than repeated in six HTML files, so the markup and
  * its labels stay in one place and are translated by construction.
@@ -8,6 +8,7 @@
 
 import { el, replaceChildren, requireElement } from '../core/dom.js';
 import { LOCALES, locale, setLocale, t, type Locale } from '../i18n/index.js';
+import { openAccentPicker } from './accent-picker.js';
 import { cycleTheme, theme, type ThemeChoice } from './theme.js';
 
 const THEME_ICON: Readonly<Record<ThemeChoice, string>> = {
@@ -51,8 +52,33 @@ export function mountAppBar(options: AppBarOptions): void {
       el('a', { class: 'appbar__home', attrs: { href: '../' }, text: `← ${t('nav.home')}` }),
     el('span', { class: 'appbar__spacer' }),
     themeButton,
+    accentButton(),
     languageSwitcher(),
   );
+}
+
+/**
+ * The button that opens the accent picker.
+ *
+ * Its icon is a dot filled with `--accent` itself, so the control shows the
+ * setting it changes and needs no glyph that would have to mean "colour" in
+ * every language.
+ */
+function accentButton(): HTMLElement {
+  const button = el(
+    'button',
+    {
+      class: ['btn', 'btn--ghost', 'btn--icon'],
+      attrs: { type: 'button', title: t('accent.open'), 'aria-label': t('accent.open') },
+    },
+    el('span', { class: 'accent-dot', attrs: { 'aria-hidden': 'true' } }),
+  );
+
+  button.addEventListener('click', () => {
+    openAccentPicker();
+  });
+
+  return button;
 }
 
 /**

@@ -20,6 +20,18 @@ export const en = {
   'lang.de': 'Deutsch',
   'lang.en': 'English',
 
+  'accent.open': 'Change the accent colour',
+  'accent.title': 'Accent colour',
+  'accent.hint':
+    'Every button, link and highlight takes this colour. It is adjusted for the light and dark theme so text stays legible in both.',
+  'accent.custom': 'Your own colour',
+  'accent.preset.ocean': 'Ocean',
+  'accent.preset.teal': 'Teal',
+  'accent.preset.forest': 'Forest',
+  'accent.preset.amber': 'Amber',
+  'accent.preset.rose': 'Rose',
+  'accent.preset.violet': 'Violet',
+
   'common.close': 'Close',
   'common.delete': 'Delete',
   'common.load': 'Load',

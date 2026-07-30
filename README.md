@@ -12,7 +12,8 @@ tracking, no servers, and no third-party code at run time.
 | [Picture Counter](counter/) | Mark and count objects in a photo, then save the annotated image                      |
 
 Every tool is available in English and German, follows your system's light or
-dark theme, and works offline once loaded.
+dark theme, takes whatever accent colour you pick for it, and works offline once
+loaded.
 
 ## Design principles
 
@@ -73,7 +74,8 @@ index.html            the hub
 <tool>/index.html     one entry point per tool, giving clean URLs like /sudoku/
 src/
   config/site.ts      the tool catalogue — build inputs, hub cards and tests all read this
-  core/               framework-free primitives: Result, schema, storage, DOM, formatting
+  config/accent.ts    the accent colours the picker offers
+  core/               framework-free primitives: Result, schema, storage, DOM, formatting, colour
   i18n/               en.ts defines the message keys; de.ts must satisfy them to compile
   lib/xlsx/           the dependency-free spreadsheet writer
   shell/              app bar, theme, dialogs, per-page bootstrap

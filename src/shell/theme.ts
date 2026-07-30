@@ -15,6 +15,8 @@ import { literals } from '../core/schema.js';
 export const THEME_CHOICES = ['system', 'light', 'dark'] as const;
 export type ThemeChoice = (typeof THEME_CHOICES)[number];
 
+const DARK_QUERY = '(prefers-color-scheme: dark)';
+
 const store = defineStore<ThemeChoice>({
   key: 'theme',
   decoder: literals(...THEME_CHOICES),
@@ -56,6 +58,55 @@ export function setTheme(next: ThemeChoice): void {
   choice = next;
   void store.write(next);
   applyTheme();
+  announce();
+}
+
+/**
+ * The theme actually in force, with `system` resolved against the device.
+ *
+ * CSS never needs this — `prefers-color-scheme` answers it in the stylesheet —
+ * but the accent palette is computed in script, and "which of the two token sets
+ * am I deriving for" is a question the media query cannot answer from there.
+ */
+export function effectiveTheme(): Exclude<ThemeChoice, 'system'> {
+  if (choice !== 'system') return choice;
+  return darkQuery()?.matches === true ? 'dark' : 'light';
+}
+
+const listeners: (() => void)[] = [];
+
+/**
+ * Subscribe to changes in the *effective* theme.
+ *
+ * Both sources of change are covered: an explicit switch through `setTheme`, and
+ * the device flipping to night mode while `system` is selected. The second one
+ * used to need no handling at all, because the media query in `tokens.css` did
+ * the work; anything derived in script has to be told.
+ */
+export function onThemeChange(listener: () => void): void {
+  listeners.push(listener);
+  watchSystemTheme();
+}
+
+function announce(): void {
+  for (const listener of listeners) listener();
+}
+
+let watching = false;
+
+function watchSystemTheme(): void {
+  if (watching) return;
+  const query = darkQuery();
+  /* `addEventListener` on a MediaQueryList is absent in jsdom and in Safari
+     before 14, and neither is a reason to fail: the palette is merely applied
+     once and left alone until the next explicit change. */
+  if (query === undefined || typeof query.addEventListener !== 'function') return;
+  watching = true;
+  query.addEventListener('change', announce);
+}
+
+function darkQuery(): MediaQueryList | undefined {
+  return typeof matchMedia === 'function' ? matchMedia(DARK_QUERY) : undefined;
 }
 
 /** Advance to the next choice, wrapping around. */

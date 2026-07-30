@@ -1,7 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
+import { ACCENT_PRESETS, DEFAULT_ACCENT } from '../src/config/accent.js';
 import { TOOLS } from '../src/config/site.js';
+import { derivePalette } from '../src/core/color.js';
 
 /** Smoke tests: each tool boots, renders and does the one thing it exists for. */
+
+const seedOf = (id: string): string => {
+  const preset = ACCENT_PRESETS.find((candidate) => candidate.id === id);
+  if (preset === undefined) throw new Error(`There is no accent preset "${id}".`);
+  return preset.seed;
+};
 
 test.describe('hub', () => {
   test('lists every tool and links to it', async ({ page }) => {
@@ -34,6 +42,47 @@ test.describe('hub', () => {
     const afterFirst = await page.locator('html').getAttribute('data-theme');
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-theme', afterFirst ?? '');
+  });
+
+  test('changes the accent colour and remembers it', async ({ page }) => {
+    const root = page.locator('html');
+
+    await page.goto('');
+    await expect(root).toHaveCSS('--accent', derivePalette(DEFAULT_ACCENT, 'light').accent);
+
+    await page.getByRole('button', { name: 'Change the accent colour' }).click();
+    await page.getByRole('button', { name: 'Amber' }).click();
+
+    /* Asserting the exact derived colour, rather than merely that something
+       changed, is what ties the palette the unit tests check to the one the page
+       actually paints. */
+    const amber = derivePalette(seedOf('amber'), 'light').accent;
+    await expect(root).toHaveCSS('--accent', amber);
+    await expect(page.getByRole('button', { name: 'Amber' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.reload();
+    await expect(root).toHaveCSS('--accent', amber);
+  });
+
+  test('re-derives the accent when the device switches to dark', async ({ page }) => {
+    const root = page.locator('html');
+    const rose = seedOf('rose');
+
+    await page.goto('');
+    await page.getByRole('button', { name: 'Change the accent colour' }).click();
+    await page.getByRole('button', { name: 'Rose' }).click();
+    await page.getByRole('button', { name: 'Close' }).click();
+    await expect(root).toHaveCSS('--accent', derivePalette(rose, 'light').accent);
+
+    /* The stylesheet cannot do this part on its own. Its dark block only knows
+       the default accent, so a chosen one has to be re-derived in script when
+       the device flips — with the theme left on `system`, nothing else fires. */
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await expect(root).toHaveCSS('--accent', derivePalette(rose, 'dark').accent);
   });
 });
 

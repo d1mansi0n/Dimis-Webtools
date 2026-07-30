@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+### The accent colour is yours to pick
+
+- **A colour control sits beside the theme button** on every page: six presets —
+  ocean, teal, forest, amber, rose and violet — plus the operating system's own
+  colour picker for anything else. The choice applies as you make it, with the
+  page visible around the dialog, and is remembered per device. The default is
+  now a blue rather than the old indigo.
+- **Only the seed colour is stored.** The six accent tokens — the hover shade,
+  the soft tint, the control fill, the halo behind the page and the text drawn on
+  top of the accent — are derived from it per theme in
+  [`core/color.ts`](src/core/color.ts), so one setting themes both the light and
+  the dark palette and neither has to be tuned by hand.
+- **The derivation checks its own work.** It runs in OKLCH, keeps the hue, caps
+  the chroma and then walks the lightness until the accent clears 4.5:1 against
+  the surface it sits on _and_ against its own soft tint. A pale yellow picked in
+  the light theme comes back dark enough to read; the same yellow in the dark
+  theme comes back light enough. Tests assert this for a spread of seeds,
+  including black, white and pure yellow, in both themes.
+- **`tokens.css` still declares the default accent**, so the first frame is
+  painted before any script runs, and a build-side test fails if what the
+  stylesheet says stops matching what the derivation produces.
+
 ### Own items on the shopping list
 
 - **Anything can be put on the list by hand**, into whichever aisle it will be

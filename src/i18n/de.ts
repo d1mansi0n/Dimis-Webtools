@@ -16,6 +16,18 @@ export const de: Messages = {
   'lang.de': 'Deutsch',
   'lang.en': 'English',
 
+  'accent.open': 'Akzentfarbe ändern',
+  'accent.title': 'Akzentfarbe',
+  'accent.hint':
+    'Jeder Knopf, jeder Link und jede Hervorhebung nimmt diese Farbe an. Sie wird für den hellen und den dunklen Modus angepasst, damit Text in beiden gut lesbar bleibt.',
+  'accent.custom': 'Eigene Farbe',
+  'accent.preset.ocean': 'Ozean',
+  'accent.preset.teal': 'Petrol',
+  'accent.preset.forest': 'Wald',
+  'accent.preset.amber': 'Bernstein',
+  'accent.preset.rose': 'Rosé',
+  'accent.preset.violet': 'Violett',
+
   'common.close': 'Schließen',
   'common.delete': 'Löschen',
   'common.load': 'Laden',

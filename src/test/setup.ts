@@ -7,6 +7,10 @@ import { resetStorageForTesting } from '../core/storage.js';
  * store for the whole file and the fallback path could never be exercised.
  */
 beforeEach(() => {
+  /* Suites that ask for the node environment — the ones asserting about files on
+     disk — have neither storage nor a document to reset. */
+  if (typeof localStorage === 'undefined') return;
+
   localStorage.clear();
   resetStorageForTesting();
   document.body.replaceChildren();
