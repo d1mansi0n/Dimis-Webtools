@@ -1,0 +1,54 @@
+.tool-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.tool-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  text-decoration: none;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow);
+  transition:
+    transform var(--transition),
+    border-color var(--transition);
+}
+
+.tool-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.tool-card__icon {
+  flex: 0 0 2.875rem;
+  height: 2.875rem;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+  font-size: 1.4rem;
+}
+
+.tool-card__body {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.tool-card__name {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.tool-card__desc {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}

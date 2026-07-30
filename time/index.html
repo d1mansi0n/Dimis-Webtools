@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Time Tracking · Dimis Webtools</title>
+    <meta
+      name="description"
+      content="Track time with start, pause and stop, add comments by voice, and export everything to a spreadsheet."
+    />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script type="module" src="/src/tools/time/main.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main"></a>
+    <header class="appbar"></header>
+    <main id="main" class="page">
+      <section class="card stack">
+        <h1 data-time="title"></h1>
+        <div class="cluster">
+          <button class="btn btn--primary" type="button" data-time="new"></button>
+          <button class="btn" type="button" data-time="format"></button>
+          <button class="btn" type="button" data-time="export"></button>
+          <button class="btn btn--danger" type="button" data-time="clear"></button>
+          <span class="time-voice">
+            <button class="btn" type="button" data-time="voice"></button>
+            <select data-time="voiceLang">
+              <option value="en-US">English</option>
+              <option value="de-DE">Deutsch</option>
+            </select>
+          </span>
+        </div>
+        <p class="msg" data-time="feedback" role="status" aria-live="polite"></p>
+      </section>
+
+      <p class="card empty" data-time="empty"></p>
+      <div class="time-entries" data-time="entries"></div>
+
+      <section class="card cluster">
+        <span class="stat__label" data-time="totalLabel"></span>
+        <span class="stat__value numeric" data-time="total">00:00:00</span>
+      </section>
+
+      <section class="card stack">
+        <div class="cluster">
+          <button class="btn" type="button" data-time="toggleComments"></button>
+          <button class="btn btn--danger" type="button" data-time="clearComments" hidden></button>
+        </div>
+        <div data-time="commentsList" hidden></div>
+      </section>
+    </main>
+
+    <datalist id="comment-suggestions"></datalist>
+  </body>
+</html>

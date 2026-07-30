@@ -1,0 +1,155 @@
+body {
+  --page-width: 48rem;
+}
+
+.time-voice {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-left: auto;
+}
+
+.time-voice .btn[aria-pressed='true'] {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.time-entries {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.time-entry {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-3) var(--space-4);
+  align-items: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow);
+}
+
+.time-entry[data-running] {
+  border-color: var(--ok);
+}
+
+.time-entry__controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.time-entry__controls .btn {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+  min-width: 5rem;
+}
+
+.time-entry__body {
+  min-width: 0;
+}
+
+.time-entry__date {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.time-entry__elapsed {
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.time-entry[data-running] .time-entry__elapsed {
+  color: var(--ok);
+}
+
+.time-entry__sessions {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.time-entry__sessions [data-live] {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+.time-entry__comment {
+  width: 100%;
+  margin-top: var(--space-2);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.6rem;
+}
+
+/*
+ * Hold-to-delete. The filling bar is the only feedback that the hold is being
+ * registered, so it is deliberately not decorative — but it is animation, and
+ * `base.css` disables it under `prefers-reduced-motion`, where the press simply
+ * completes after the same delay.
+ */
+.time-entry__delete {
+  position: relative;
+  overflow: hidden;
+  color: var(--danger);
+  border-color: transparent;
+  background: var(--danger-soft);
+}
+
+.time-entry__delete[data-holding]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--danger);
+  opacity: 0.35;
+  transform-origin: left;
+  animation: time-hold-fill 1s linear forwards;
+}
+
+@keyframes time-hold-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.time-comment {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.4rem 0.55rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+}
+
+.time-comment:nth-child(odd) {
+  background: var(--surface-sunken);
+}
+
+.time-comment .btn {
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+  color: var(--danger);
+  min-height: auto;
+}
+
+@media (max-width: 36rem) {
+  .time-entry {
+    grid-template-columns: 1fr;
+  }
+
+  .time-entry__controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .time-voice {
+    margin-left: 0;
+  }
+}

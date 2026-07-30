@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+# The redirect stubs at the old 1.0/2.0 file names carry their own noindex tag.

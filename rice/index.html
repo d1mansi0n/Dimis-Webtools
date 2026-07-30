@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rice Cup Converter · Dimis Webtools</title>
+    <meta
+      name="description"
+      content="Convert cups of rice into cups of water, with presets for sushi, white, basmati and brown rice."
+    />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script type="module" src="/src/tools/rice/main.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main"></a>
+    <header class="appbar"></header>
+    <main id="main" class="page">
+      <section class="card stack">
+        <h1 data-rice="title"></h1>
+        <p class="lead" data-rice="lead"></p>
+
+        <div>
+          <label for="rice-cups" data-rice="cupsLabel"></label>
+          <div class="stepper">
+            <button class="btn stepper__button" type="button" data-rice="minus">&minus;</button>
+            <input
+              class="input input--numeric"
+              id="rice-cups"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              max="100"
+              step="0.5"
+              autocomplete="off"
+            />
+            <button class="btn stepper__button" type="button" data-rice="plus">+</button>
+          </div>
+        </div>
+
+        <div class="rice-result">
+          <output class="rice-result__value numeric" id="rice-water" for="rice-cups">0.00</output>
+          <p class="stat__label" data-rice="resultLabel"></p>
+        </div>
+        <p class="note" data-rice="total"></p>
+      </section>
+
+      <section class="card">
+        <details>
+          <summary data-rice="settings"></summary>
+          <div class="stack rice-settings">
+            <div>
+              <p class="rice-presets__label" data-rice="presetsLabel"></p>
+              <div class="cluster" data-rice="presets"></div>
+            </div>
+            <div>
+              <label for="rice-ratio" data-rice="customLabel"></label>
+              <input
+                class="input"
+                id="rice-ratio"
+                type="number"
+                inputmode="decimal"
+                min="0.1"
+                max="10"
+                step="0.1"
+                autocomplete="off"
+              />
+              <p class="msg" id="rice-ratio-msg" role="status"></p>
+            </div>
+          </div>
+        </details>
+      </section>
+    </main>
+  </body>
+</html>

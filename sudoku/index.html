@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sudoku · Dimis Webtools</title>
+    <meta
+      name="description"
+      content="Play Sudoku with a timer, pencil notes, saved games and best times. Puzzles are generated on your own device."
+    />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script type="module" src="/src/tools/sudoku/main.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main"></a>
+    <header class="appbar"></header>
+    <main id="main" class="page">
+      <section class="card stack">
+        <h1 data-sudoku="title"></h1>
+
+        <div class="cluster sudoku-status">
+          <span class="cluster">
+            <label for="sudoku-difficulty" data-sudoku="difficultyLabel"></label>
+            <select id="sudoku-difficulty"></select>
+          </span>
+          <span class="cluster sudoku-timer">
+            <span class="stat__value numeric" data-sudoku="timer">00:00</span>
+            <button class="btn btn--icon" type="button" data-sudoku="pause"></button>
+          </span>
+        </div>
+
+        <div class="sudoku-grid-wrapper" data-sudoku="wrapper">
+          <div class="sudoku-grid" data-sudoku="grid" role="grid"></div>
+          <p class="sudoku-paused" data-sudoku="pausedOverlay"></p>
+        </div>
+
+        <div class="cluster">
+          <button class="btn btn--primary" type="button" data-sudoku="new"></button>
+          <button class="btn" type="button" data-sudoku="save"></button>
+          <button class="btn" type="button" data-sudoku="load"></button>
+          <button class="btn" type="button" data-sudoku="best"></button>
+          <button class="btn" type="button" data-sudoku="reset"></button>
+          <button class="btn" type="button" data-sudoku="undo"></button>
+          <button class="btn" type="button" data-sudoku="check"></button>
+          <button class="btn" type="button" data-sudoku="validation" aria-pressed="true"></button>
+        </div>
+
+        <p class="msg" data-sudoku="message" role="status" aria-live="polite"></p>
+        <p class="note sudoku-kb-hint" data-sudoku="kbHint"></p>
+      </section>
+
+      <section class="card">
+        <div class="sudoku-pad" data-sudoku="pad"></div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,246 @@
+body {
+  --page-width: 34rem;
+}
+
+.sudoku-status {
+  justify-content: space-between;
+}
+
+.sudoku-status label {
+  margin-bottom: 0;
+}
+
+.sudoku-timer {
+  gap: var(--space-2);
+}
+
+/* ------------------------------------------------------------------- grid */
+
+.sudoku-grid-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.sudoku-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  aspect-ratio: 1;
+  width: 100%;
+  border: 2px solid var(--text);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  /* The cell handlers manage selection; no browser gesture should intercept. */
+  touch-action: manipulation;
+}
+
+.sudoku-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  font: inherit;
+  font-size: clamp(1rem, 4.5vw, 1.6rem);
+  font-variant-numeric: tabular-nums;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  padding: 0;
+  /* Overlap neighbouring borders so the grid lines stay hairline-thin. */
+  margin: -1px 0 0 -1px;
+}
+
+/* The heavier lines that separate the nine boxes. */
+.sudoku-cell[data-box-right] {
+  border-right-color: var(--text);
+  border-right-width: 2px;
+}
+
+.sudoku-cell[data-box-bottom] {
+  border-bottom-color: var(--text);
+  border-bottom-width: 2px;
+}
+
+.sudoku-cell[data-given] {
+  font-weight: 700;
+  background: var(--surface-sunken);
+  cursor: default;
+}
+
+.sudoku-cell[data-selected] {
+  background: var(--accent-soft);
+}
+
+/*
+ * Peers of the selected cell — same row, column or box. Purely an aid, so it is
+ * a very light tint that never competes with the conflict colour.
+ */
+.sudoku-cell[data-peer] {
+  background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface));
+}
+
+.sudoku-cell[data-same-digit] {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.sudoku-cell[data-conflict] .sudoku-cell__value {
+  color: var(--danger);
+}
+
+.sudoku-cell:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+  z-index: 1;
+}
+
+.sudoku-cell__value {
+  grid-area: 1 / 1;
+  pointer-events: none;
+}
+
+.sudoku-cell__notes {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.sudoku-cell__note {
+  font-size: clamp(0.5rem, 1.7vw, 0.8rem);
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  visibility: hidden;
+}
+
+.sudoku-cell__note[data-on] {
+  visibility: visible;
+}
+
+/* ------------------------------------------------------------------ pause */
+
+.sudoku-paused {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: var(--radius-sm);
+}
+
+.sudoku-grid-wrapper[data-paused] .sudoku-paused {
+  display: grid;
+}
+
+.sudoku-grid-wrapper[data-paused] .sudoku-grid {
+  /* Hide the puzzle while paused, so pausing is not a way to study it for free. */
+  filter: blur(8px);
+}
+
+/* -------------------------------------------------------------- number pad */
+
+.sudoku-pad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-2);
+}
+
+.sudoku-pad .btn {
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: var(--space-3) 0;
+  min-height: 3rem;
+}
+
+.sudoku-pad .btn[data-action] {
+  font-size: 0.85rem;
+}
+
+@media (min-width: 30rem) {
+  .sudoku-pad {
+    grid-template-columns: repeat(9, 1fr);
+  }
+
+  .sudoku-pad .btn[data-action] {
+    grid-column: span 3;
+  }
+}
+
+.sudoku-kb-hint {
+  text-align: center;
+}
+
+@media (pointer: coarse) {
+  .sudoku-kb-hint {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------- win */
+
+.sudoku-grid-wrapper[data-won] .sudoku-grid {
+  animation: sudoku-win-glow 2s ease-in-out infinite;
+}
+
+@keyframes sudoku-win-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--ok);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--ok) 35%, transparent);
+  }
+}
+
+.sudoku-best-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.sudoku-best-list li,
+.sudoku-save-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+}
+
+.sudoku-save-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+  text-align: left;
+}
+
+.sudoku-save-info {
+  display: grid;
+  font-size: 0.85rem;
+}
+
+.sudoku-dialog-section {
+  margin-bottom: var(--space-4);
+  text-align: left;
+}
+
+.sudoku-dialog-section h3 {
+  font-size: 0.95rem;
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--border);
+}

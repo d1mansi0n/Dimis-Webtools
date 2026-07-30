@@ -1,0 +1,10 @@
+/*
+ * The single stylesheet every page pulls in.
+ *
+ * Vite inlines these imports at build time, so a page still costs exactly one
+ * CSS request — which is what lets `style-src 'self'` hold with no inline
+ * `<style>` blocks anywhere.
+ */
+@import './tokens.css';
+@import './base.css';
+@import './components.css';

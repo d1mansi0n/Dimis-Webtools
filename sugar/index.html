@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sugar Calculator · Dimis Webtools</title>
+    <meta
+      name="description"
+      content="Turn grams of sugar into sugar cubes, a share of the WHO daily maximum, and comparable everyday foods."
+    />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script type="module" src="/src/tools/sugar/main.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main"></a>
+    <header class="appbar"></header>
+    <main id="main" class="page">
+      <section class="card stack">
+        <h1 data-sugar="title"></h1>
+        <p class="lead" data-sugar="lead"></p>
+        <div>
+          <label for="sugar-grams" data-sugar="inputLabel"></label>
+          <div class="sugar-input-row">
+            <input
+              class="input"
+              id="sugar-grams"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="any"
+              autocomplete="off"
+            />
+            <span class="sugar-unit" aria-hidden="true">g</span>
+          </div>
+          <p class="msg msg--warn" id="sugar-hint" role="status"></p>
+        </div>
+      </section>
+
+      <section class="card" id="sugar-result" hidden>
+        <div class="sugar-stats">
+          <div class="stat">
+            <p class="stat__value numeric" data-sugar="cubes">–</p>
+            <p class="stat__label" data-sugar="cubesLabel"></p>
+          </div>
+          <div class="stat">
+            <p class="stat__value numeric" data-sugar="percent">–</p>
+            <p class="stat__label" data-sugar="percentLabel"></p>
+          </div>
+        </div>
+        <p class="sugar-cubes" data-sugar="cubeStrip" aria-hidden="true"></p>
+      </section>
+
+      <section class="card stack" id="sugar-compare" hidden>
+        <div>
+          <h2 data-sugar="compareTitle"></h2>
+          <p class="note" data-sugar="compareNote"></p>
+        </div>
+        <ul class="sugar-compare" data-sugar="compareList"></ul>
+      </section>
+    </main>
+  </body>
+</html>

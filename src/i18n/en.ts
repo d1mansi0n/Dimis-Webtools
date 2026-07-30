@@ -1,0 +1,195 @@
+/**
+ * English messages — and, by construction, the schema every other locale must
+ * satisfy.
+ *
+ * `TranslationKey` is derived from the keys of this object, so adding a string
+ * here immediately makes `de.ts` fail to compile until it is translated. That is
+ * the whole mechanism: there is no runtime "missing translation" path to test,
+ * because a missing translation is a build error.
+ *
+ * Placeholders are `{name}` and are substituted by `t()`. Keys ending in
+ * `.one`/`.other` form a plural group selected by `Intl.PluralRules`.
+ */
+export const en = {
+  /* -------------------------------------------------------------- shell */
+  'app.name': 'Dimis Webtools',
+  'app.tagline': 'Small tools for everyday things. Everything stays on your device.',
+  'nav.home': 'All tools',
+  'nav.language': 'Language',
+  'nav.skip': 'Skip to content',
+  'lang.de': 'Deutsch',
+  'lang.en': 'English',
+
+  'common.close': 'Close',
+  'common.delete': 'Delete',
+  'common.load': 'Load',
+  'common.yes': 'Yes',
+  'common.no': 'No',
+
+  'storage.ephemeral':
+    'Your browser is blocking local storage, so nothing will be kept after you close this tab.',
+  'storage.full': 'Storage is full — the change could not be saved.',
+  'storage.failed': 'The change could not be saved.',
+
+  /* ---------------------------------------------------------------- hub */
+  'hub.privacy': 'No accounts, no tracking, no servers. Every tool runs entirely in your browser.',
+  'hub.source': 'Source code',
+
+  'tool.sudoku.name': 'Sudoku',
+  'tool.sudoku.desc': 'Puzzles with a timer, notes, best times and saved games',
+  'tool.rice.name': 'Rice Cup Converter',
+  'tool.rice.desc': 'Work out the rice-to-water ratio in seconds',
+  'tool.time.name': 'Time Tracking',
+  'tool.time.desc': 'Track time by voice or button and export to Excel',
+  'tool.sugar.name': 'Sugar Calculator',
+  'tool.sugar.desc': 'Translate grams of sugar into cubes and everyday foods',
+  'tool.counter.name': 'Picture Counter',
+  'tool.counter.desc': 'Mark and count objects in a photo',
+
+  /* --------------------------------------------------------------- rice */
+  'rice.lead': 'Enter the amount of rice — the water you need updates as you type.',
+  'rice.cups.label': 'Cups of rice',
+  'rice.decrease': 'Decrease by half a cup',
+  'rice.increase': 'Increase by half a cup',
+  'rice.result.label': 'cups of water · ratio 1 : {ratio}',
+  'rice.total': 'Total in the pot: {total} cups',
+  'rice.settings': 'Settings — water ratio',
+  'rice.presets': 'Presets',
+  'rice.preset.sushi': 'Sushi rice 1 : 1',
+  'rice.preset.white': 'White rice 1 : 1.2',
+  'rice.preset.basmati': 'Basmati 1 : 1.5',
+  'rice.preset.brown': 'Brown rice 1 : 2',
+  'rice.custom.label': 'Custom ratio (cups of water per cup of rice)',
+  'rice.saved': 'Ratio saved.',
+  'rice.invalid': 'Enter a number between {min} and {max}.',
+
+  /* -------------------------------------------------------------- sugar */
+  'sugar.lead': 'Enter an amount of sugar and see straight away what it means.',
+  'sugar.input.label': 'Amount of sugar in grams',
+  'sugar.invalid': 'Enter a valid amount of at least 0.',
+  'sugar.cubes.label': 'Sugar cubes (3 g each)',
+  'sugar.who.label': 'of the WHO daily maximum (50 g)',
+  'sugar.compare.title': 'Comparable foods',
+  'sugar.compare.note': 'Sugar per 100 g — the closest match is highlighted.',
+  'sugar.cubes.overflow': '… ({total} in total)',
+
+  /* --------------------------------------------------------------- time */
+  'time.newEntry': '+ New entry',
+  'time.showDecimal': 'Show decimal',
+  'time.showClock': 'Show HH:MM:SS',
+  'time.export': 'Export to Excel',
+  'time.clearAll': 'Clear all entries',
+  'time.voice.push': '🎤 Push to talk',
+  'time.voice.hold': 'Hold to speak',
+  'time.voice.language': 'Voice language',
+  'time.voice.unsupported': 'Your browser does not support speech recognition.',
+  'time.empty': 'No entries yet. Choose “New entry” to start.',
+  'time.total': 'Total elapsed',
+  'time.start': 'Start',
+  'time.pause': 'Pause',
+  'time.stop': 'Stop',
+  'time.delete': 'Delete',
+  'time.delete.hint': 'Hold for one second to delete',
+  'time.finished': 'finished',
+  'time.running': 'running',
+  'time.comment.placeholder': 'Add a comment',
+  'time.comments.toggle': 'Show or hide saved comments',
+  'time.comments.clear': 'Clear all comments',
+  'time.comments.empty': 'No saved comments.',
+  'time.confirm.clearEntries': 'Delete all time entries? This cannot be undone.',
+  'time.confirm.clearComments': 'Delete all saved comments? This cannot be undone.',
+  'time.export.empty': 'There are no entries to export.',
+  'time.export.done': 'Exported {count} entries.',
+  'time.voice.alreadyRunning': 'Another timer is already running.',
+  'time.voice.added': 'New entry added.',
+  'time.voice.started': 'Timer started.',
+  'time.voice.paused': 'Timer paused.',
+  'time.voice.stopped': 'Timer stopped.',
+  'time.voice.comment': 'Comment “{text}” added.',
+  'time.voice.noComment': 'No comment text recognised.',
+  'time.voice.noTarget': 'There is no open entry for that command.',
+  'time.voice.noSpeech': 'No speech detected.',
+  'time.voice.noMic': 'Microphone unavailable.',
+  'time.voice.denied': 'Microphone permission denied.',
+  'time.voice.error': 'Speech recognition error: {error}',
+
+  'time.export.column.date': 'Date',
+  'time.export.column.start': 'Start',
+  'time.export.column.end': 'End',
+  'time.export.column.elapsed': 'Elapsed (HH:MM:SS)',
+  'time.export.column.decimal': 'Decimal hours',
+  'time.export.column.comment': 'Comment',
+  'time.export.column.sessions': 'Sessions',
+  'time.export.total': 'Total',
+  'time.export.sheet': 'Time entries',
+
+  /* ------------------------------------------------------------ counter */
+  'counter.upload': '📁 Choose image',
+  'counter.markers.one': '{count} marker',
+  'counter.markers.other': '{count} markers',
+  'counter.color': 'Colour',
+  'counter.size': 'Size',
+  'counter.zoom': 'Zoom',
+  'counter.zoomIn': 'Zoom in',
+  'counter.zoomOut': 'Zoom out',
+  'counter.fit': 'Fit',
+  'counter.fit.title': 'Fit the image to the view',
+  'counter.lock': 'Lock zoom and pan',
+  'counter.undo': 'Undo last',
+  'counter.clear': 'Clear all',
+  'counter.save': '💾 Save image',
+  'counter.empty': 'Choose an image to start counting.',
+  'counter.empty.hint':
+    'Tap to add a marker · drag a marker to move it · drag the background to pan · pinch or scroll to zoom.',
+  'counter.help': 'Markers are numbered automatically. “Undo last” removes the most recent one.',
+  'counter.notAnImage': 'That file is not an image. Choose an image file.',
+  'counter.tooLarge': 'That image is larger than {limit} MB. Choose a smaller file.',
+  'counter.failed': 'That image could not be opened.',
+  'counter.confirmClear': 'Remove all markers?',
+
+  /* ------------------------------------------------------------- sudoku */
+  'sudoku.difficulty': 'Difficulty',
+  'sudoku.difficulty.easy': 'Easy',
+  'sudoku.difficulty.medium': 'Medium',
+  'sudoku.difficulty.hard': 'Hard',
+  'sudoku.difficulty.expert': 'Expert',
+  'sudoku.pause': 'Pause',
+  'sudoku.resume': 'Resume',
+  'sudoku.paused': 'Paused',
+  'sudoku.newGame': 'New game',
+  'sudoku.save': 'Save',
+  'sudoku.load': 'Load',
+  'sudoku.bestTimes': 'Best times',
+  'sudoku.reset': 'Reset',
+  'sudoku.undo': 'Undo',
+  'sudoku.check': 'Check',
+  'sudoku.instantValidation': 'Highlight mistakes as I play',
+  'sudoku.theme': 'Switch light or dark mode',
+  'sudoku.generating': 'Generating a new puzzle…',
+  'sudoku.generateFailed': 'The puzzle could not be generated. Please try again.',
+  'sudoku.saved': 'Game saved.',
+  'sudoku.loaded': 'Game loaded.',
+  'sudoku.nothingToSave': 'There is no game to save.',
+  'sudoku.saveNotFound': 'That saved game no longer exists.',
+  'sudoku.correct': 'Correct so far.',
+  'sudoku.errors': 'There are mistakes on the board.',
+  'sudoku.win.title': 'Congratulations!',
+  'sudoku.win.solvedIn': 'You solved the puzzle in {time}.',
+  'sudoku.win.question': 'Would you like to save this time?',
+  'sudoku.win.message': 'Solved!',
+  'sudoku.savedGames.title': 'Saved games',
+  'sudoku.savedGames.empty': 'No saved games yet.',
+  'sudoku.savedGames.full': 'Only the {limit} most recent saves are kept.',
+  'sudoku.bestTimes.empty': 'No times recorded yet.',
+  'sudoku.play': 'Play',
+  'sudoku.cell': 'Row {row}, column {col}',
+  'sudoku.erase': 'Erase',
+  'sudoku.kbHint':
+    'Keyboard: arrows move · 1–9 enter a number · Shift+1–9 toggles a note · 0 or Delete clears · Esc closes menus',
+} as const;
+
+/** Every message key the application may ask for. */
+export type TranslationKey = keyof typeof en;
+
+/** The shape a locale must provide in full. */
+export type Messages = Readonly<Record<TranslationKey, string>>;

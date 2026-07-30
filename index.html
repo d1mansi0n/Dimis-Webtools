@@ -1,103 +1,27 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dimis Webtools</title>
-<style>
-  :root {
-    --bg: #f4f5fb; --card: #ffffff; --text: #1f2333; --muted: #6b7186;
-    --accent: #4f46e5; --accent-soft: #eef0ff; --border: #e3e5f0;
-    --shadow: 0 6px 18px rgba(31,35,51,.08);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #14151d; --card: #1e2029; --text: #eceef6; --muted: #9aa0b4;
-      --accent: #818cf8; --accent-soft: #2a2c44; --border: #32354a;
-      --shadow: 0 6px 18px rgba(0,0,0,.4);
-    }
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; min-height: 100vh; padding: 2.5rem 1.25rem;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background: var(--bg); color: var(--text);
-  }
-  main { max-width: 640px; margin: 0 auto; }
-  header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .5rem; }
-  h1 { margin: 0; font-size: 1.7rem; letter-spacing: -.02em; }
-  .subtitle { color: var(--muted); margin: .25rem 0 1.75rem; font-size: .95rem; }
-
-  /* Version toggle */
-  .toggle { display: inline-flex; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 3px; box-shadow: var(--shadow); }
-  .toggle button {
-    border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 600;
-    padding: .4rem 1.1rem; border-radius: 999px; cursor: pointer; transition: background .2s, color .2s;
-  }
-  .toggle button.active { background: var(--accent); color: #fff; }
-
-  .grid { display: grid; gap: .9rem; }
-  a.card {
-    display: flex; align-items: center; gap: 1rem; text-decoration: none;
-    background: var(--card); color: var(--text); border: 1px solid var(--border);
-    border-radius: 14px; padding: 1rem 1.15rem; box-shadow: var(--shadow);
-    transition: transform .15s, border-color .15s;
-  }
-  a.card:hover { transform: translateY(-2px); border-color: var(--accent); }
-  .icon {
-    flex: 0 0 46px; height: 46px; display: grid; place-items: center;
-    background: var(--accent-soft); border-radius: 12px; font-size: 1.4rem;
-  }
-  .card h2 { margin: 0 0 .15rem; font-size: 1.05rem; }
-  .card p { margin: 0; color: var(--muted); font-size: .85rem; }
-  .badge {
-    margin-left: auto; flex: 0 0 auto; font-size: .72rem; font-weight: 700;
-    color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: .25rem .6rem;
-  }
-  footer { margin-top: 2rem; text-align: center; color: var(--muted); font-size: .8rem; }
-</style>
-</head>
-<body>
-<main>
-  <header>
-    <h1>Dimis Webtools</h1>
-    <div class="toggle" role="group" aria-label="Version wählen">
-      <button type="button" data-v="1">1.0</button>
-      <button type="button" data-v="2">2.0</button>
-    </div>
-  </header>
-  <p class="subtitle">Kleine Werkzeuge für den Alltag. Mit dem Schalter wechselst du zwischen der klassischen Version 1.0 und der überarbeiteten Version 2.0.</p>
-
-  <div class="grid" id="tools"></div>
-
-  <footer>Version <span id="vLabel"></span> aktiv &middot; Auswahl wird gespeichert</footer>
-</main>
-<script>
-  const TOOLS = [
-    { icon: "🔢", name: "Sudoku",              desc: "Rätsel mit Timer, Notizen, Bestzeiten und Spielständen", v1: "SDK-index.html", v2: "SDK-v2.html" },
-    { icon: "🍚", name: "Rice Cup Converter",  desc: "Reis-zu-Wasser-Verhältnis in Sekunden umrechnen",        v1: "rcc-index.html", v2: "rcc-v2.html" },
-    { icon: "⏱️", name: "Time Tracking Tool",  desc: "Zeiterfassung mit Sprachsteuerung und Excel-Export",     v1: "ZE-index.html",  v2: "ZE-v2.html"  },
-    { icon: "🍬", name: "Zuckerrechner",       desc: "Zuckermengen in Würfel und Lebensmittel übersetzen",     v1: "ZR-index.html",  v2: "ZR-v2.html"  },
-    { icon: "📸", name: "Picture Counter",     desc: "Objekte auf Fotos markieren und zählen",                 v1: "PC-index.html",  v2: "PC-v2.html"  }
-  ];
-  const KEY = "dwt-version";
-  const grid = document.getElementById("tools");
-  const vLabel = document.getElementById("vLabel");
-  const buttons = document.querySelectorAll(".toggle button");
-
-  function render() {
-    const v = localStorage.getItem(KEY) === "1" ? "1" : "2";
-    buttons.forEach(b => b.classList.toggle("active", b.dataset.v === v));
-    vLabel.textContent = v + ".0";
-    grid.innerHTML = TOOLS.map(t => `
-      <a class="card" href="${v === "1" ? t.v1 : t.v2}">
-        <span class="icon" aria-hidden="true">${t.icon}</span>
-        <span><h2>${t.name}</h2><p>${t.desc}</p></span>
-        <span class="badge">${v}.0</span>
-      </a>`).join("");
-  }
-  buttons.forEach(b => b.addEventListener("click", () => { localStorage.setItem(KEY, b.dataset.v); render(); }));
-  render();
-</script>
-</body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dimis Webtools</title>
+    <meta
+      name="description"
+      content="A small collection of offline browser tools: Sudoku, a rice-to-water converter, time tracking, a sugar calculator and a picture counter. Nothing leaves your device."
+    />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script type="module" src="/src/tools/hub/main.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main"></a>
+    <header class="appbar"></header>
+    <main id="main" class="page">
+      <div class="stack">
+        <h1 data-hub="title"></h1>
+        <p class="lead" data-hub="tagline"></p>
+      </div>
+      <ul class="tool-list" data-hub="tools"></ul>
+    </main>
+    <footer class="site-footer" data-hub="footer"></footer>
+  </body>
 </html>

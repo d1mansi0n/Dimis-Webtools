@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Picture Counter · Dimis Webtools</title>
+    <meta
+      name="description"
+      content="Mark and count objects in a photo, then save the annotated image. The picture never leaves your device."
+    />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script type="module" src="/src/tools/counter/main.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main"></a>
+    <header class="appbar"></header>
+    <main id="main" class="page">
+      <section class="card stack">
+        <h1 data-counter="title"></h1>
+        <div class="cluster">
+          <label
+            class="btn btn--primary counter-upload"
+            for="counter-file"
+            data-counter="upload"
+          ></label>
+          <input id="counter-file" type="file" accept="image/*" class="visually-hidden" />
+
+          <span class="badge" data-counter="count" role="status" aria-live="polite"></span>
+
+          <span class="cluster">
+            <label for="counter-color" data-counter="colorLabel"></label>
+            <input id="counter-color" type="color" value="#ff0000" />
+          </span>
+
+          <span class="cluster">
+            <label for="counter-size" data-counter="sizeLabel"></label>
+            <input id="counter-size" type="range" min="10" max="100" step="1" value="20" />
+            <input
+              id="counter-size-number"
+              class="input counter-size-number"
+              type="number"
+              min="10"
+              max="100"
+              value="20"
+              aria-hidden="true"
+              tabindex="-1"
+            />
+          </span>
+
+          <span class="cluster">
+            <span class="counter-group-label" data-counter="zoomLabel"></span>
+            <button class="btn btn--icon" type="button" data-counter="zoomOut">&minus;</button>
+            <button class="btn btn--icon" type="button" data-counter="zoomIn">+</button>
+            <button class="btn" type="button" data-counter="fit"></button>
+          </span>
+
+          <span class="cluster">
+            <input id="counter-lock" type="checkbox" />
+            <label for="counter-lock" data-counter="lockLabel"></label>
+          </span>
+
+          <button class="btn" type="button" data-counter="undo"></button>
+          <button class="btn btn--danger" type="button" data-counter="clear"></button>
+          <button class="btn" type="button" data-counter="save"></button>
+        </div>
+        <p class="msg msg--err" data-counter="error" role="status"></p>
+      </section>
+
+      <section class="card counter-stage-card">
+        <div class="counter-stage" data-counter="stage">
+          <canvas data-counter="canvas" hidden></canvas>
+          <p class="counter-overlay" data-counter="overlay"></p>
+        </div>
+        <p class="note" data-counter="help"></p>
+      </section>
+    </main>
+  </body>
+</html>

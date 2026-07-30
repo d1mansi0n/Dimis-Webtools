@@ -1,0 +1,66 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Allows a redeploy from the Actions tab without an empty commit.
+  workflow_dispatch:
+
+# Least privilege: read the repo, write only a Pages deployment, and prove the
+# artifact's provenance with an OIDC token.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time, and never cancel one midway — a half-applied deploy
+# would leave the site serving a mix of two builds.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # The same gates as CI. Nothing reaches the live site without passing them.
+      - name: Verify
+        run: |
+          npm run format:check
+          npm run lint
+          npm run typecheck
+          npm run test
+
+      - name: Build
+        # `BASE_PATH` has to match where Pages serves the site from. For a project
+        # site that is /<repo>/; set it to / if a custom domain is configured.
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
