@@ -1,0 +1,282 @@
+body {
+  --page-width: 38rem;
+}
+
+/* ------------------------------------------------------------- controls */
+
+.recipes-persons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+}
+
+.recipes-persons__label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.recipes-persons__count {
+  min-width: 2rem;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  align-self: center;
+}
+
+.stepper {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.stepper__button {
+  flex: 0 0 2.75rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.recipes-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.recipes-tab {
+  justify-content: center;
+}
+
+/*
+ * The two panels.
+ *
+ * `.stack` cannot be used here: it sets `display: grid`, and an author rule
+ * beats the user agent's `[hidden] { display: none }` at equal specificity — so
+ * the hidden panel stayed on screen and both lists rendered at once. The
+ * attribute selector below outranks the class and puts that right.
+ */
+.recipes-panel {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.recipes-panel[hidden] {
+  display: none;
+}
+
+/* -------------------------------------------------------------- recipes */
+
+.recipes-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.recipes-meal {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-top: var(--space-2);
+}
+
+.recipe {
+  padding: var(--space-3) var(--space-4);
+}
+
+.recipe__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.recipe__icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.recipe__name {
+  flex: 1 1 8rem;
+  font-size: 1rem;
+}
+
+.recipe__details {
+  margin-top: var(--space-3);
+}
+
+.recipe__details[open] summary {
+  margin-bottom: var(--space-3);
+}
+
+.recipe__body {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-3);
+}
+
+.recipe__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.recipe__ingredients,
+.recipe__steps {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.recipe__ingredients {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.recipe__ingredients li {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* The scaled amount is the thing that changes with the stepper, so it leads
+   the line and keeps a fixed column rather than drifting with the name. */
+.recipe__amount {
+  flex: 0 0 5.5rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.recipe__steps {
+  padding-left: 1.2rem;
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* ------------------------------------------------------- shopping list */
+
+.recipes-progress {
+  height: 0.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.recipes-progress__fill {
+  height: 100%;
+  width: var(--fill, 0%);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  transition: width var(--transition);
+}
+
+.recipes-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.recipes-legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.recipes-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.recipes-dot--fresh {
+  background: var(--warn);
+}
+
+.recipes-dot--stable {
+  background: var(--text-muted);
+}
+
+.recipes-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.recipes-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.recipes-item__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-1);
+  margin: 0;
+  font-weight: 400;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.recipes-item__label:hover {
+  background: var(--surface-sunken);
+}
+
+.recipes-item__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.recipes-item__name {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.recipes-item__detail {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Ticked lines stay readable — struck through and dimmed, never hidden, so the
+   list still reads as a record of what was bought. */
+.recipes-item.is-checked .recipes-item__name,
+.recipes-item.is-checked .recipes-item__detail {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.badge--fresh {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.badge--stable {
+  color: var(--text-muted);
+  background: var(--surface-sunken);
+}
+
+.recipes-actions {
+  justify-content: center;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+}

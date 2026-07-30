@@ -1,5 +1,34 @@
 # Changelog
 
+## Unreleased
+
+### Added: Recipes & Shopping List
+
+A sixth tool, built from a standalone HTML page of vegan recipes. Choose what you
+want to cook and the shopping list adds every ingredient up, grouped by aisle,
+with ticks that survive a reload.
+
+- **Amounts scale with the number of people, inside the recipe as well as on the
+  list.** The imported version scaled only the shopping list; the ingredient list
+  in an opened recipe was fixed at one portion and labelled as such, so cooking
+  for three meant doing the arithmetic by hand.
+- **Cooking amounts and shopping amounts round differently.** A recipe asks for
+  half an avocado and two thirds of a tin of chickpeas, because that is what it
+  uses; the shopping list asks for one avocado and one tin, because that is what
+  a shop sells. Ingredients are summed across recipes _before_ rounding, so two
+  recipes needing half an onion each buy one onion rather than two.
+- **Recipes can no longer be typed in.** They are curated in `data.ts` with their
+  ingredients in catalogue units, which is what lets them be added up and scaled
+  at all. The old free-text recipes could be neither, and ended up in a separate
+  section of the list that never responded to the person count.
+- **Fixed recipes that cooked with ingredients they never bought.** The avocado
+  toast squeezed a lemon and the bean salad was tossed with salad leaves, neither
+  of which was on any list; three more reached for soy sauce, curry powder and
+  dried herbs that were not even cupboard staples. A test now checks every
+  method, in both languages, against the ingredients the recipe actually shops
+  for, so the next recipe added cannot reintroduce the gap.
+- Both languages throughout, including every recipe name and method step.
+
 ## 3.0.0 — full rewrite
 
 Versions 1.0 and 2.0 were standalone HTML files with inline scripts and styles,

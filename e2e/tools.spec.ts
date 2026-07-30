@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { TOOLS } from '../src/config/site.js';
 
 /** Smoke tests: each tool boots, renders and does the one thing it exists for. */
@@ -451,5 +451,96 @@ test.describe('sudoku', () => {
     await page.getByRole('button', { name: 'Load', exact: true }).click();
     await expect(page.locator('dialog[open]')).toBeVisible();
     await expect(page.locator('.sudoku-save-list li')).toHaveCount(1);
+  });
+});
+
+test.describe('recipes and shopping list', () => {
+  /** Put one recipe on the list and switch to the shopping tab. */
+  const chooseFirstRecipe = async (page: Page): Promise<void> => {
+    await page.goto('recipes/');
+    await page.locator('.recipe').first().getByRole('button', { name: 'Add to list' }).click();
+    await page.getByRole('button', { name: 'Shopping list' }).click();
+  };
+
+  test('offers no way to type in a recipe', async ({ page }) => {
+    /* Recipes are curated in `data.ts`; the form the imported version had is
+       deliberately gone, and its absence is part of the tool's contract. */
+    await page.goto('recipes/');
+
+    await expect(page.locator('#recipes-panel-recipes textarea')).toHaveCount(0);
+    await expect(page.locator('#recipes-panel-recipes input[type="text"]')).toHaveCount(0);
+  });
+
+  test('shows one panel at a time', async ({ page }) => {
+    /* The regression test for a panel that would not hide: `.stack` sets
+       `display: grid`, and an author rule outranks the user agent's
+       `[hidden] { display: none }`, so both lists rendered on top of each other. */
+    await page.goto('recipes/');
+    await expect(page.locator('#recipes-panel-recipes')).toBeVisible();
+    await expect(page.locator('#recipes-panel-shopping')).toBeHidden();
+
+    await page.getByRole('button', { name: 'Shopping list' }).click();
+    await expect(page.locator('#recipes-panel-recipes')).toBeHidden();
+    await expect(page.locator('#recipes-panel-shopping')).toBeVisible();
+  });
+
+  test('scales the ingredients inside a recipe with the number of people', async ({ page }) => {
+    await page.goto('recipes/');
+
+    const porridge = page.locator('.recipe').first();
+    /* `<summary>` is not exposed as a button, so it is matched as an element. */
+    await porridge.locator('summary').click();
+
+    await expect(porridge.locator('.recipe__label').first()).toHaveText('Ingredients for 1 person');
+    await expect(porridge.locator('.recipe__amount').first()).toHaveText('60 g');
+
+    await page.getByRole('button', { name: 'One person more' }).click();
+    await page.getByRole('button', { name: 'One person more' }).click();
+
+    await expect(porridge.locator('.recipe__label').first()).toHaveText('Ingredients for 3 people');
+    await expect(porridge.locator('.recipe__amount').first()).toHaveText('180 g');
+  });
+
+  test('keeps a recipe open while the amounts change under it', async ({ page }) => {
+    await page.goto('recipes/');
+    const porridge = page.locator('.recipe').first();
+
+    await porridge.locator('summary').click();
+    await page.getByRole('button', { name: 'One person more' }).click();
+
+    await expect(porridge.locator('.recipe__ingredients')).toBeVisible();
+  });
+
+  test('builds a shopping list from the chosen recipes and scales it too', async ({ page }) => {
+    await chooseFirstRecipe(page);
+
+    const oats = page.locator('.recipes-item', { hasText: 'Rolled oats' });
+    await expect(oats.locator('.recipes-item__detail')).toHaveText('60 g');
+
+    await page.getByRole('button', { name: 'One person more' }).click();
+    await expect(oats.locator('.recipes-item__detail')).toHaveText('120 g');
+  });
+
+  test('ticks an item off and remembers it across a reload', async ({ page }) => {
+    await chooseFirstRecipe(page);
+
+    const oats = page.locator('.recipes-item', { hasText: 'Rolled oats' });
+    await oats.locator('input[type="checkbox"]').check();
+    await expect(oats).toHaveClass(/is-checked/);
+
+    await page.reload();
+    await page.getByRole('button', { name: 'Shopping list' }).click();
+    await expect(
+      page.locator('.recipes-item', { hasText: 'Rolled oats' }).locator('input'),
+    ).toBeChecked();
+  });
+
+  test('says the list is empty until something is chosen', async ({ page }) => {
+    await page.goto('recipes/');
+    await page.getByRole('button', { name: 'Shopping list' }).click();
+
+    await expect(page.locator('.empty')).toBeVisible();
+    /* The cupboard staples are needed whatever is cooked, so they stay. */
+    await expect(page.getByRole('heading', { name: 'Cupboard staples' })).toBeVisible();
   });
 });
