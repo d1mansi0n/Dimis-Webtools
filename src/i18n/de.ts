@@ -197,11 +197,29 @@ export const de: Messages = {
   'recipes.legend.fresh': 'frisch – kurz vorher kaufen',
   'recipes.legend.stable': 'hält sich – kann Vorrat sein',
   'recipes.count': '{done}/{total}',
+  'recipes.custom.title': 'Eigene Einträge',
+  'recipes.custom.hint':
+    'Alles, was du sonst noch brauchst. Es landet in der gewählten Kategorie und wird wie alles andere abgehakt – gehört aber dir und wird von Rezepten und Personenzahl nie angefasst.',
+  'recipes.custom.name': 'Was brauchst du?',
+  'recipes.custom.namePlaceholder': 'Kaffee',
+  'recipes.custom.note': 'Menge (optional)',
+  'recipes.custom.notePlaceholder': '2 Packungen',
+  'recipes.custom.category': 'Kategorie',
+  'recipes.custom.add': 'Zur Liste',
+  'recipes.custom.badge': 'eigenes',
+  'recipes.custom.remove': '{name} entfernen',
+  'recipes.custom.nameRequired': 'Bitte zuerst eintragen, was du brauchst.',
+  'recipes.custom.full':
+    'Die Liste fasst {limit} eigene Einträge. Entferne einen, um Platz zu schaffen.',
+  'recipes.reset.ingredients': 'Häkchen oben zurücksetzen',
+  'recipes.reset.staples': 'Häkchen der Grundausstattung zurücksetzen',
+  'recipes.confirmReset.ingredients':
+    'Alle Häkchen bei den Zutaten und eigenen Einträgen entfernen? Die Grundausstattung behält ihre.',
+  'recipes.confirmReset.staples':
+    'Alle Häkchen bei der Grundausstattung entfernen? Die Zutaten behalten ihre.',
   'recipes.progress': '{done} von {total} abgehakt',
   'recipes.empty':
     'Die Einkaufsliste ist noch leer. Geh zu „Rezepte“ und tipp an, was du kochen möchtest.',
-  'recipes.resetChecks': 'Häkchen zurücksetzen',
-  'recipes.confirmReset': 'Alle Häkchen entfernen?',
 
   /* ------------------------------------------------------------- sudoku */
   'sudoku.difficulty': 'Schwierigkeitsgrad',

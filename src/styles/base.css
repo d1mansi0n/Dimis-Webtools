@@ -17,8 +17,13 @@ body {
   font-family: var(--font-sans);
   font-size: 1rem;
   line-height: 1.5;
-  background: var(--bg);
   color: var(--text);
+
+  /* Flat colour plus one soft halo at the top of the page. The gradient is
+     painted once and scrolls with the content; see `--bg-glow`. */
+  background-color: var(--bg);
+  background-image: var(--bg-glow);
+  background-repeat: no-repeat;
 }
 
 h1,
@@ -30,7 +35,8 @@ h3 {
 }
 
 h1 {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
+  letter-spacing: -0.025em;
 }
 
 h2 {

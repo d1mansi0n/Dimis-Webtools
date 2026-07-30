@@ -2,6 +2,40 @@
 
 ## Unreleased
 
+### Own items on the shopping list
+
+- **Anything can be put on the list by hand**, into whichever aisle it will be
+  picked up in, and ticked off like everything else. Own items carry a coloured
+  spine, a lighter row tint and a "yours" badge, so they are distinguishable from
+  the recipe ingredients they sit beside without breaking the rhythm of the list —
+  and the badge says it in words for anyone who cannot see the colour. They are
+  never scaled by the person count, because "2 packs" is a note, not an amount.
+- **The two halves of the list clear separately.** Ingredients and own items have
+  their own button, the cupboard staples theirs. One button for both meant that
+  clearing a finished shopping trip also wiped which staples were still in.
+
+### A refreshed look
+
+- **New palette** in both themes: warmer neutrals, a brighter indigo accent, a
+  soft halo behind the page, and two-layer shadows that read as depth at far
+  lower opacity than one big blur. Every foreground/background pair still meets
+  WCAG AA for body text, checked numerically rather than by eye.
+- **Checkboxes are drawn rather than native.** `accent-color` only tints the
+  _checked_ fill, so a list of unticked boxes was a column of near-black squares
+  in the light theme. The box now uses the palette, and the tick is a real
+  element beside the input — Firefox will not render a pseudo-element inside an
+  `<input>`, and a tick that works in three browsers out of four is worse than a
+  native one.
+- **`--border-strong` now meets the 3:1** that WCAG asks of a control's outline;
+  the lighter `--border` stays for card edges, where nothing is identified by it.
+- **The dark theme's danger colour no longer carries white text.** It is a light
+  red, and white on it measured 2:1; there is now a `--text-on-danger` that flips
+  with the theme the way `--text-on-accent` does.
+- **The hub's app bar no longer repeats the site name** a few pixels above the
+  heading that already says it.
+- No JavaScript was added for any of this, and no assets: the whole refresh is
+  the token file plus the shared component sheet.
+
 ### Added: Recipes & Shopping List
 
 A sixth tool, built from a standalone HTML page of vegan recipes. Choose what you

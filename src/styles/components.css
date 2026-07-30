@@ -29,6 +29,14 @@
   box-shadow: var(--shadow);
 }
 
+@media (max-width: 30rem) {
+  /* Side padding costs more than it gives on a narrow screen: at 360px the old
+     value spent a twelfth of the width on whitespace beside every list row. */
+  .card {
+    padding: var(--space-4);
+  }
+}
+
 .lead {
   color: var(--text-muted);
   font-size: 0.95rem;
@@ -79,7 +87,8 @@
   transition:
     background-color var(--transition),
     border-color var(--transition),
-    color var(--transition);
+    color var(--transition),
+    transform var(--transition);
   /* Meets the 24x24 minimum target size of WCAG 2.2 Success Criterion 2.5.8. */
   min-height: 2.25rem;
 }
@@ -87,6 +96,13 @@
 .btn:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* A press that moves. One pixel is enough to feel, and `transform` is the one
+   property that animates without touching layout or paint. */
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .btn:disabled {
@@ -98,6 +114,7 @@
   background: var(--accent);
   border-color: var(--accent);
   color: var(--text-on-accent);
+  box-shadow: 0 1px 2px rgb(21 25 45 / 12%);
 }
 
 .btn--primary:hover:not(:disabled) {
@@ -167,6 +184,12 @@ select {
 select:focus {
   outline: var(--focus-ring);
   outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.75;
 }
 
 .input--numeric {
@@ -190,13 +213,81 @@ input[type='color'] {
 }
 
 input[type='range'] {
-  accent-color: var(--accent);
+  accent-color: var(--control);
 }
 
+/*
+ * Checkbox.
+ *
+ * The browser's own checkbox draws its unchecked state with a near-black
+ * outline that no property reaches: `accent-color` tints the *checked* fill and
+ * nothing else, so a list of unticked boxes read as a column of dark squares.
+ *
+ * The box is therefore drawn here, and the tick is a real element beside the
+ * input rather than a pseudo-element — Firefox does not render `::before` or
+ * `::after` inside an `<input>`, and a tick that exists in three browsers out of
+ * four is worse than a native one. It is a text glyph rather than an SVG or a
+ * `data:` background because the policy allows neither an inline SVG helper here
+ * nor a `data:` image, and a glyph needs no asset at all.
+ *
+ *   <span class="checkbox">
+ *     <input type="checkbox" />
+ *     <span class="checkbox__tick" aria-hidden="true">✓</span>
+ *   </span>
+ */
+.checkbox {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
+
+.checkbox input[type='checkbox'] {
+  appearance: none;
+  margin: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 1.5px solid var(--border-strong);
+  /* Not `--radius-sm`: 8px on a 21px box rounds it most of the way to a circle,
+     and a circle reads as a radio button. */
+  border-radius: 6px;
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    background-color var(--transition),
+    border-color var(--transition);
+}
+
+.checkbox input[type='checkbox']:hover:not(:disabled) {
+  border-color: var(--control);
+}
+
+.checkbox input[type='checkbox']:checked {
+  background: var(--control);
+  border-color: var(--control);
+}
+
+.checkbox__tick {
+  position: absolute;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-on-accent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition);
+}
+
+.checkbox input[type='checkbox']:checked + .checkbox__tick {
+  opacity: 1;
+}
+
+/* Anything not wrapped in `.checkbox` keeps the native control, tinted. */
 input[type='checkbox'] {
-  accent-color: var(--accent);
-  width: 1.1rem;
-  height: 1.1rem;
+  accent-color: var(--control);
+  width: 1.15rem;
+  height: 1.15rem;
+  cursor: pointer;
 }
 
 /* ------------------------------------------------------------- data display */
@@ -208,6 +299,7 @@ input[type='checkbox'] {
   background: var(--accent-soft);
   border-radius: var(--radius-pill);
   padding: 0.25rem 0.6rem;
+  white-space: nowrap;
 }
 
 .stat {
@@ -219,6 +311,7 @@ input[type='checkbox'] {
 .stat__value {
   font-size: 1.5rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }

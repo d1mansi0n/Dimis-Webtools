@@ -12,7 +12,7 @@ body {
 .time-voice .btn[aria-pressed='true'] {
   background: var(--danger);
   border-color: var(--danger);
-  color: #fff;
+  color: var(--text-on-danger);
 }
 
 .time-entries {

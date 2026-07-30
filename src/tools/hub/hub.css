@@ -25,6 +25,12 @@
 .tool-card:hover {
   transform: translateY(-2px);
   border-color: var(--accent);
+  box-shadow: var(--shadow-lg);
+}
+
+.tool-card:hover .tool-card__icon {
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .tool-card__icon {
@@ -35,6 +41,9 @@
   background: var(--accent-soft);
   border-radius: var(--radius);
   font-size: 1.4rem;
+  transition:
+    background-color var(--transition),
+    color var(--transition);
 }
 
 .tool-card__body {
@@ -46,6 +55,7 @@
 .tool-card__name {
   font-size: 1.05rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .tool-card__desc {
