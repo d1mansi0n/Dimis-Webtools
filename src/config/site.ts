@@ -14,7 +14,7 @@
  */
 
 /** Stable identifier for a tool. Used in URLs, translation keys and storage keys. */
-export type ToolId = 'sudoku' | 'rice' | 'time' | 'sugar' | 'counter';
+export type ToolId = 'sudoku' | 'rice' | 'time' | 'sugar' | 'counter' | 'recipes';
 
 export interface Tool {
   /** Stable id. Also the directory name and the URL segment. */
@@ -35,6 +35,8 @@ export const TOOLS: readonly Tool[] = [
   { id: 'time', icon: '⏱️', legacyPaths: ['ZE-index.html', 'ZE-v2.html'] },
   { id: 'sugar', icon: '🍬', legacyPaths: ['ZR-index.html', 'ZR-v2.html'] },
   { id: 'counter', icon: '📸', legacyPaths: ['PC-index.html', 'PC-v2.html'] },
+  /* Added after the rewrite, so there is no 1.0/2.0 file name to redirect from. */
+  { id: 'recipes', icon: '🥗', legacyPaths: [] },
 ] as const;
 
 /** Every page the site ships, hub first. Relative to the deployment base. */

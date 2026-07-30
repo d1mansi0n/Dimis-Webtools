@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recipes &amp; Shopping List · Dimis Webtools</title>
+    <meta
+      name="description"
+      content="A curated collection of vegan recipes with a shopping list that adds every ingredient up and scales with the number of people."
+    />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script type="module" src="/src/tools/recipes/main.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main"></a>
+    <header class="appbar"></header>
+    <main id="main" class="page">
+      <section class="card stack">
+        <h1 data-recipes="title"></h1>
+        <p class="lead" data-recipes="lead"></p>
+
+        <div class="recipes-persons">
+          <span class="recipes-persons__label" id="recipes-persons-label"></span>
+          <div class="stepper" role="group" aria-labelledby="recipes-persons-label">
+            <button class="btn stepper__button" type="button" data-recipes="personsMinus">
+              &minus;
+            </button>
+            <output class="recipes-persons__count numeric" data-recipes="personsCount">1</output>
+            <button class="btn stepper__button" type="button" data-recipes="personsPlus">+</button>
+          </div>
+        </div>
+
+        <!--
+          Two toggle buttons rather than an ARIA tablist: `aria-pressed` plus
+          `aria-controls` describes this accurately without owing the keyboard
+          behaviour — arrow-key roving focus — that `role="tab"` promises.
+        -->
+        <div class="recipes-tabs">
+          <button
+            class="btn recipes-tab"
+            type="button"
+            id="recipes-tab-recipes"
+            aria-controls="recipes-panel-recipes"
+            aria-pressed="true"
+          ></button>
+          <button
+            class="btn recipes-tab"
+            type="button"
+            id="recipes-tab-shopping"
+            aria-controls="recipes-panel-shopping"
+            aria-pressed="false"
+          ></button>
+        </div>
+
+        <p class="msg" data-recipes="feedback" role="status"></p>
+      </section>
+
+      <div class="recipes-panel" id="recipes-panel-recipes"></div>
+
+      <div class="recipes-panel" id="recipes-panel-shopping" hidden></div>
+    </main>
+  </body>
+</html>

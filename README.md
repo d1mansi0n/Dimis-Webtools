@@ -1,6 +1,6 @@
 # Dimis Webtools
 
-Five small browser tools that run entirely on your own device. No accounts, no
+Six small browser tools that run entirely on your own device. No accounts, no
 tracking, no servers, and no third-party code at run time.
 
 | Tool                        | What it does                                                                          |
