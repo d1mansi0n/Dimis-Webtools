@@ -142,5 +142,11 @@ tried. A denial-of-service flaw in a glob matcher that runs on a developer's
 machine, and never in a visitor's browser, is not worth breaking the build for.
 That judgement gets revisited whenever the tooling is updated.
 
-Dependabot watches both npm packages and GitHub Actions weekly; CodeQL runs the
-`security-extended` suite on every push and weekly.
+Dependabot raises **security** advisories against a dependency immediately and
+individually, so they are never delayed or buried. Routine version bumps are a
+separate matter: they arrive as one grouped pull request per ecosystem, monthly.
+Since no dependency here reaches a visitor's browser, a routine bump is a
+maintenance chore rather than a risk, and there is no benefit in it competing for
+attention with a real advisory.
+
+CodeQL runs the `security-extended` suite on every push and weekly.

@@ -1,31 +1,34 @@
 version: 2
 
+# Tuned for signal over volume.
+#
+# The first configuration here was weekly with per-family groups, and its opening
+# run produced ten pull requests in one morning — one per package, three of which
+# could not pass because Dependabot had split packages that pin each other.
+#
+# This site ships no runtime dependencies at all: everything below is build-time
+# tooling, so a routine version bump cannot reach anyone visiting the site. That
+# makes a monthly digest the right cadence, and a single pull request per
+# ecosystem the right shape. At most two arrive per month.
+#
+# Security updates are deliberately *not* covered by these groups. Dependabot
+# raises those separately and immediately, which is what should happen — an
+# advisory should not wait for the monthly digest or be buried in it.
+
 updates:
-  # Build-time dependencies. There are no runtime ones to update.
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
+      interval: monthly
+    # One grouped pull request, so it cannot exceed one either.
+    open-pull-requests-limit: 1
     groups:
-      # Families whose packages pin each other and must move together, majors
-      # included. Bumped singly they fail at `npm ci` on a peer conflict, so the
-      # pull request can never go green — the first run of this config produced
-      # exactly that for vitest, @vitest/coverage-v8 and @eslint/js.
-      #
-      # These are listed before the catch-all because a dependency joins the
-      # first group whose patterns match it.
-      vitest:
-        patterns: ['vitest', '@vitest/*']
-      eslint:
-        patterns: ['eslint', '@eslint/*', 'eslint-config-*', 'typescript-eslint']
-
-      # One pull request for the routine bumps, so review effort goes to the
-      # updates that actually change something.
-      dev-dependencies:
+      npm:
+        # Everything, majors included. Packages that pin each other — vitest and
+        # its coverage provider, eslint and its config packages — must move
+        # together or the install fails outright, and the only way to guarantee
+        # that is to move all of them at once.
         patterns: ['*']
-        update-types: ['minor', 'patch']
     commit-message:
       prefix: 'chore(deps)'
 
@@ -34,7 +37,10 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      actions:
+        patterns: ['*']
     commit-message:
       prefix: 'chore(actions)'
