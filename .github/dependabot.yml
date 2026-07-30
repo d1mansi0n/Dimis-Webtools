@@ -9,6 +9,18 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     groups:
+      # Families whose packages pin each other and must move together, majors
+      # included. Bumped singly they fail at `npm ci` on a peer conflict, so the
+      # pull request can never go green — the first run of this config produced
+      # exactly that for vitest, @vitest/coverage-v8 and @eslint/js.
+      #
+      # These are listed before the catch-all because a dependency joins the
+      # first group whose patterns match it.
+      vitest:
+        patterns: ['vitest', '@vitest/*']
+      eslint:
+        patterns: ['eslint', '@eslint/*', 'eslint-config-*', 'typescript-eslint']
+
       # One pull request for the routine bumps, so review effort goes to the
       # updates that actually change something.
       dev-dependencies:
