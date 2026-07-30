@@ -48,7 +48,14 @@ jobs:
           BASE_PATH: /${{ github.event.repository.name }}/
         run: npm run build
 
+      # `enablement: true` switches the repository's Pages source to "GitHub
+      # Actions" on the first run, using the `pages: write` permission granted
+      # above. Without it the deploy step fails while the repository is still set
+      # to "Deploy from a branch", and the source has to be changed by hand in
+      # Settings → Pages. Harmless once already set.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

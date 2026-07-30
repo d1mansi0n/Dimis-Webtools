@@ -33,15 +33,18 @@ Decisions taken with the owner, so they do not need relitigating:
 
 ## Before this goes live
 
-Two steps that need repository access, neither of which can be done from a clone:
+Merging `rewrite/v3-typescript` into `main` is all that is required. The archive
+tag is already pushed, and `deploy.yml` passes `enablement: true` to
+`actions/configure-pages`, so the first run switches the repository's Pages source
+from "Deploy from a branch" to "GitHub Actions" by itself.
 
-1. **Push the archive tag**: `git push origin v1.0-archive`. Without it the
-   `README` and `CHANGELOG` links to the old code point nowhere.
-2. **Switch GitHub Pages to "GitHub Actions"** as its source (Settings → Pages).
-   Until then `deploy.yml` will build successfully and publish nothing.
+If that ever needs doing by hand, it lives at
+`https://github.com/<owner>/<repo>/settings/pages` — the **repository's** settings.
+The similarly named page at `https://github.com/settings/pages` is the account-level
+one and only manages verified custom domains; it has no source setting.
 
-Then check the deployed site once by hand: the base path is `/Dimis-Webtools/`,
-and if a custom domain is ever added, `BASE_PATH` must be set to `/` in
+Afterwards, check the deployed site once by hand. The base path is
+`/Dimis-Webtools/`; if a custom domain is ever added, set `BASE_PATH` to `/` in
 `deploy.yml`.
 
 ## Open items, in the order I would take them
