@@ -239,7 +239,7 @@ test.describe('sudoku', () => {
     expect(givens).toBeLessThan(81);
   });
 
-  test('accepts a digit from the number pad', async ({ page }) => {
+  test('opens the radial picker on the tapped cell and enters a digit', async ({ page }) => {
     await page.goto('sudoku/');
     await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({
       timeout: 15_000,
@@ -247,9 +247,120 @@ test.describe('sudoku', () => {
 
     const empty = page.locator('.sudoku-cell:not([data-given])').first();
     await empty.click();
-    await page.locator('.sudoku-pad button', { hasText: /^5$/ }).click();
+
+    const radial = page.locator('[data-sudoku="radial"]');
+    await expect(radial).toBeVisible();
+    await expect(empty).toHaveAttribute('data-picking', '');
+
+    await radial.locator('.sudoku-radial__item', { hasText: /^5$/ }).click();
 
     await expect(empty.locator('.sudoku-cell__value')).toHaveText('5');
+    await expect(radial).toBeHidden();
+  });
+
+  test('the radial picker is anchored to where the cell was tapped', async ({ page }) => {
+    await page.goto('sudoku/');
+    await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({
+      timeout: 15_000,
+    });
+
+    /* The point of the design: the digits come to the finger. */
+    const cell = page.locator('.sudoku-cell:not([data-given])').nth(3);
+    const cellBox = await cell.boundingBox();
+    await cell.click();
+
+    const radialBox = await page.locator('[data-sudoku="radial"]').boundingBox();
+    expect(cellBox).not.toBeNull();
+    expect(radialBox).not.toBeNull();
+    if (cellBox === null || radialBox === null) return;
+
+    const cellCentre = { x: cellBox.x + cellBox.width / 2, y: cellBox.y + cellBox.height / 2 };
+    const radialCentre = {
+      x: radialBox.x + radialBox.width / 2,
+      y: radialBox.y + radialBox.height / 2,
+    };
+    /* Allowing for the clamp that keeps the ring inside the viewport. */
+    expect(Math.hypot(radialCentre.x - cellCentre.x, radialCentre.y - cellCentre.y)).toBeLessThan(
+      120,
+    );
+  });
+
+  test('holding a digit in the radial picker writes a note instead', async ({ page }) => {
+    await page.goto('sudoku/');
+    await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({
+      timeout: 15_000,
+    });
+
+    const empty = page.locator('.sudoku-cell:not([data-given])').first();
+    await empty.click();
+
+    const digit = page
+      .locator('[data-sudoku="radial"] .sudoku-radial__item')
+      .filter({ hasText: /^4$/ });
+    const box = await digit.boundingBox();
+    expect(box).not.toBeNull();
+    if (box === null) return;
+
+    /* Hold past the 400 ms threshold, then release. */
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await expect(digit).toHaveAttribute('data-holding', '', { timeout: 2000 });
+    await page.mouse.up();
+
+    /* A note, not an answer: the cell's value stays empty. */
+    await expect(empty.locator('.sudoku-cell__value')).toHaveText('');
+    await expect(empty.locator('.sudoku-cell__note[data-on]')).toHaveText('4');
+  });
+
+  test('the radial picker closes without changing anything', async ({ page }) => {
+    await page.goto('sudoku/');
+    await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({
+      timeout: 15_000,
+    });
+
+    const empty = page.locator('.sudoku-cell:not([data-given])').first();
+    const radial = page.locator('[data-sudoku="radial"]');
+
+    await empty.click();
+    await expect(radial).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(radial).toBeHidden();
+    await expect(empty.locator('.sudoku-cell__value')).toHaveText('');
+
+    await empty.click();
+    await expect(radial).toBeVisible();
+    /* A tap outside the ring dismisses it, via the overlay behind it. */
+    await page.locator('[data-sudoku="radialOverlay"]').click({ position: { x: 4, y: 4 } });
+    await expect(radial).toBeHidden();
+    await expect(empty.locator('.sudoku-cell__value')).toHaveText('');
+  });
+
+  test('does not offer the picker for a given', async ({ page }) => {
+    await page.goto('sudoku/');
+    const given = page.locator('.sudoku-cell[data-given]').first();
+    await expect(given).toBeVisible({ timeout: 15_000 });
+
+    await given.click();
+    await expect(page.locator('[data-sudoku="radial"]')).toBeHidden();
+  });
+
+  test('erases from the centre of the radial picker', async ({ page }) => {
+    await page.goto('sudoku/');
+    await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({
+      timeout: 15_000,
+    });
+
+    const empty = page.locator('.sudoku-cell:not([data-given])').first();
+    await empty.click();
+    await page
+      .locator('[data-sudoku="radial"] .sudoku-radial__item')
+      .filter({ hasText: /^6$/ })
+      .click();
+    await expect(empty.locator('.sudoku-cell__value')).toHaveText('6');
+
+    await empty.click();
+    await page.locator('[data-sudoku="radial"] .sudoku-radial__item[data-digit="0"]').click();
+    await expect(empty.locator('.sudoku-cell__value')).toHaveText('');
   });
 
   test('supports the keyboard', async ({ page }) => {

@@ -47,12 +47,24 @@
         </div>
 
         <p class="msg" data-sudoku="message" role="status" aria-live="polite"></p>
+        <p class="note" data-sudoku="radialHint"></p>
         <p class="note sudoku-kb-hint" data-sudoku="kbHint"></p>
       </section>
-
-      <section class="card">
-        <div class="sudoku-pad" data-sudoku="pad"></div>
-      </section>
     </main>
+
+    <!--
+      The radial number picker. Positioned at the point that was tapped, so the
+      digits come to the finger rather than the finger travelling to a keypad at
+      the bottom of the screen. Lives outside `main` because it is fixed to the
+      viewport, and the overlay behind it catches taps that should dismiss it.
+    -->
+    <div class="sudoku-radial-overlay" data-sudoku="radialOverlay" hidden></div>
+    <div
+      class="sudoku-radial"
+      data-sudoku="radial"
+      role="menu"
+      aria-label="Number picker"
+      hidden
+    ></div>
   </body>
 </html>

@@ -1,8 +1,9 @@
 import '../../styles/app.css';
 import './sudoku.css';
 
-import { el, requireElement } from '../../core/dom.js';
+import { el, queryAll, requireElement } from '../../core/dom.js';
 import { formatStopwatch, formatTimestamp } from '../../core/format.js';
+import { clamp } from '../../core/math.js';
 import { trustedWorkerUrl } from '../../core/trusted-types.js';
 import { intlTag, t, type TranslationKey } from '../../i18n/index.js';
 import { boot } from '../../shell/boot.js';
@@ -40,7 +41,6 @@ boot({
 
     let difficulty: Difficulty = 'medium';
     let selected: number | undefined;
-    let noteMode = false;
     let paused = false;
     let won = false;
     let seconds = 0;
@@ -53,7 +53,8 @@ boot({
     /* ---------------------------------------------------------------- elements */
     const gridHost = requireElement('[data-sudoku="grid"]');
     const wrapper = requireElement('[data-sudoku="wrapper"]');
-    const padHost = requireElement('[data-sudoku="pad"]');
+    const radialHost = requireElement('[data-sudoku="radial"]');
+    const radialOverlay = requireElement('[data-sudoku="radialOverlay"]');
     const timerLabel = requireElement('[data-sudoku="timer"]');
     const pauseButton = requireElement<HTMLButtonElement>('[data-sudoku="pause"]');
     const messageArea = requireElement('[data-sudoku="message"]');
@@ -69,6 +70,7 @@ boot({
     requireElement('[data-sudoku="title"]').textContent = t('tool.sudoku.name');
     requireElement('[data-sudoku="difficultyLabel"]').textContent = t('sudoku.difficulty');
     requireElement('[data-sudoku="pausedOverlay"]').textContent = t('sudoku.paused');
+    requireElement('[data-sudoku="radialHint"]').textContent = t('sudoku.radialHint');
     requireElement('[data-sudoku="kbHint"]').textContent = t('sudoku.kbHint');
     newButton.textContent = t('sudoku.newGame');
     saveButton.textContent = t('sudoku.save');
@@ -161,9 +163,24 @@ boot({
           },
           data: { index },
           on: {
-            click: () => {
-              if (paused) return;
+            click: (event) => {
+              if (paused || won) return;
               select(index);
+
+              /* Givens cannot be changed, so there is nothing to pick for them.
+                 Selecting one is still useful: it highlights the same digit
+                 elsewhere on the board. */
+              if (game.isGiven(index)) {
+                hideRadial();
+                return;
+              }
+
+              /* `detail === 0` means the click came from the keyboard activating
+                 the button, which carries no coordinates to anchor a ring to.
+                 Those users type the digit directly instead. */
+              if (event.detail === 0) return;
+
+              showRadial(event.clientX, event.clientY, index);
             },
           },
         });
@@ -176,45 +193,164 @@ boot({
       }
     }
 
-    function buildPad(): void {
-      padHost.replaceChildren(
-        ...DIGITS.map((digit) =>
-          el('button', {
-            class: 'btn',
-            attrs: { type: 'button' },
-            text: digit,
-            on: {
-              click: () => {
-                enter(digit);
-              },
-            },
-          }),
-        ),
+    /* ----------------------------------------------------------- radial picker
+     *
+     * The digits appear in a ring centred on the cell that was tapped, so the
+     * finger never leaves the board. Holding a digit rather than tapping it
+     * pencils in a note, which means notes need no separate mode switch — one
+     * gesture covers both, and that is the whole point of the design.
+     */
+
+    /** Ring diameter in pixels. Items are laid out inside this box. */
+    const RADIAL_DIAMETER = 180;
+
+    /** Inset of the digit centres from the ring's edge. */
+    const RADIAL_ITEM_INSET = 25;
+
+    /** Hold this long and the digit becomes a note instead of an answer. */
+    const NOTE_HOLD_MS = 400;
+
+    /**
+     * How long a tap outside the ring suppresses reopening.
+     *
+     * Dismissal happens on the overlay's `pointerdown`; the `click` that follows
+     * lands on whatever is underneath — often the very cell that opened the ring —
+     * and would reopen it immediately. Only that path arms the guard. Closing by
+     * choosing a digit or pressing Escape leaves it unarmed, so entering digit
+     * after digit across the board has no dead time between cells.
+     */
+    const REOPEN_BLOCK_MS = 120;
+
+    /** Keep the ring this far from the viewport edge. */
+    const RADIAL_EDGE_PADDING = 10;
+
+    /** Index of the cell the ring is currently acting on, if it is open. */
+    let radialTarget: number | undefined;
+    let radialClosedAt = 0;
+    let holdTimer: number | undefined;
+    let holdBecameNote = false;
+
+    function buildRadial(): void {
+      const centre = RADIAL_DIAMETER / 2;
+      const radius = centre - RADIAL_ITEM_INSET;
+
+      const item = (digit: number): HTMLElement =>
         el('button', {
-          class: 'btn',
-          attrs: { type: 'button', 'data-action': 'erase' },
-          text: t('sudoku.erase'),
-          on: {
-            click: () => {
-              eraseSelected();
-            },
+          class: 'sudoku-radial__item',
+          attrs: {
+            type: 'button',
+            role: 'menuitem',
+            'aria-label': digit === 0 ? t('sudoku.erase') : String(digit),
+            /* The ring is driven by pointer gestures and dismissed on blur; the
+               items stay out of the tab order so a keyboard user is never parked
+               inside it. Keyboard entry is direct digit presses. */
+            tabindex: -1,
           },
-        }),
-        el('button', {
-          class: 'btn',
-          attrs: { type: 'button', 'data-action': 'notes', 'aria-pressed': 'false' },
-          text: '✏️',
-          on: {
-            click: (event) => {
-              noteMode = !noteMode;
-              (event.currentTarget as HTMLElement).setAttribute('aria-pressed', String(noteMode));
-            },
-          },
-        }),
-      );
-      const notesButton = padHost.querySelector('[data-action="notes"]');
-      notesButton?.setAttribute('title', t('sudoku.kbHint'));
+          data: { digit },
+          text: digit === 0 ? '⌫' : String(digit),
+        });
+
+      const items = DIGITS.map((digit) => {
+        /* Start at twelve o'clock and step 40° per digit, so 1-9 read clockwise. */
+        const angle = ((digit - 1) * 40 - 90) * (Math.PI / 180);
+        const node = item(digit);
+        node.style.setProperty('--x', `${String(Math.cos(angle) * radius + centre)}px`);
+        node.style.setProperty('--y', `${String(Math.sin(angle) * radius + centre)}px`);
+        return node;
+      });
+
+      /* Erase sits in the middle, where the thumb already is. */
+      const erase = item(0);
+      erase.style.setProperty('--x', `${String(centre)}px`);
+      erase.style.setProperty('--y', `${String(centre)}px`);
+
+      radialHost.replaceChildren(...items, erase);
+      radialHost.setAttribute('aria-label', t('sudoku.picker'));
     }
+
+    function showRadial(clientX: number, clientY: number, index: number): void {
+      if (Date.now() - radialClosedAt < REOPEN_BLOCK_MS) return;
+
+      /* Nudge the ring back inside the viewport so no digit lands off-screen. */
+      const radius = RADIAL_DIAMETER / 2;
+      const limit = radius + RADIAL_EDGE_PADDING;
+      const x = clamp(clientX, limit, Math.max(limit, window.innerWidth - limit));
+      const y = clamp(clientY, limit, Math.max(limit, window.innerHeight - limit));
+
+      radialHost.style.setProperty('--left', `${String(x)}px`);
+      radialHost.style.setProperty('--top', `${String(y)}px`);
+      radialHost.hidden = false;
+      radialOverlay.hidden = false;
+      radialTarget = index;
+      render();
+    }
+
+    function hideRadial(): void {
+      if (radialTarget === undefined) return;
+      clearHold();
+      radialHost.hidden = true;
+      radialOverlay.hidden = true;
+      radialTarget = undefined;
+      render();
+    }
+
+    function clearHold(): void {
+      window.clearTimeout(holdTimer);
+      holdTimer = undefined;
+      holdBecameNote = false;
+      for (const node of queryAll('[data-holding]', radialHost)) {
+        node.removeAttribute('data-holding');
+      }
+    }
+
+    function digitOf(target: EventTarget | null): { node: HTMLElement; digit: number } | undefined {
+      if (!(target instanceof Element)) return undefined;
+      const node = target.closest<HTMLElement>('.sudoku-radial__item');
+      if (node === null) return undefined;
+      const digit = Number(node.dataset['digit']);
+      return Number.isInteger(digit) ? { node, digit } : undefined;
+    }
+
+    radialHost.addEventListener('pointerdown', (event) => {
+      const found = digitOf(event.target);
+      if (found === undefined) return;
+      event.preventDefault();
+      /* Capture, so the matching pointerup arrives here even if the finger
+         drifts off the digit while holding. */
+      found.node.setPointerCapture(event.pointerId);
+
+      clearHold();
+      holdTimer = window.setTimeout(() => {
+        holdBecameNote = true;
+        found.node.setAttribute('data-holding', '');
+      }, NOTE_HOLD_MS);
+    });
+
+    radialHost.addEventListener('pointerup', (event) => {
+      const found = digitOf(event.target);
+      if (found === undefined || radialTarget === undefined) return;
+      event.preventDefault();
+
+      const index = radialTarget;
+      const asNote = holdBecameNote;
+      clearHold();
+
+      if (found.digit === 0) {
+        if (game.erase(index)) render();
+      } else if (asNote) {
+        if (game.toggleNote(index, found.digit)) render();
+      } else {
+        enter(found.digit, index);
+      }
+      hideRadial();
+    });
+
+    radialHost.addEventListener('pointercancel', clearHold);
+    radialOverlay.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
+      radialClosedAt = Date.now();
+      hideRadial();
+    });
 
     /* --------------------------------------------------------------- rendering */
 
@@ -239,6 +375,7 @@ boot({
         cell.toggleAttribute('data-given', game.isGiven(index));
         cell.toggleAttribute('data-conflict', conflicts.has(index));
         cell.toggleAttribute('data-selected', index === selected);
+        cell.toggleAttribute('data-picking', index === radialTarget);
         cell.toggleAttribute('data-peer', selected !== undefined && isPeer(selected, index));
         cell.toggleAttribute(
           'data-same-digit',
@@ -280,10 +417,9 @@ boot({
 
     /* ------------------------------------------------------------------ moves */
 
-    function enter(digit: number): void {
-      if (selected === undefined || paused || won) return;
-      const changed = noteMode ? game.toggleNote(selected, digit) : game.place(selected, digit);
-      if (!changed) return;
+    function enter(digit: number, index = selected): void {
+      if (index === undefined || paused || won) return;
+      if (!game.place(index, digit)) return;
       render();
       checkForWin();
     }
@@ -640,6 +776,10 @@ boot({
       if (document.querySelector('dialog[open]') !== null) return;
 
       if (event.key === 'Escape') {
+        if (radialTarget !== undefined) {
+          hideRadial();
+          return;
+        }
         selected = undefined;
         render();
         return;
@@ -695,7 +835,7 @@ boot({
     /* -------------------------------------------------------------------- go */
 
     buildGrid();
-    buildPad();
+    buildRadial();
     setPaused(false);
     updateLoadButton();
     newGame();

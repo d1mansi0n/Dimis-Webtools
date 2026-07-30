@@ -49,6 +49,13 @@ Never claim work is done without running `npm run verify`. It is fast.
   decoders — getting this wrong silently discards every affected record.
 - **`DOMException` is not `instanceof Error` across realms** (including in jsdom).
   Storage error classification duck-types instead.
+- **The Sudoku radial picker is the point of that tool — do not "simplify" it into
+  a number pad.** Tapping a cell opens a ring of digits at that spot so the digits
+  come to the finger; holding a digit writes a note instead of an answer. Its
+  overlay sits above the board, so a second tap on the same cell never reaches the
+  cell — dismissal is via the overlay or Escape. Only the overlay path arms the
+  reopen guard; arming it on every close puts dead time between consecutive entries
+  and makes e2e tests flaky.
 - **Don't put raw control characters in source files.** It makes them binary to
   `grep` and other tools. Write them as `\u0000`-style escape sequences instead.
 

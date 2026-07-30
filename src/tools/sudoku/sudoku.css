@@ -145,33 +145,105 @@ body {
   filter: blur(8px);
 }
 
-/* -------------------------------------------------------------- number pad */
+/* ---------------------------------------------------------- radial picker */
 
-.sudoku-pad {
+/*
+ * The number ring. It is anchored to the point that was tapped via the --left
+ * and --top custom properties, which the script sets, so no inline style
+ * attribute is needed — the Content Security Policy forbids those.
+ */
+.sudoku-radial {
+  position: fixed;
+  left: var(--left, 50%);
+  top: var(--top, 50%);
+  width: 11.25rem;
+  height: 11.25rem;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: color-mix(in srgb, var(--surface) 92%, var(--accent));
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-lg);
+  /* The picker owns its gestures; no scrolling or double-tap zoom inside it. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  animation: sudoku-radial-in 120ms ease-out;
+}
+
+@keyframes sudoku-radial-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.sudoku-radial__item {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 2.5rem;
+  height: 2.5rem;
+  transform: translate(-50%, -50%);
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: var(--space-2);
-}
-
-.sudoku-pad .btn {
-  font-size: 1.25rem;
+  place-items: center;
+  font: inherit;
+  font-size: 1.2rem;
   font-weight: 700;
-  padding: var(--space-3) 0;
-  min-height: 3rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  touch-action: none;
+  transition:
+    transform 120ms ease-out,
+    background-color var(--transition),
+    color var(--transition);
 }
 
-.sudoku-pad .btn[data-action] {
-  font-size: 0.85rem;
+@media (hover: hover) {
+  .sudoku-radial__item:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-on-accent);
+    transform: translate(-50%, -50%) scale(1.15);
+    z-index: 1;
+  }
 }
 
-@media (min-width: 30rem) {
-  .sudoku-pad {
-    grid-template-columns: repeat(9, 1fr);
-  }
+/*
+ * Held long enough to become a note. The change has to be unmistakable, because
+ * it is the only signal that the same gesture is about to do something different.
+ */
+.sudoku-radial__item[data-holding] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translate(-50%, -50%) scale(1.35);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 35%, transparent);
+  z-index: 2;
+}
 
-  .sudoku-pad .btn[data-action] {
-    grid-column: span 3;
-  }
+/* Catches taps outside the ring, which dismiss it. */
+.sudoku-radial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: transparent;
+  touch-action: none;
+}
+
+/* The cell the ring is currently acting on. */
+.sudoku-cell[data-picking] {
+  background: var(--accent-soft);
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  z-index: 1;
 }
 
 .sudoku-kb-hint {

@@ -78,11 +78,17 @@ each of the ten 1.0/2.0 file names.
   two were English, and Sudoku mixed the two.
 - **A site-wide light/dark/system theme control.** Only Sudoku had one before, and
   it could not express "light mode on a dark-mode device".
-- **Sudoku's radial number menu was replaced by an always-visible number pad.**
-  The radial menu was pointer-only and could not be reached by keyboard or screen
-  reader. The pad works for everyone, and keyboard entry is unchanged. _This is the
-  one deliberate feature removal in this release_ — say the word if you want the
-  radial menu rebuilt as an additional touch input.
+- **Sudoku's radial number picker is kept**, and is still the way digits are
+  entered with a pointer: tap a cell and the ring opens on that spot, so the digits
+  come to the finger instead of the finger travelling to a keypad. Holding a digit
+  rather than tapping it pencils in a note, so notes need no mode switch. Compared
+  with 2.0 it now also has a hold indicator, an animated open, a highlight on the
+  cell being edited, viewport clamping on all four sides, and dismissal with Escape.
+  Rapid entry across cells has no dead time between them: only a tap outside the
+  ring briefly suppresses reopening, and choosing a digit does not.
+- **Keyboard entry remains a separate, complete path** — arrow keys to move, 1–9 to
+  enter, Shift+1–9 for a note, 0 or Delete to clear — so the tool is fully usable
+  without a pointer.
 - **Native dialogs** replace `confirm()`, which brings focus trapping, Escape to
   dismiss, and translated buttons. Destructive actions default to the safe choice.
 - **Accessibility work throughout:** keyboard support for the Sudoku grid via

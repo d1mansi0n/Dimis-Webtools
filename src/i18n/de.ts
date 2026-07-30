@@ -183,6 +183,9 @@ export const de: Messages = {
   'sudoku.play': 'Spielen',
   'sudoku.cell': 'Zeile {row}, Spalte {col}',
   'sudoku.erase': 'Löschen',
+  'sudoku.picker': 'Zahlenauswahl',
+  'sudoku.radialHint':
+    'Zelle antippen, dann eine Zahl im Ring antippen. Zahl gedrückt halten, um sie als Notiz einzutragen.',
   'sudoku.kbHint':
     'Tastatur: Pfeiltasten bewegen · 1–9 eintragen · Umschalt+1–9 Notiz · 0 oder Entf löscht · Esc schließt Menüs',
 };

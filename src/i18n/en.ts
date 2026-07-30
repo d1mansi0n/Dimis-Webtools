@@ -184,6 +184,9 @@ export const en = {
   'sudoku.play': 'Play',
   'sudoku.cell': 'Row {row}, column {col}',
   'sudoku.erase': 'Erase',
+  'sudoku.picker': 'Number picker',
+  'sudoku.radialHint':
+    'Tap a cell, then tap a number in the ring. Hold a number instead to pencil it in as a note.',
   'sudoku.kbHint':
     'Keyboard: arrows move · 1–9 enter a number · Shift+1–9 toggles a note · 0 or Delete clears · Esc closes menus',
 } as const;
