@@ -86,6 +86,10 @@ each of the ten 1.0/2.0 file names.
   cell being edited, viewport clamping on all four sides, and dismissal with Escape.
   Rapid entry across cells has no dead time between them: only a tap outside the
   ring briefly suppresses reopening, and choosing a digit does not.
+- **Erasing from the centre of the ring no longer reopens it.** The compatibility
+  click a browser emits after a touch gesture is hit-tested once the ring is
+  already hidden, so it landed back on the originating cell. A cell now opens the
+  picker only when the gesture began on it.
 - **Keyboard entry remains a separate, complete path** — arrow keys to move, 1–9 to
   enter, Shift+1–9 for a note, 0 or Delete to clear — so the tool is fully usable
   without a pointer.

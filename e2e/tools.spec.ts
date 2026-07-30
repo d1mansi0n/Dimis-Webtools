@@ -361,6 +361,53 @@ test.describe('sudoku', () => {
     await empty.click();
     await page.locator('[data-sudoku="radial"] .sudoku-radial__item[data-digit="0"]').click();
     await expect(empty.locator('.sudoku-cell__value')).toHaveText('');
+
+    /* Erase sits at the centre of the ring, directly over the cell that opened
+       it, so the click that follows the release lands back on that cell. It must
+       not reopen the picker. */
+    await expect(page.locator('[data-sudoku="radial"]')).toBeHidden();
+  });
+
+  test('a click on a cell with no gesture behind it cannot open the picker', async ({ page }) => {
+    await page.goto('sudoku/');
+    await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({
+      timeout: 15_000,
+    });
+
+    const empty = page.locator('.sudoku-cell:not([data-given])').first();
+
+    /* This is the compatibility click a browser synthesises after the ring is
+       dismissed — a click with no preceding pointerdown on the cell. Real input
+       always has one, so rejecting it costs nothing and closes the reopen bug at
+       its source. Dispatched directly because Playwright's synthetic input always
+       emits a well-formed pointer sequence and so cannot reproduce it. */
+    await empty.dispatchEvent('click', { detail: 1, clientX: 50, clientY: 50 });
+    await expect(page.locator('[data-sudoku="radial"]')).toBeHidden();
+
+    /* A genuine tap still opens it. */
+    await empty.click();
+    await expect(page.locator('[data-sudoku="radial"]')).toBeVisible();
+  });
+
+  test('tapping erase by touch does not reopen the picker', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.use.hasTouch !== true, 'needs a touch-capable context');
+
+    await page.goto('sudoku/');
+    await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({
+      timeout: 15_000,
+    });
+
+    const empty = page.locator('.sudoku-cell:not([data-given])').first();
+    const radial = page.locator('[data-sudoku="radial"]');
+
+    await empty.tap();
+    await expect(radial).toBeVisible();
+
+    /* Touch is the case that matters: the browser synthesises the click by
+       hit-testing the coordinates *after* the ring has gone, so it lands on the
+       cell underneath — which for the centre button is the originating cell. */
+    await radial.locator('.sudoku-radial__item[data-digit="0"]').tap();
+    await expect(radial).toBeHidden();
   });
 
   test('supports the keyboard', async ({ page }) => {

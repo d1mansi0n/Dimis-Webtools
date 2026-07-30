@@ -49,6 +49,13 @@ Never claim work is done without running `npm run verify`. It is fast.
   decoders — getting this wrong silently discards every affected record.
 - **`DOMException` is not `instanceof Error` across realms** (including in jsdom).
   Storage error classification duck-types instead.
+- **A cell only opens the radial picker if the pointer gesture _started_ on it**
+  (`gestureStartedOnCell`). After the ring closes, the browser emits a
+  compatibility `click` for the same gesture, and on touch it hit-tests the
+  coordinates _after_ the ring has gone — so the erase button at the centre lands
+  its click on the very cell that opened the ring and reopened it. Do not replace
+  this with a timing window; a window long enough to be reliable also swallows a
+  fast tap on the next cell.
 - **The Sudoku radial picker is the point of that tool — do not "simplify" it into
   a number pad.** Tapping a cell opens a ring of digits at that spot so the digits
   come to the finger; holding a digit writes a note instead of an answer. Its

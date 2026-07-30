@@ -1,5 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import { append, clear, delegate, el, queryAll, replaceChildren, requireElement } from './dom.js';
+import {
+  append,
+  clear,
+  delegate,
+  el,
+  onReady,
+  queryAll,
+  replaceChildren,
+  requireElement,
+} from './dom.js';
 
 describe('el', () => {
   it('creates an element with the type implied by the tag', () => {
@@ -136,5 +145,25 @@ describe('delegate', () => {
     }
 
     expect(handler).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('onReady', () => {
+  it('runs immediately when the document is already parsed', () => {
+    const fn = vi.fn();
+    onReady(fn);
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits for DOMContentLoaded while the document is still loading', () => {
+    const readyState = vi.spyOn(document, 'readyState', 'get').mockReturnValue('loading');
+    const fn = vi.fn();
+
+    onReady(fn);
+    expect(fn).not.toHaveBeenCalled();
+
+    readyState.mockRestore();
+    document.dispatchEvent(new Event('DOMContentLoaded'));
+    expect(fn).toHaveBeenCalledTimes(1);
   });
 });

@@ -207,3 +207,46 @@ describe('clearing', () => {
     expect(store.read()).toBe(1.2);
   });
 });
+
+describe('classifying an unusual failure', () => {
+  it('reports a thrown string as the message', () => {
+    const store = defineStore({ key: 'test.s', decoder: string, fallback: () => '' });
+    store.read();
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- deliberately not an Error
+      throw 'disk on fire';
+    });
+
+    const result = store.write('x');
+    expect(result.ok).toBe(false);
+    expect(result.ok ? '' : result.error).toEqual({
+      kind: 'write-failed',
+      message: 'disk on fire',
+    });
+  });
+
+  it('describes a thrown object without printing "[object Object]"', () => {
+    const store = defineStore({ key: 'test.s', decoder: string, fallback: () => '' });
+    store.read();
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- deliberately not an Error
+      throw { unexpected: true };
+    });
+
+    const result = store.write('x');
+    expect(result.ok ? '' : (result.error as { message: string }).message).toBe('unknown error');
+  });
+
+  it('recognises the Firefox quota error, which uses a different name and code', () => {
+    const store = defineStore({ key: 'test.s', decoder: string, fallback: () => '' });
+    store.read();
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw Object.assign(new Error('full'), {
+        name: 'NS_ERROR_DOM_QUOTA_REACHED',
+        code: 1014,
+      });
+    });
+
+    expect(store.write('x')).toEqual({ ok: false, error: { kind: 'quota-exceeded' } });
+  });
+});

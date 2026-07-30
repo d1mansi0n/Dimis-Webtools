@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { buildSheet, exportFileName, type ExportLabels } from './export.js';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { buildSheet, downloadWorkbook, exportFileName, type ExportLabels } from './export.js';
 import { createEntry, pause, start, stop, type Entry } from './model.js';
 
 const CLOCK = (date: Date): string => date.toISOString().slice(11, 19);
@@ -117,5 +117,81 @@ describe('buildSheet', () => {
 describe('exportFileName', () => {
   it('is sortable and free of locale-specific separators', () => {
     expect(exportFileName('2026-07-29')).toBe('time-entries-2026-07-29.xlsx');
+  });
+});
+
+describe('downloadWorkbook', () => {
+  /* jsdom implements neither object URLs nor navigation, so both are stubbed and
+     the assertions are about what the browser is *asked* to do. */
+  function stubDownload() {
+    const created: Blob[] = [];
+    const revoked: string[] = [];
+    const clicked: HTMLAnchorElement[] = [];
+
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL: (blob: Blob) => {
+        created.push(blob);
+        return 'blob:stub';
+      },
+      revokeObjectURL: (url: string) => revoked.push(url),
+    });
+
+    /* Spying on the prototype rather than on `document.createElement` keeps this
+       out of the way of every other element the code builds. */
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      clicked.push(this);
+    });
+
+    return { created, revoked, clicked };
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  const sheet = () => buildSheet(finished(), LABELS, identity, T0 + minutes(90));
+
+  it('offers the workbook under the given file name', () => {
+    const stub = stubDownload();
+    downloadWorkbook(sheet(), 'time-entries-2026-07-29.xlsx');
+
+    expect(stub.clicked).toHaveLength(1);
+    expect(stub.clicked[0]?.download).toBe('time-entries-2026-07-29.xlsx');
+    expect(stub.clicked[0]?.href).toBe('blob:stub');
+  });
+
+  it('hands over a blob typed as a spreadsheet, not a bare download', () => {
+    const stub = stubDownload();
+    downloadWorkbook(sheet(), 'x.xlsx');
+
+    expect(stub.created).toHaveLength(1);
+    expect(stub.created[0]?.type).toBe(
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    expect(stub.created[0]?.size).toBeGreaterThan(0);
+  });
+
+  it('sets rel="noopener" on the link it synthesises', () => {
+    const stub = stubDownload();
+    downloadWorkbook(sheet(), 'x.xlsx');
+    expect(stub.clicked[0]?.rel).toBe('noopener');
+  });
+
+  it('releases the object URL once the download has started', () => {
+    vi.useFakeTimers();
+    const stub = stubDownload();
+
+    downloadWorkbook(sheet(), 'x.xlsx');
+    /* Revoking synchronously can race the browser's own fetch of the URL, so it
+       is deferred by a turn of the event loop. */
+    expect(stub.revoked).toEqual([]);
+
+    vi.runAllTimers();
+    expect(stub.revoked).toEqual(['blob:stub']);
   });
 });

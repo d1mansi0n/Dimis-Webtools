@@ -180,6 +180,9 @@ boot({
                  Those users type the digit directly instead. */
               if (event.detail === 0) return;
 
+              /* Only a gesture that started on this cell may open the ring. */
+              if (gestureStartedOnCell !== index) return;
+
               showRadial(event.clientX, event.clientY, index);
             },
           },
@@ -211,22 +214,40 @@ boot({
     const NOTE_HOLD_MS = 400;
 
     /**
-     * How long a tap outside the ring suppresses reopening.
+     * The cell a pointer gesture started on, or `undefined` if it started
+     * anywhere else.
      *
-     * Dismissal happens on the overlay's `pointerdown`; the `click` that follows
-     * lands on whatever is underneath — often the very cell that opened the ring —
-     * and would reopen it immediately. Only that path arms the guard. Closing by
-     * choosing a digit or pressing Escape leaves it unarmed, so entering digit
-     * after digit across the board has no dead time between cells.
+     * This is what stops the picker reopening the instant it closes. Releasing a
+     * digit hides the ring, and the browser then emits a compatibility `click`
+     * for the same gesture — on touch it does so by hit-testing the coordinates
+     * *after* the ring has gone, so the click lands on whatever is underneath.
+     * For the erase button at the centre that is precisely the cell that opened
+     * the ring, which promptly reopened it.
+     *
+     * Requiring the gesture to have *begun* on the cell rejects those synthesised
+     * clicks by construction, whatever route they arrive by, while a genuine tap
+     * always qualifies. It replaces a timing window, which could only ever be
+     * both too short to be reliable and long enough to swallow a fast second tap.
      */
-    const REOPEN_BLOCK_MS = 120;
+    let gestureStartedOnCell: number | undefined;
+
+    document.addEventListener(
+      'pointerdown',
+      (event) => {
+        const origin =
+          event.target instanceof Element ? event.target.closest('.sudoku-cell') : null;
+        gestureStartedOnCell =
+          origin instanceof HTMLElement ? Number(origin.dataset['index']) : undefined;
+      },
+      /* Capture, so this runs before any handler that might stop propagation. */
+      true,
+    );
 
     /** Keep the ring this far from the viewport edge. */
     const RADIAL_EDGE_PADDING = 10;
 
     /** Index of the cell the ring is currently acting on, if it is open. */
     let radialTarget: number | undefined;
-    let radialClosedAt = 0;
     let holdTimer: number | undefined;
     let holdBecameNote = false;
 
@@ -269,8 +290,6 @@ boot({
     }
 
     function showRadial(clientX: number, clientY: number, index: number): void {
-      if (Date.now() - radialClosedAt < REOPEN_BLOCK_MS) return;
-
       /* Nudge the ring back inside the viewport so no digit lands off-screen. */
       const radius = RADIAL_DIAMETER / 2;
       const limit = radius + RADIAL_EDGE_PADDING;
@@ -348,7 +367,6 @@ boot({
     radialHost.addEventListener('pointercancel', clearHold);
     radialOverlay.addEventListener('pointerdown', (event) => {
       event.preventDefault();
-      radialClosedAt = Date.now();
       hideRadial();
     });
 
