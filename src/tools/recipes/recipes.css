@@ -236,6 +236,12 @@ body {
   background: var(--surface-sunken);
 }
 
+/* The row a tick lands on, tinted rather than only struck through: on a phone
+   held at arm's length in a shop, the fill is what reads. */
+.recipes-item.is-checked .recipes-item__label {
+  background: var(--accent-soft);
+}
+
 .recipes-item__text {
   flex: 1;
   min-width: 0;
@@ -251,6 +257,111 @@ body {
   display: block;
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+/*
+ * Items the user added themselves.
+ *
+ * Marked by a coloured spine down the left rather than by a different
+ * background: they sit interleaved with the recipe ingredients of the same
+ * aisle, so the difference has to be legible at a glance without breaking the
+ * rhythm of the list. The badge beside the name carries the same information in
+ * text, for anyone who cannot see the colour.
+ */
+.recipes-item--own {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-left: 3px solid var(--control);
+  border-radius: var(--radius-sm);
+  padding-left: var(--space-2);
+  background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+}
+
+.recipes-item--own .recipes-item__label {
+  flex: 1;
+  min-width: 0;
+}
+
+.recipes-item__remove {
+  flex: none;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.recipes-item__remove:hover {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: transparent;
+}
+
+.badge--own {
+  /* Text takes the full-strength accent, not `--control`: at 11.5px the lighter
+     tint measured 4.47:1 on white, just under the 4.5 small text needs. The
+     border keeps the lighter tint, where 3:1 is the bar. */
+  color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--control);
+}
+
+/* ------------------------------------------------------- adding an item */
+
+.recipes-own-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.recipes-own-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.recipes-own-form__row select {
+  width: 100%;
+}
+
+.recipes-own-form__submit {
+  display: flex;
+}
+
+.recipes-own-form__submit .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 26rem) {
+  /* Two fields side by side stop being readable before the phone runs out of
+     width — the aisle select is the first to lose its label to ellipsis. */
+  .recipes-own-form__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.recipes-card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.recipes-card-actions--standalone {
+  justify-content: center;
+  margin-top: calc(var(--space-2) * -1);
+}
+
+.recipes-reset {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+  min-height: 2rem;
+  color: var(--text-muted);
+  border-color: var(--border);
+  background: transparent;
+}
+
+.recipes-reset:hover:not(:disabled) {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--danger-soft);
 }
 
 /* Ticked lines stay readable — struck through and dimmed, never hidden, so the

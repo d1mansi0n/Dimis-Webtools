@@ -6,7 +6,7 @@
  * its labels stay in one place and are translated by construction.
  */
 
-import { el, requireElement } from '../core/dom.js';
+import { el, replaceChildren, requireElement } from '../core/dom.js';
 import { LOCALES, locale, setLocale, t, type Locale } from '../i18n/index.js';
 import { cycleTheme, theme, type ThemeChoice } from './theme.js';
 
@@ -42,10 +42,13 @@ export function mountAppBar(options: AppBarOptions): void {
     themeButton.textContent = THEME_ICON[cycleTheme()];
   });
 
-  host.replaceChildren(
-    options.showHomeLink
-      ? el('a', { class: 'appbar__home', attrs: { href: '../' }, text: `← ${t('nav.home')}` })
-      : el('span', { class: 'appbar__home', text: t('app.name') }),
+  /* On the hub the left slot stays empty: it used to repeat the site name a
+     few pixels above the `<h1>` that already says it. Elsewhere it is the way
+     back, which is the only thing in this bar that is not a setting. */
+  replaceChildren(
+    host,
+    options.showHomeLink &&
+      el('a', { class: 'appbar__home', attrs: { href: '../' }, text: `← ${t('nav.home')}` }),
     el('span', { class: 'appbar__spacer' }),
     themeButton,
     languageSwitcher(),

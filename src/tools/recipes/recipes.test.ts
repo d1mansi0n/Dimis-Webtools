@@ -4,18 +4,29 @@ import { INGREDIENTS, RECIPES, STAPLES, type Recipe } from './data.js';
 import {
   clampPersons,
   cookingQuantity,
-  countLines,
+  addCustomItem,
+  clearTicks,
+  countEntries,
   createRecipeStore,
+  customCheckId,
   ingredientById,
   ingredientCheckId,
+  MAX_CUSTOM_ITEMS,
+  MAX_CUSTOM_NAME,
   MAX_PERSONS,
   portionsFor,
   purchaseQuantity,
   recipesOf,
+  removeCustomItem,
+  stapleCheckId,
   selectedRecipes,
   shoppingList,
   unlistedMentions,
 } from './recipes.js';
+
+/** The ingredient entries of a list, with the union already narrowed. */
+const ingredientEntries = (groups: ReturnType<typeof shoppingList>) =>
+  groups.flatMap((group) => group.entries).filter((entry) => entry.kind === 'ingredient');
 
 const recipe = (id: string): Recipe => {
   const found = RECIPES.find((candidate) => candidate.id === id);
@@ -192,9 +203,7 @@ describe('the shopping list', () => {
       [recipe('lentil-vegetable-stew'), recipe('pasta-lentil-bolognese')],
       1,
     );
-    const onions = list
-      .flatMap((group) => group.lines)
-      .find((line) => line.ingredient.id === 'onions');
+    const onions = ingredientEntries(list).find((entry) => entry.ingredient.id === 'onions');
 
     expect(onions?.quantity).toEqual({ unit: 'piece', value: 1 });
   });
@@ -204,8 +213,7 @@ describe('the shopping list', () => {
     const forFour = shoppingList([recipe('porridge-berries')], 4);
 
     const oats = (groups: ReturnType<typeof shoppingList>): number | undefined =>
-      groups.flatMap((group) => group.lines).find((line) => line.ingredient.id === 'oats')?.quantity
-        .value;
+      ingredientEntries(groups).find((entry) => entry.ingredient.id === 'oats')?.quantity.value;
 
     expect(oats(forOne)).toBe(60);
     expect(oats(forFour)).toBe(240);
@@ -225,11 +233,116 @@ describe('the shopping list', () => {
   it('gives every line a tick id that survives a locale change', () => {
     const list = shoppingList([recipe('trail-mix')], 1);
 
-    expect(list[0]?.lines[0]?.checkId).toBe(ingredientCheckId('trail-mix'));
+    expect(list[0]?.entries[0]?.checkId).toBe(ingredientCheckId('trail-mix'));
   });
 
   it('counts its lines for the progress readout', () => {
-    expect(countLines(shoppingList([recipe('nuts-apple')], 1))).toBe(2);
+    expect(countEntries(shoppingList([recipe('nuts-apple')], 1))).toBe(2);
+  });
+});
+
+describe('own items', () => {
+  const coffee = { name: 'Coffee', note: '2 packs', category: 'cupboard' } as const;
+
+  it('adds an item and files it under the chosen aisle', () => {
+    const items = addCustomItem([], coffee);
+
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ name: 'Coffee', note: '2 packs', category: 'cupboard' });
+  });
+
+  it('gives every item an id no other item is using', () => {
+    /* Ids come from the list rather than the clock: two items added in the same
+       millisecond would otherwise share an id, and ticking one would tick both. */
+    const items = [coffee, coffee, coffee].reduce<ReturnType<typeof addCustomItem>>(
+      addCustomItem,
+      [],
+    );
+
+    expect(new Set(items.map((item) => item.id)).size).toBe(3);
+  });
+
+  it('does not reuse the id of a removed item', () => {
+    const two = addCustomItem(addCustomItem([], coffee), { ...coffee, name: 'Tea' });
+    const afterRemoval = removeCustomItem(two, two[1]!.id);
+    const readded = addCustomItem(afterRemoval, { ...coffee, name: 'Salt' });
+
+    expect(new Set(readded.map((item) => item.id)).size).toBe(readded.length);
+  });
+
+  it('ignores an empty name', () => {
+    expect(addCustomItem([], { ...coffee, name: '   ' })).toEqual([]);
+  });
+
+  it('trims and bounds what the form supplied', () => {
+    const items = addCustomItem([], { ...coffee, name: `  ${'x'.repeat(200)}  ` });
+
+    expect(items[0]?.name).toHaveLength(MAX_CUSTOM_NAME);
+  });
+
+  it('stops at the maximum rather than growing without bound', () => {
+    let items = addCustomItem([], coffee);
+    for (let index = 0; index < MAX_CUSTOM_ITEMS + 10; index++) {
+      items = addCustomItem(items, coffee);
+    }
+
+    expect(items).toHaveLength(MAX_CUSTOM_ITEMS);
+  });
+
+  it('puts an item on the shopping list, in its own aisle, after the ingredients', () => {
+    const items = addCustomItem([], { name: 'Coffee', note: '', category: 'fruit' });
+    const list = shoppingList([recipe('nuts-apple')], 1, items);
+    const fruit = list.find((group) => group.category === 'fruit');
+
+    expect(fruit?.entries.map((entry) => entry.kind)).toEqual(['ingredient', 'custom']);
+  });
+
+  it('shows an aisle that holds nothing but own items', () => {
+    /* Nothing is cooked here, so without the item the list would be empty. */
+    const items = addCustomItem([], coffee);
+
+    expect(shoppingList([], 1, items).map((group) => group.category)).toEqual(['cupboard']);
+  });
+
+  it('never scales an own item with the number of people', () => {
+    const items = addCustomItem([], coffee);
+    const one = shoppingList([], 1, items);
+    const six = shoppingList([], 6, items);
+
+    expect(one).toEqual(six);
+  });
+
+  it('removes an item by id', () => {
+    const items = addCustomItem([], coffee);
+
+    expect(removeCustomItem(items, items[0]!.id)).toEqual([]);
+  });
+});
+
+describe('clearing ticks', () => {
+  /*
+   * The two halves of the list are restocked on different rhythms — the
+   * ingredients change with every set of recipes, the cupboard staples are
+   * checked every few weeks — so one button for both wiped the staples along
+   * with a finished shopping trip.
+   */
+  const ticks = [
+    ingredientCheckId('oats'),
+    customCheckId('1'),
+    stapleCheckId('oil'),
+    stapleCheckId('salt'),
+  ];
+
+  it('clears the ingredients and own items, keeping the staples', () => {
+    expect(clearTicks(ticks, 'ingredients')).toEqual([stapleCheckId('oil'), stapleCheckId('salt')]);
+  });
+
+  it('clears the staples, keeping the ingredients and own items', () => {
+    expect(clearTicks(ticks, 'staples')).toEqual([ingredientCheckId('oats'), customCheckId('1')]);
+  });
+
+  it('leaves nothing behind when both halves are cleared in turn', () => {
+    expect(clearTicks(clearTicks(ticks, 'ingredients'), 'staples')).toEqual([]);
   });
 });
 
@@ -255,17 +368,23 @@ describe('the stored state', () => {
     const store = createRecipeStore();
     store.clear();
 
-    expect(store.read()).toEqual({ persons: 1, selected: [], checked: [] });
+    expect(store.read()).toEqual({ persons: 1, selected: [], checked: [], custom: [] });
   });
 
   it('round-trips a selection', () => {
     const store = createRecipeStore();
-    store.write({ persons: 3, selected: ['trail-mix'], checked: [ingredientCheckId('oats')] });
+    store.write({
+      persons: 3,
+      selected: ['trail-mix'],
+      checked: [ingredientCheckId('oats')],
+      custom: [{ id: '1', name: 'Coffee', note: '2 packs', category: 'cupboard' }],
+    });
 
     expect(store.read()).toEqual({
       persons: 3,
       selected: ['trail-mix'],
       checked: [ingredientCheckId('oats')],
+      custom: [{ id: '1', name: 'Coffee', note: '2 packs', category: 'cupboard' }],
     });
   });
 
@@ -293,7 +412,25 @@ describe('the stored state', () => {
     const store = createRecipeStore();
     localStorage.setItem(store.key, '"not an object"');
 
-    expect(store.read()).toEqual({ persons: 1, selected: [], checked: [] });
+    expect(store.read()).toEqual({ persons: 1, selected: [], checked: [], custom: [] });
+  });
+
+  it('drops an own item filed under an aisle that does not exist', () => {
+    const store = createRecipeStore();
+    localStorage.setItem(
+      store.key,
+      JSON.stringify({
+        persons: 1,
+        selected: [],
+        checked: [],
+        custom: [
+          { id: '1', name: 'Coffee', note: '', category: 'cupboard' },
+          { id: '2', name: 'Ghost', note: '', category: 'no-such-aisle' },
+        ],
+      }),
+    );
+
+    expect(store.read().custom.map((item) => item.id)).toEqual(['1']);
   });
 });
 

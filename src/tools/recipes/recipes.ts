@@ -19,6 +19,7 @@ import {
   inRange,
   integer,
   lenientArrayOf,
+  literals,
   maxLength,
   objectOf,
   string,
@@ -42,11 +43,16 @@ import {
 export const MIN_PERSONS = 1;
 export const MAX_PERSONS = 6;
 
+/** Most own items kept. Generous for a shop, bounded for storage. */
+export const MAX_CUSTOM_ITEMS = 50;
+export const MAX_CUSTOM_NAME = 60;
+export const MAX_CUSTOM_NOTE = 30;
+
 /** Longest id we will read back from storage; ids in the catalogue are far shorter. */
 const MAX_ID_LENGTH = 64;
 
 /** Enough room for every tick on the largest possible list, and no more. */
-const MAX_CHECKED = INGREDIENTS.length + STAPLES.length;
+const MAX_CHECKED = INGREDIENTS.length + STAPLES.length + MAX_CUSTOM_ITEMS;
 
 /** Litres take over from millilitres at this point, as they do on a bottle. */
 const ML_PER_LITRE = 1000;
@@ -158,17 +164,37 @@ export function portionsFor(recipe: Recipe, persons: number): readonly Portion[]
 
 /* ----------------------------------------------------------- shopping list */
 
-export interface ShoppingLine {
-  readonly ingredient: Ingredient;
-  /** Scaled, summed across recipes, then rounded to what a shop sells. */
-  readonly quantity: Quantity;
-  /** Identifier for the tick, stable across reloads and locale changes. */
-  readonly checkId: string;
+/**
+ * Something the user put on the list themselves.
+ *
+ * Unlike a recipe ingredient this carries no unit and is never scaled: "2 packs
+ * of coffee" is a note, not an amount the tool can do arithmetic on. It belongs
+ * to one of the existing aisles so it appears where it will be picked up rather
+ * than in a separate list at the bottom.
+ */
+export interface CustomItem {
+  readonly id: string;
+  readonly name: string;
+  /** Free-text amount, e.g. "2 packs". May be empty. */
+  readonly note: string;
+  readonly category: Category;
 }
+
+/** A line on the shopping list: either an ingredient the recipes need, or an own item. */
+export type ShoppingEntry =
+  | {
+      readonly kind: 'ingredient';
+      readonly ingredient: Ingredient;
+      /** Scaled, summed across recipes, then rounded to what a shop sells. */
+      readonly quantity: Quantity;
+      /** Identifier for the tick, stable across reloads and locale changes. */
+      readonly checkId: string;
+    }
+  | { readonly kind: 'custom'; readonly item: CustomItem; readonly checkId: string };
 
 export interface ShoppingGroup {
   readonly category: Category;
-  readonly lines: readonly ShoppingLine[];
+  readonly entries: readonly ShoppingEntry[];
 }
 
 /** The tick id for an ingredient. Namespaced so it cannot collide with a staple. */
@@ -181,8 +207,14 @@ export function stapleCheckId(id: string): string {
   return `staple:${id}`;
 }
 
+/** The tick id for an own item. */
+export function customCheckId(id: string): string {
+  return `custom:${id}`;
+}
+
 /**
- * Add the selected recipes up into one list, grouped by aisle.
+ * Add the selected recipes up into one list, grouped by aisle, with the user's
+ * own items folded into the aisle each was filed under.
  *
  * Amounts are summed *before* rounding: three portions of 0.5 an onion is two
  * onions, not three. Rounding each recipe separately and adding afterwards was
@@ -191,6 +223,7 @@ export function stapleCheckId(id: string): string {
 export function shoppingList(
   recipes: readonly Recipe[],
   persons: number,
+  custom: readonly CustomItem[] = [],
 ): readonly ShoppingGroup[] {
   const people = clampPersons(persons);
   const totals = new Map<string, number>();
@@ -203,21 +236,104 @@ export function shoppingList(
 
   const groups: ShoppingGroup[] = [];
   for (const category of CATEGORY_ORDER) {
-    const lines = INGREDIENTS.filter(
+    const fromRecipes: ShoppingEntry[] = INGREDIENTS.filter(
       (ingredient) => ingredient.category === category && (totals.get(ingredient.id) ?? 0) > 0,
     ).map((ingredient) => ({
+      kind: 'ingredient',
       ingredient,
       quantity: purchaseQuantity(ingredient.unit, totals.get(ingredient.id) ?? 0),
       checkId: ingredientCheckId(ingredient.id),
     }));
-    if (lines.length > 0) groups.push({ category, lines });
+
+    /* Own items come after the ingredients of the same aisle: the recipe-driven
+       part of the list is the part that changes when the person count does, and
+       keeping it contiguous makes that easier to follow. */
+    const own: ShoppingEntry[] = custom
+      .filter((item) => item.category === category)
+      .map((item) => ({ kind: 'custom', item, checkId: customCheckId(item.id) }));
+
+    const entries = [...fromRecipes, ...own];
+    if (entries.length > 0) groups.push({ category, entries });
   }
   return groups;
 }
 
-/** Total number of lines across the groups, for the progress readout. */
-export function countLines(groups: readonly ShoppingGroup[]): number {
-  return groups.reduce((total, group) => total + group.lines.length, 0);
+/** Total number of entries across the groups, for the progress readout. */
+export function countEntries(groups: readonly ShoppingGroup[]): number {
+  return groups.reduce((total, group) => total + group.entries.length, 0);
+}
+
+/* ------------------------------------------------------------- own items */
+
+export interface CustomDraft {
+  readonly name: string;
+  readonly note: string;
+  readonly category: Category;
+}
+
+/**
+ * Append an own item, trimming and bounding what the form supplied.
+ *
+ * Bounding happens here rather than only on the input element: a `maxlength`
+ * attribute is a hint to the browser, and the decoder on the way back out of
+ * storage would reject — and so silently drop — anything longer.
+ */
+export function addCustomItem(
+  items: readonly CustomItem[],
+  draft: CustomDraft,
+): readonly CustomItem[] {
+  const name = draft.name.trim().slice(0, MAX_CUSTOM_NAME);
+  if (name === '' || items.length >= MAX_CUSTOM_ITEMS) return items;
+
+  return [
+    ...items,
+    {
+      id: nextCustomId(items),
+      name,
+      note: draft.note.trim().slice(0, MAX_CUSTOM_NOTE),
+      category: draft.category,
+    },
+  ];
+}
+
+export function removeCustomItem(items: readonly CustomItem[], id: string): readonly CustomItem[] {
+  return items.filter((item) => item.id !== id);
+}
+
+/**
+ * One past the highest id in use.
+ *
+ * Derived from the list rather than from the clock, so the function stays pure
+ * and two items added in the same millisecond cannot collide — which would make
+ * one item's tick silently toggle the other's.
+ */
+function nextCustomId(items: readonly CustomItem[]): string {
+  const highest = items.reduce((max, item) => {
+    const parsed = Number.parseInt(item.id, 10);
+    return Number.isSafeInteger(parsed) && parsed > max ? parsed : max;
+  }, 0);
+  return String(highest + 1);
+}
+
+/* ---------------------------------------------------------------- ticks */
+
+/**
+ * Which half of the list a "clear the ticks" action applies to.
+ *
+ * The two are cleared separately because they are restocked on different
+ * rhythms: the ingredients change with every set of recipes, while the cupboard
+ * staples are checked every few weeks. One button for both meant that clearing
+ * a finished shopping trip also wiped the record of which staples were still in.
+ */
+export type TickScope = 'ingredients' | 'staples';
+
+const STAPLE_PREFIX = 'staple:';
+
+/** The ticks that survive clearing `scope`. Own items clear with the ingredients. */
+export function clearTicks(checked: Iterable<string>, scope: TickScope): string[] {
+  return [...checked].filter((id) =>
+    scope === 'staples' ? !id.startsWith(STAPLE_PREFIX) : id.startsWith(STAPLE_PREFIX),
+  );
 }
 
 /* ----------------------------------------------- method / ingredient check */
@@ -327,8 +443,10 @@ export interface RecipeState {
   readonly persons: number;
   /** Ids of the recipes on the list. */
   readonly selected: readonly string[];
-  /** Tick ids, as produced by `ingredientCheckId` and `stapleCheckId`. */
+  /** Tick ids, from `ingredientCheckId`, `stapleCheckId` and `customCheckId`. */
   readonly checked: readonly string[];
+  /** Items the user added themselves. */
+  readonly custom: readonly CustomItem[];
 }
 
 /** Ids are dropped rather than rejected: one stale id must not cost the whole list. */
@@ -339,12 +457,27 @@ function idList(limit: number): Decoder<string[]> {
   };
 }
 
+const customItemDecoder: Decoder<CustomItem> = objectOf({
+  id: maxLength(string, MAX_ID_LENGTH),
+  name: maxLength(string, MAX_CUSTOM_NAME),
+  note: withDefault(maxLength(string, MAX_CUSTOM_NOTE), ''),
+  /* An aisle that no longer exists would leave the item unreachable, so the
+     value is checked against the catalogue rather than trusted. */
+  category: literals(...CATEGORY_ORDER),
+});
+
+const customList: Decoder<CustomItem[]> = (input, path) => {
+  const decoded = lenientArrayOf(customItemDecoder)(input, path);
+  return decoded.ok ? { ok: true, value: decoded.value.slice(0, MAX_CUSTOM_ITEMS) } : decoded;
+};
+
 const stateDecoder: Decoder<RecipeState> = objectOf({
   persons: withDefault(inRange(integer, MIN_PERSONS, MAX_PERSONS), MIN_PERSONS),
   /* Selections are filtered against the catalogue on read, so a recipe removed
      from `data.ts` cannot linger invisibly in someone's shopping list. */
   selected: withDefault(idList(RECIPES.length), []),
   checked: withDefault(idList(MAX_CHECKED), []),
+  custom: withDefault(customList, []),
 });
 
 export function createRecipeStore(): Store<RecipeState> {
@@ -361,7 +494,7 @@ export function createRecipeStore(): Store<RecipeState> {
         },
       };
     },
-    fallback: () => ({ persons: MIN_PERSONS, selected: [], checked: [] }),
+    fallback: () => ({ persons: MIN_PERSONS, selected: [], checked: [], custom: [] }),
   });
 }
 

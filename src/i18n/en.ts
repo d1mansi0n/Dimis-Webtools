@@ -197,10 +197,27 @@ export const en = {
   'recipes.legend.fresh': 'fresh — buy close to the day',
   'recipes.legend.stable': 'keeps — can live in the cupboard',
   'recipes.count': '{done}/{total}',
+  'recipes.custom.title': 'Your own items',
+  'recipes.custom.hint':
+    'Anything else you need. It joins the aisle you pick and ticks off like the rest — but it is yours, so it is never touched by the recipes or the person count.',
+  'recipes.custom.name': 'What do you need?',
+  'recipes.custom.namePlaceholder': 'Coffee',
+  'recipes.custom.note': 'Amount (optional)',
+  'recipes.custom.notePlaceholder': '2 packs',
+  'recipes.custom.category': 'Aisle',
+  'recipes.custom.add': 'Add to list',
+  'recipes.custom.badge': 'yours',
+  'recipes.custom.remove': 'Remove {name}',
+  'recipes.custom.nameRequired': 'Type what you need first.',
+  'recipes.custom.full': 'The list holds {limit} own items. Remove one to add another.',
+  'recipes.reset.ingredients': 'Clear the ticks above',
+  'recipes.reset.staples': 'Clear the staple ticks',
+  'recipes.confirmReset.ingredients':
+    'Clear every tick on the ingredients and your own items? The cupboard staples keep theirs.',
+  'recipes.confirmReset.staples':
+    'Clear every tick on the cupboard staples? The ingredients keep theirs.',
   'recipes.progress': '{done} of {total} ticked off',
   'recipes.empty': 'The shopping list is empty. Go to “Recipes” and tap what you want to cook.',
-  'recipes.resetChecks': 'Clear all ticks',
-  'recipes.confirmReset': 'Clear every tick on the list?',
 
   /* ------------------------------------------------------------- sudoku */
   'sudoku.difficulty': 'Difficulty',

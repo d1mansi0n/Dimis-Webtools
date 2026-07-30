@@ -535,6 +535,71 @@ test.describe('recipes and shopping list', () => {
     ).toBeChecked();
   });
 
+  test('puts an own item on the list, in the chosen aisle, and ticks it off', async ({ page }) => {
+    await chooseFirstRecipe(page);
+
+    await page.getByLabel('What do you need?').fill('Coffee beans');
+    await page.getByLabel('Amount (optional)').fill('1 bag');
+    await page.getByLabel('Aisle').selectOption('fruit');
+    await page.locator('.recipes-own-form').getByRole('button', { name: 'Add to list' }).click();
+
+    const own = page.locator('.recipes-item--own', { hasText: 'Coffee beans' });
+    await expect(own).toBeVisible();
+    /* Filed under Fruit, so it sits in that card and nowhere else. */
+    await expect(
+      page.locator('.card', { hasText: 'Fruit' }).locator('.recipes-item--own'),
+    ).toHaveCount(1);
+
+    await own.locator('input[type="checkbox"]').check();
+    await expect(own).toHaveClass(/is-checked/);
+
+    await page.reload();
+    await page.getByRole('button', { name: 'Shopping list' }).click();
+    await expect(
+      page.locator('.recipes-item--own', { hasText: 'Coffee beans' }).locator('input'),
+    ).toBeChecked();
+  });
+
+  test('removes an own item again', async ({ page }) => {
+    await chooseFirstRecipe(page);
+
+    await page.getByLabel('What do you need?').fill('Coffee beans');
+    await page.locator('.recipes-own-form').getByRole('button', { name: 'Add to list' }).click();
+    await expect(page.locator('.recipes-item--own')).toHaveCount(1);
+
+    await page.getByRole('button', { name: 'Remove Coffee beans' }).click();
+    await expect(page.locator('.recipes-item--own')).toHaveCount(0);
+  });
+
+  test('will not add an item with no name', async ({ page }) => {
+    await chooseFirstRecipe(page);
+
+    await page.locator('.recipes-own-form').getByRole('button', { name: 'Add to list' }).click();
+    await expect(page.locator('.recipes-item--own')).toHaveCount(0);
+  });
+
+  test('clears the two halves of the list independently', async ({ page }) => {
+    /* The regression test for one button clearing both: the staples are checked
+       every few weeks, the ingredients every shopping trip. */
+    await chooseFirstRecipe(page);
+
+    const oats = page.locator('.recipes-item', { hasText: 'Rolled oats' });
+    const oil = page.locator('.recipes-item', { hasText: 'Olive oil' });
+    await oats.locator('input').check();
+    await oil.locator('input').check();
+
+    await page.getByRole('button', { name: 'Clear the ticks above' }).click();
+    await page.getByRole('button', { name: 'Yes' }).click();
+
+    await expect(oats.locator('input')).not.toBeChecked();
+    await expect(oil.locator('input')).toBeChecked();
+
+    await page.getByRole('button', { name: 'Clear the staple ticks' }).click();
+    await page.getByRole('button', { name: 'Yes' }).click();
+
+    await expect(oil.locator('input')).not.toBeChecked();
+  });
+
   test('says the list is empty until something is chosen', async ({ page }) => {
     await page.goto('recipes/');
     await page.getByRole('button', { name: 'Shopping list' }).click();
