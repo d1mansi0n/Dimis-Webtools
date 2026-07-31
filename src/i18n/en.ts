@@ -43,6 +43,10 @@ export const en = {
   'storage.full': 'Storage is full — the change could not be saved.',
   'storage.failed': 'The change could not be saved.',
 
+  /* Shown when a tool throws while starting up, so the page says something
+     rather than sitting there half-built. */
+  'boot.failed': 'Something went wrong and this tool could not start. Reloading the page may help.',
+
   /* ---------------------------------------------------------------- hub */
   'hub.privacy': 'No accounts, no tracking, no servers. Every tool runs entirely in your browser.',
   'hub.source': 'Source code',

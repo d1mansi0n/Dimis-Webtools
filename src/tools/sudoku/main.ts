@@ -139,7 +139,34 @@ boot({
     const cellValues: HTMLElement[] = [];
     const cellNotes: HTMLElement[][] = [];
 
+    /**
+     * The nine `role="row"` containers the grid needs.
+     *
+     * `role="grid"` may only contain rows, and `role="gridcell"` may only sit
+     * inside one. Appending all 81 cells straight to the grid — which is what
+     * this did — is an invalid structure that leaves a screen reader with no
+     * defined way to walk the board, and it is what the accessibility sweep
+     * caught.
+     *
+     * The rows carry `display: contents` so the nine-column CSS grid still lays
+     * the cells out directly; the wrappers exist for the accessibility tree and
+     * change nothing visually. Browsers used to drop `display: contents`
+     * elements out of that tree, which would have made this pointless, but that
+     * bug was fixed across Chrome, Firefox and Safari years before this code.
+     */
+    function buildRows(): HTMLElement[] {
+      return Array.from({ length: GRID_SIZE }, (_, row) =>
+        el('div', {
+          class: 'sudoku-row',
+          attrs: { role: 'row', 'aria-rowindex': row + 1 },
+        }),
+      );
+    }
+
     function buildGrid(): void {
+      const rows = buildRows();
+      for (const row of rows) gridHost.append(row);
+
       for (let index = 0; index < CELL_COUNT; index++) {
         const row = rowOf(index);
         const column = columnOf(index);
@@ -154,6 +181,7 @@ boot({
           attrs: {
             type: 'button',
             role: 'gridcell',
+            'aria-colindex': column + 1,
             'aria-label': t('sudoku.cell', { row: row + 1, col: column + 1 }),
             /* Only the focused cell is tabbable; arrows move within the grid.
                This is the standard roving-tabindex pattern for a grid widget. */
@@ -192,7 +220,7 @@ boot({
         cells.push(cell);
         cellValues.push(value);
         cellNotes.push(notes);
-        gridHost.append(cell);
+        rows[row]?.append(cell);
       }
     }
 

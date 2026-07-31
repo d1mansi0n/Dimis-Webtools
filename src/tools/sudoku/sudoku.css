@@ -21,6 +21,14 @@ body {
   width: 100%;
 }
 
+/* The nine `role="row"` wrappers exist for the accessibility tree only: a grid
+   may contain nothing but rows, and a gridcell may sit nowhere else. `contents`
+   keeps them out of the layout, so the cells remain direct grid items of the
+   nine-column track below and the board looks exactly as it did. */
+.sudoku-row {
+  display: contents;
+}
+
 .sudoku-grid {
   display: grid;
   grid-template-columns: repeat(9, 1fr);

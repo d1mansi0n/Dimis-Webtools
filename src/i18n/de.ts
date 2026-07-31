@@ -39,6 +39,9 @@ export const de: Messages = {
   'storage.full': 'Der Speicher ist voll – die Änderung konnte nicht gespeichert werden.',
   'storage.failed': 'Die Änderung konnte nicht gespeichert werden.',
 
+  'boot.failed':
+    'Etwas ist schiefgelaufen, dieses Werkzeug konnte nicht starten. Ein Neuladen der Seite hilft vielleicht.',
+
   /* ---------------------------------------------------------------- hub */
   'hub.privacy':
     'Keine Konten, kein Tracking, keine Server. Jedes Werkzeug läuft vollständig im Browser.',

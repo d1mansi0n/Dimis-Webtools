@@ -34,6 +34,10 @@ Never claim work is done without running `npm run verify`. It is fast.
   in render loops. ESLint errors on it.
 - **No `alert`/`confirm`/`prompt`.** Use `confirmDialog()` from
   [`src/shell/dialog.ts`](src/shell/dialog.ts).
+- **Every page is swept by axe** ([`e2e/accessibility.spec.ts`](e2e/accessibility.spec.ts)),
+  derived from `PAGES`, so a new tool is enrolled automatically. If you reach for
+  ARIA roles, implement the whole pattern — a `gridcell` outside a `row` is a
+  violation, and that is a real bug this suite caught.
 - **No hardcoded user-visible strings.** Add a key to
   [`src/i18n/en.ts`](src/i18n/en.ts); `de.ts` will then fail to compile until it is
   translated, which is intended.

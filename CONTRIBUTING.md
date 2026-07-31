@@ -98,6 +98,25 @@ stale, as [`recipes/main.ts`](src/tools/recipes/main.ts) does. Rebuilding a
 hidden panel is work nobody can see, and rebuilding a whole list to change one
 label is the same mistake in a smaller size.
 
+### Accessibility
+
+Two different mechanisms cover this, and it is worth knowing which does what.
+
+Colour is handled in code: [`core/color.ts`](src/core/color.ts) derives every
+accent against the WCAG 2.1 contrast figures, so an accent that would be
+illegible cannot be produced in the first place.
+
+Everything else is checked by [`e2e/accessibility.spec.ts`](e2e/accessibility.spec.ts),
+which runs axe over every page in `PAGES`. Automated rules catch roughly half of
+what matters — an unlabelled control, a missing landmark, an invalid ARIA
+structure. They cannot judge whether a label reads well or whether focus order
+matches reading order, so a green run is a floor rather than a certificate.
+
+If you use ARIA roles, use the whole pattern: `role="grid"` may contain only
+rows, and `role="gridcell"` may sit nowhere but inside one. The Sudoku board got
+this wrong for a while — 81 cells parented straight to the grid — and the sweep
+is what found it.
+
 ### Adding a tool
 
 1. Add one entry to [`src/config/site.ts`](src/config/site.ts).
