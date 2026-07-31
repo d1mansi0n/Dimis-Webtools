@@ -3,6 +3,46 @@ import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
 import globals from 'globals';
 
+/**
+ * The lint-time half of the Content Security Policy: these stop unsafe DOM sinks
+ * from being written at all, so the policy never has to catch them at run time.
+ */
+const cspSelectors = [
+  {
+    selector: "CallExpression[callee.name='eval']",
+    message: 'eval is blocked by the Content Security Policy.',
+  },
+  {
+    selector: "NewExpression[callee.name='Function']",
+    message: 'The Function constructor is blocked by the Content Security Policy.',
+  },
+  {
+    selector:
+      "CallExpression[callee.object.name='document'][callee.property.name='write'], CallExpression[callee.object.name='document'][callee.property.name='writeln']",
+    message: 'document.write is blocked by Trusted Types.',
+  },
+];
+
+/**
+ * `Intl` formatters are expensive to construct and cheap to reuse — tens of
+ * microseconds against well under one. Building one per call is invisible until
+ * it happens inside a render loop, where it cost the Recipes list several
+ * milliseconds on every tap.
+ *
+ * `core/format.ts` and `i18n/index.ts` construct them once per locale and cache
+ * them; everything else goes through those. The exemption for those two modules
+ * is granted below rather than here.
+ */
+const intlSelector = {
+  selector: "NewExpression[callee.object.name='Intl']",
+  message:
+    'Construct Intl formatters once per locale, not per call. Use the helpers in ' +
+    'core/format.ts, or plural() from i18n, and add a cached formatter there if you need a new one.',
+};
+
+/** Modules allowed to construct `Intl` objects, because they are what caches them. */
+const INTL_OWNERS = ['src/core/format.ts', 'src/i18n/index.ts'];
+
 export default tseslint.config(
   { ignores: ['dist/', 'coverage/', 'node_modules/', 'playwright-report/', 'test-results/'] },
 
@@ -80,22 +120,17 @@ export default tseslint.config(
             'insertAdjacentHTML is blocked by Trusted Types. Build nodes with core/dom.ts instead.',
         },
       ],
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: "CallExpression[callee.name='eval']",
-          message: 'eval is blocked by the Content Security Policy.',
-        },
-        {
-          selector: "NewExpression[callee.name='Function']",
-          message: 'The Function constructor is blocked by the Content Security Policy.',
-        },
-        {
-          selector:
-            "CallExpression[callee.object.name='document'][callee.property.name='write'], CallExpression[callee.object.name='document'][callee.property.name='writeln']",
-          message: 'document.write is blocked by Trusted Types.',
-        },
-      ],
+      'no-restricted-syntax': ['error', ...cspSelectors, intlSelector],
+    },
+  },
+
+  /* The two modules that own the formatter caches. They are exempt from the
+     `Intl` restriction and from nothing else, so the selectors above are
+     re-stated rather than switched off wholesale. */
+  {
+    files: INTL_OWNERS,
+    rules: {
+      'no-restricted-syntax': ['error', ...cspSelectors],
     },
   },
 

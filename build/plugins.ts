@@ -1,3 +1,5 @@
+import { gzipSync } from 'node:zlib';
+import type { OutputChunk } from 'rollup';
 import type { Plugin } from 'vite';
 import { contentSecurityPolicy } from './csp.js';
 import { TOOLS } from '../src/config/site.js';
@@ -122,6 +124,112 @@ export function assertNoInlineCode(): Plugin {
           }
         }
       }
+    },
+  };
+}
+
+/**
+ * Gzipped bytes each page is allowed to ship, counting its entry chunk, every
+ * chunk it imports, and its stylesheets.
+ *
+ * These are ratchets, not targets. Each was set with roughly a quarter of
+ * headroom over the real figure at the time, so ordinary work does not trip
+ * them; a build that exceeds one means something arrived that nobody weighed —
+ * a heavy import, a library, or dead code the bundler could not drop. Raising a
+ * number is a fine outcome, but it should be a decision someone made, which is
+ * the entire point of failing the build rather than printing a warning.
+ *
+ * Every entry needs a line here. A new tool with no budget fails the build,
+ * which is deliberate: choosing the weight of a page is part of adding one.
+ *
+ * The Sudoku worker is not covered. Vite builds workers in a separate pass with
+ * its own plugin list, so it never reaches this bundle; it is also fetched on
+ * demand rather than with the page, so it does not belong in a page's total.
+ */
+const PAGE_BUDGETS: Readonly<Record<string, number>> = {
+  hub: 19_000,
+  rice: 19_500,
+  sugar: 22_000,
+  counter: 23_500,
+  time: 27_500,
+  sudoku: 28_000,
+  recipes: 32_500,
+};
+
+/**
+ * Fails the build when a page grows past its budget.
+ *
+ * The site's whole performance story is that it ships very little; without a
+ * number attached, that stays true only for as long as everyone remembers it is
+ * supposed to. This is the check that noticed 139 regular expressions being
+ * compiled and thrown away on every visit to the Recipes page.
+ */
+export function assertBundleBudget(): Plugin {
+  return {
+    name: 'dwt:assert-bundle-budget',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      const chunks = new Map<string, OutputChunk>();
+      for (const output of Object.values(bundle)) {
+        if (output.type === 'chunk') chunks.set(output.fileName, output);
+      }
+
+      const gzipped = (source: string | Uint8Array): number => gzipSync(source).length;
+
+      /** An entry plus everything it pulls in, following imports transitively. */
+      const weigh = (entry: OutputChunk): { total: number; css: readonly string[] } => {
+        const seen = new Set<string>();
+        const css = new Set<string>();
+        let total = 0;
+
+        const visit = (fileName: string): void => {
+          if (seen.has(fileName)) return;
+          seen.add(fileName);
+          const chunk = chunks.get(fileName);
+          if (chunk === undefined) return;
+
+          total += gzipped(chunk.code);
+          /* Vite records the stylesheets a chunk pulls in here; they are fetched
+             with the page, so they count against the same budget. */
+          for (const sheet of chunk.viteMetadata?.importedCss ?? []) css.add(sheet);
+          for (const imported of chunk.imports) visit(imported);
+        };
+
+        visit(entry.fileName);
+
+        for (const sheet of css) {
+          const asset = bundle[sheet];
+          if (asset?.type === 'asset') total += gzipped(asset.source);
+        }
+        return { total, css: [...css] };
+      };
+
+      const report: string[] = [];
+      for (const chunk of chunks.values()) {
+        if (!chunk.isEntry) continue;
+
+        const name = chunk.name;
+        const budget = PAGE_BUDGETS[name];
+        if (budget === undefined) {
+          this.error(
+            `The entry "${name}" has no size budget. Add one to PAGE_BUDGETS in ` +
+              `build/plugins.ts — deciding what a new page may weigh is part of adding it.`,
+          );
+        }
+
+        const { total } = weigh(chunk);
+        report.push(`${name}: ${String(total)} / ${String(budget)} B gzip`);
+
+        if (total > budget) {
+          this.error(
+            `The "${name}" page ships ${String(total)} bytes gzipped, over its ` +
+              `${String(budget)} byte budget. Find what grew, or raise the budget in ` +
+              `build/plugins.ts if the growth is justified.`,
+          );
+        }
+      }
+
+      this.info(`page weight — ${report.sort().join(', ')}`);
     },
   };
 }

@@ -80,13 +80,38 @@ Dates are stored as ISO `YYYY-MM-DD` and formatted with `Intl` at render time.
 Version 1.0 stored `29.07.26`, which cannot be sorted, compared, or read in
 another locale.
 
+### Reuse the cached `Intl` formatters
+
+Use `formatNumber`, `formatIsoDate` and `formatTimestamp` from
+[`core/format.ts`](src/core/format.ts), and `plural()` from
+[`i18n`](src/i18n/index.ts). Constructing an `Intl` formatter costs tens of
+microseconds against well under one for reusing it, which is invisible until it
+happens inside a render loop — where it cost the Recipes list several
+milliseconds on every tap. ESLint rejects `new Intl.*` outside those two
+modules; if you need a formatter that does not exist yet, add a cached one
+there.
+
+### Render only what is on screen
+
+Tools with more than one panel should rebuild the visible one and mark the rest
+stale, as [`recipes/main.ts`](src/tools/recipes/main.ts) does. Rebuilding a
+hidden panel is work nobody can see, and rebuilding a whole list to change one
+label is the same mistake in a smaller size.
+
 ### Adding a tool
 
 1. Add one entry to [`src/config/site.ts`](src/config/site.ts).
 2. Create `<tool>/index.html` and `src/tools/<tool>/`.
 3. Add the two name/description keys to `en.ts` and `de.ts`.
+4. Add a page budget to `PAGE_BUDGETS` in [`build/plugins.ts`](build/plugins.ts).
 
-The build inputs, hub cards and test sweep all derive from step 1.
+The build inputs, hub cards and the whole security sweep — Content Security
+Policy, no inline code, no third-party requests, `no-referrer`, legacy redirects
+— all derive from step 1, so a new tool is enrolled in them automatically.
+
+Step 4 has no default on purpose: the build fails for an entry with no budget,
+because deciding what a page may weigh is part of adding one. Run
+`npm run build` and it will print each page's real gzipped weight.
 
 ## Tests
 

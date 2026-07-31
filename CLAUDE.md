@@ -22,6 +22,16 @@ Never claim work is done without running `npm run verify`. It is fast.
 - **No runtime dependencies.** The site ships zero third-party JavaScript, and that
   is a deliberate security property, not an accident. Adding one to `dependencies`
   needs an explicit decision from the maintainer. Dev dependencies are fine.
+  [`build/dependencies.test.ts`](build/dependencies.test.ts) fails on any runtime
+  dependency field, so this is a test, not a preference.
+- **Every page has a gzipped size budget** in `PAGE_BUDGETS`
+  ([`build/plugins.ts`](build/plugins.ts)), and the build fails when a page exceeds
+  it — or when a new entry has no budget at all. Raising a number is fine; it just
+  has to be a decision. `npm run build` prints each page's real weight.
+- **No `new Intl.*` outside [`core/format.ts`](src/core/format.ts) and
+  [`i18n/index.ts`](src/i18n/index.ts).** Formatters are built once per locale and
+  cached there; constructing one per call is tens of microseconds each and lands
+  in render loops. ESLint errors on it.
 - **No `alert`/`confirm`/`prompt`.** Use `confirmDialog()` from
   [`src/shell/dialog.ts`](src/shell/dialog.ts).
 - **No hardcoded user-visible strings.** Add a key to

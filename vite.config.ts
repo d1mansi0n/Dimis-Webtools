@@ -1,6 +1,11 @@
 import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url';
-import { assertNoInlineCode, legacyRedirects, securityMeta } from './build/plugins.js';
+import {
+  assertBundleBudget,
+  assertNoInlineCode,
+  legacyRedirects,
+  securityMeta,
+} from './build/plugins.js';
 import { TOOLS } from './src/config/site.js';
 
 const here = (relativePath: string): string =>
@@ -27,7 +32,7 @@ export default defineConfig(({ command, isPreview }) => {
   return {
     base,
 
-    plugins: [securityMeta(), legacyRedirects(base), assertNoInlineCode()],
+    plugins: [securityMeta(), legacyRedirects(base), assertNoInlineCode(), assertBundleBudget()],
 
     build: {
       target: 'es2022',
