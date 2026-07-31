@@ -98,12 +98,17 @@ export default defineConfig(({ command, isPreview }) => {
              - `main.ts` files are DOM wiring, asserted end to end;
              - `src/shell/**` composes the app bar, theme and dialogs, likewise;
              - `*.worker.ts` runs in a Worker, which jsdom does not provide;
+             - `sw.ts` is a service worker, so it needs a
+               `ServiceWorkerGlobalScope`, the Cache API and real `fetch`
+               interception; `e2e/offline.spec.ts` covers it by cutting the
+               network for real, which is the only test that means anything here;
              - `render.ts` draws on a 2D canvas, also absent from jsdom;
              - `trusted-types.ts` needs the browser Trusted Types API, and the
                e2e CSP test is what proves the policy actually works. */
           'src/**/main.ts',
           'src/shell/**',
           'src/**/*.worker.ts',
+          'src/sw.ts',
           'src/tools/counter/render.ts',
           'src/core/trusted-types.ts',
         ],

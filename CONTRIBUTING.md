@@ -14,8 +14,14 @@ npm run verify   # format, lint, typecheck, unit tests, build
 npm run e2e      # Playwright, against the production build
 ```
 
-`npm run verify` runs the same gates as CI, so if it passes locally CI will pass
-too. The e2e suite is separate because it builds the site and downloads a browser.
+`npm run verify` runs the same gates as CI, including the coverage thresholds, so
+if it passes locally CI will pass too. The e2e suite is separate because it builds
+the site and downloads a browser.
+
+That promise is only worth making if it is true: `verify` once ran the tests
+without coverage while CI ran them with it, and a change that dropped branch
+coverage below the threshold went out green locally and failed on CI. The two run
+the same command now.
 
 ## Conventions
 
