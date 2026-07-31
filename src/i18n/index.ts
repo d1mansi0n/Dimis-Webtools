@@ -114,13 +114,31 @@ export function plural(
   count: number,
   params?: Readonly<Record<string, string | number>>,
 ): string {
-  const category = new Intl.PluralRules(INTL_TAGS[active]).select(count);
+  const category = pluralRules().select(count);
   const catalogue = CATALOGUES[active] as Readonly<Record<string, string | undefined>>;
   const template = catalogue[`${base}.${category}`] ?? catalogue[`${base}.other`];
   if (template === undefined) {
     throw new Error(`No plural forms defined for "${base}".`);
   }
   return interpolate(template, { count, ...params });
+}
+
+/**
+ * The plural rules for the active locale, built once per locale.
+ *
+ * Constructing an `Intl.PluralRules` costs tens of microseconds; selecting a
+ * category on an existing one costs a fraction of that. A single Recipes render
+ * calls `plural()` a couple of hundred times, so building a fresh instance per
+ * call was several milliseconds of allocation on every interaction.
+ */
+const pluralRulesByLocale = new Map<Locale, Intl.PluralRules>();
+
+function pluralRules(): Intl.PluralRules {
+  const existing = pluralRulesByLocale.get(active);
+  if (existing !== undefined) return existing;
+  const created = new Intl.PluralRules(INTL_TAGS[active]);
+  pluralRulesByLocale.set(active, created);
+  return created;
 }
 
 function interpolate(template: string, params: Readonly<Record<string, string | number>>): string {

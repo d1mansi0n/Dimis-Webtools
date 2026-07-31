@@ -359,10 +359,25 @@ function mentionPattern(keyword: string): RegExp {
   return new RegExp(`(?<!${LETTER})${escaped}`, 'giu');
 }
 
-const MENTIONS: Readonly<Record<Locale, readonly Mention[]>> = {
-  de: buildMentions('de'),
-  en: buildMentions('en'),
-};
+/**
+ * The mention patterns, built on first use rather than at module load.
+ *
+ * `unlistedMentions` is a check over the catalogue that runs in the test suite;
+ * nothing in the running application calls it. Building these eagerly made every
+ * visit to the Recipes page compile 139 regular expressions and immediately
+ * throw them away — and the bundler could not remove that work, because
+ * `new RegExp` is not provably free of side effects, so tree-shaking the binding
+ * left the calls that fed it behind as bare expression statements.
+ */
+const mentionsByLocale = new Map<Locale, readonly Mention[]>();
+
+function mentionsFor(locale: Locale): readonly Mention[] {
+  const existing = mentionsByLocale.get(locale);
+  if (existing !== undefined) return existing;
+  const built = buildMentions(locale);
+  mentionsByLocale.set(locale, built);
+  return built;
+}
 
 function buildMentions(locale: Locale): readonly Mention[] {
   const mentions: Mention[] = [];
@@ -380,7 +395,13 @@ function buildMentions(locale: Locale): readonly Mention[] {
 }
 
 /** Every cupboard staple, as tick ids, so a method may name them freely. */
-const STAPLE_IDS = new Set(STAPLES.map((staple) => stapleCheckId(staple.id)));
+let stapleIds: ReadonlySet<string> | undefined;
+
+/** Built on first use, for the same reason as `mentionsFor`. */
+function stapleIdSet(): ReadonlySet<string> {
+  stapleIds ??= new Set(STAPLES.map((staple) => stapleCheckId(staple.id)));
+  return stapleIds;
+}
 
 /**
  * Ingredients a recipe's method calls for but its ingredient list does not.
@@ -399,10 +420,11 @@ const STAPLE_IDS = new Set(STAPLES.map((staple) => stapleCheckId(staple.id)));
 export function unlistedMentions(recipe: Recipe, locale: Locale): readonly string[] {
   const listed = new Set(recipe.ingredients.map((line) => line.id));
   const missing = new Set<string>();
+  const staples = stapleIdSet();
 
   for (const step of recipe.steps[locale]) {
-    for (const { id } of longestMatches(step, MENTIONS[locale])) {
-      if (!listed.has(id) && !STAPLE_IDS.has(id)) missing.add(id);
+    for (const { id } of longestMatches(step, mentionsFor(locale))) {
+      if (!listed.has(id) && !staples.has(id)) missing.add(id);
     }
   }
   return [...missing];

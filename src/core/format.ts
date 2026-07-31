@@ -13,6 +13,30 @@ const pad2 = (value: number): string => String(value).padStart(2, '0');
 const MS_PER_SECOND = 1000;
 const MS_PER_HOUR = 3_600_000;
 
+/*
+ * `Intl` formatters are expensive to build and cheap to reuse — constructing one
+ * costs tens of microseconds against well under one for a `format()` call on an
+ * instance that already exists. That is invisible until it happens in a loop:
+ * the Recipes list formats a few hundred amounts per render, which put several
+ * milliseconds of pure allocation into every tap on a phone.
+ *
+ * The caches below are keyed by everything that varies, and the key space is
+ * bounded by the two locales the site ships and the handful of fraction-digit
+ * settings its callers ask for, so they cannot grow without limit.
+ */
+
+const dateFormats = new Map<string, Intl.DateTimeFormat>();
+const timestampFormats = new Map<string, Intl.DateTimeFormat>();
+const numberFormats = new Map<string, Intl.NumberFormat>();
+
+function cached<T>(cache: Map<string, T>, key: string, create: () => T): T {
+  const existing = cache.get(key);
+  if (existing !== undefined) return existing;
+  const created = create();
+  cache.set(key, created);
+  return created;
+}
+
 /**
  * Elapsed milliseconds as `HH:MM:SS`.
  *
@@ -61,19 +85,29 @@ export function toIsoDate(date: Date): string {
 export function formatIsoDate(iso: string, locale: string): string {
   const parsed = parseIsoDate(iso);
   if (parsed === undefined) return iso;
-  return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(parsed);
+  return cached(
+    dateFormats,
+    locale,
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }),
+  ).format(parsed);
 }
 
 /** A timestamp formatted as date and time for the given locale. */
 export function formatTimestamp(ms: number, locale: string): string {
-  return new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(ms));
+  return cached(
+    timestampFormats,
+    locale,
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }),
+  ).format(new Date(ms));
 }
 
 /** Parse a strict ISO `YYYY-MM-DD`, rejecting anything else. */
@@ -103,5 +137,9 @@ export function legacyDateToIso(value: string): string | undefined {
 
 /** A number formatted for the given locale, at most `maximumFractionDigits` places. */
 export function formatNumber(value: number, locale: string, maximumFractionDigits = 1): string {
-  return new Intl.NumberFormat(locale, { maximumFractionDigits }).format(value);
+  return cached(
+    numberFormats,
+    `${locale}:${String(maximumFractionDigits)}`,
+    () => new Intl.NumberFormat(locale, { maximumFractionDigits }),
+  ).format(value);
 }

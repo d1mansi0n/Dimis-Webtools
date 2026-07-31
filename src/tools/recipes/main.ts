@@ -61,6 +61,20 @@ boot({
 
     let currentTab: 'recipes' | 'shopping' = 'recipes';
 
+    /*
+     * Which panels no longer match the state above.
+     *
+     * Only the panel actually on screen is rebuilt; the hidden one is marked and
+     * brought up to date when it is next shown. Choosing a recipe used to rebuild
+     * both panels — 25 cards, ~100 scaled amounts and the whole shopping list —
+     * to flip one button's label, and the shopping list was rebuilt on every tap
+     * even while nobody could see it.
+     */
+    const stale = { recipes: true, shopping: true };
+
+    /** The "3 recipes chosen" badge, refreshed in place as recipes are toggled. */
+    let selectionBadge: HTMLElement | undefined;
+
     /* Rebuilt by every shopping render; the tick handler updates them in place
        so that ticking a box never re-renders the list under the user's finger. */
     let counters: Counter[] = [];
@@ -132,10 +146,19 @@ boot({
         text: chosen ? t('recipes.added') : t('recipes.add'),
         on: {
           click: () => {
-            if (chosen) selected.delete(recipe.id);
-            else selected.add(recipe.id);
+            const nowChosen = !selected.has(recipe.id);
+            if (nowChosen) selected.add(recipe.id);
+            else selected.delete(recipe.id);
+
+            /* This button's own label and the count above it are the only things
+               on this panel that changed, so they are updated in place rather
+               than by rebuilding every card to flip one of them. */
+            toggle.setAttribute('aria-pressed', String(nowChosen));
+            toggle.textContent = nowChosen ? t('recipes.added') : t('recipes.add');
+            updateSelectionBadge();
+
             persist();
-            render();
+            invalidate('shopping');
           },
         },
       });
@@ -200,7 +223,18 @@ boot({
       );
     }
 
+    /** Refresh the chosen-recipe count without rebuilding the panel around it. */
+    function updateSelectionBadge(): void {
+      if (selectionBadge === undefined) return;
+      selectionBadge.textContent = plural('recipes.selected', selected.size);
+    }
+
     function renderRecipesPanel(): void {
+      selectionBadge = el('span', {
+        class: 'badge',
+        text: plural('recipes.selected', selected.size),
+      });
+
       const summary = el(
         'section',
         { class: 'card stack' },
@@ -208,7 +242,7 @@ boot({
           'div',
           { class: 'recipes-summary' },
           el('h2', { text: t('recipes.collection.title') }),
-          el('span', { class: 'badge', text: plural('recipes.selected', selected.size) }),
+          selectionBadge,
         ),
         el('p', { class: 'note', text: t('recipes.collection.hint') }),
         el(
@@ -222,7 +256,7 @@ boot({
               click: () => {
                 for (const recipe of RECIPES) selected.add(recipe.id);
                 persist();
-                render();
+                invalidate('recipes', 'shopping');
               },
             },
           }),
@@ -234,7 +268,7 @@ boot({
               click: () => {
                 selected.clear();
                 persist();
-                render();
+                invalidate('recipes', 'shopping');
               },
             },
           }),
@@ -335,7 +369,7 @@ boot({
             custom = removeCustomItem(custom, entry.item.id);
             checked.delete(entry.checkId);
             persist();
-            render();
+            invalidate('shopping');
           },
         });
       }
@@ -406,7 +440,7 @@ boot({
               checked.clear();
               for (const id of kept) checked.add(id);
               persist();
-              render();
+              invalidate('shopping');
             })();
           },
         },
@@ -627,7 +661,7 @@ boot({
            next thing being added is usually from the same one. */
         lastCategory = category;
         persist();
-        render();
+        invalidate('shopping');
 
         /* The panel was rebuilt, so the focus target is the new form's input. */
         const fresh = document.querySelector<HTMLInputElement>('#recipes-own-name');
@@ -680,12 +714,46 @@ boot({
     }
 
     /* ---------------------------------------------------------------- chrome */
+
+    /** Reflect the current tab onto the buttons and panels. */
+    function applyTabState(): void {
+      recipesTab.setAttribute('aria-pressed', String(currentTab === 'recipes'));
+      shoppingTab.setAttribute('aria-pressed', String(currentTab === 'shopping'));
+      recipesPanel.hidden = currentTab !== 'recipes';
+      shoppingPanel.hidden = currentTab !== 'shopping';
+    }
+
+    /**
+     * Rebuild the visible panel if the state has moved on since it was drawn.
+     *
+     * The hidden panel is deliberately left stale. Rendering it would be work
+     * nobody can see, and it is rebuilt the moment it is shown, so the only
+     * thing deferring it costs is that a panel switched to may take its render
+     * then rather than earlier.
+     */
+    function refresh(): void {
+      personsCount.textContent = formatNumber(persons, intlTag(), 0);
+
+      if (currentTab === 'recipes' && stale.recipes) {
+        renderRecipesPanel();
+        stale.recipes = false;
+      } else if (currentTab === 'shopping' && stale.shopping) {
+        renderShoppingPanel();
+        stale.shopping = false;
+      }
+
+      applyTabState();
+    }
+
+    /** Mark panels as out of date, then redraw whichever one is on screen. */
+    function invalidate(...panels: readonly ('recipes' | 'shopping')[]): void {
+      for (const panel of panels) stale[panel] = true;
+      refresh();
+    }
+
     function showTab(tab: 'recipes' | 'shopping'): void {
       currentTab = tab;
-      recipesTab.setAttribute('aria-pressed', String(tab === 'recipes'));
-      shoppingTab.setAttribute('aria-pressed', String(tab === 'shopping'));
-      recipesPanel.hidden = tab !== 'recipes';
-      shoppingPanel.hidden = tab !== 'shopping';
+      refresh();
     }
 
     function setPersons(next: number): void {
@@ -693,14 +761,8 @@ boot({
       if (clamped === persons) return;
       persons = clamped;
       persist();
-      render();
-    }
-
-    function render(): void {
-      personsCount.textContent = formatNumber(persons, intlTag(), 0);
-      renderRecipesPanel();
-      renderShoppingPanel();
-      showTab(currentTab);
+      /* Both panels show scaled amounts, so both are now out of date. */
+      invalidate('recipes', 'shopping');
     }
 
     /* --------------------------------------------------------------- wiring */
@@ -717,6 +779,6 @@ boot({
       setPersons(persons + 1);
     });
 
-    render();
+    refresh();
   },
 });

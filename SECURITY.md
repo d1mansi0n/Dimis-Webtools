@@ -133,14 +133,18 @@ it to, but it costs nothing to say so.
 The site ships nothing third-party, so `npm audit --omit=dev` is the audit that
 speaks to what users receive, and **CI fails if it is not clean**.
 
-Build-time advisories are reported but do not fail the build. As of this writing
-there are eight, all reaching us transitively through ESLint and the coverage
-reporter, all the same denial-of-service advisory against `brace-expansion`. The
-only patched release is a major version that is not API-compatible with the
-consumers that pull it in; forcing it broke the coverage reporter outright when
-tried. A denial-of-service flaw in a glob matcher that runs on a developer's
-machine, and never in a visitor's browser, is not worth breaking the build for.
-That judgement gets revisited whenever the tooling is updated.
+Build-time advisories are reported but do not fail the build. `npm audit` is
+currently clean across both production and development dependencies; the
+`brace-expansion` advisories that used to reach us transitively through ESLint
+and the coverage reporter cleared with the dependency update in `d9fd104`.
+
+The policy behind that split still stands, and it is the reason the development
+audit does not gate CI: an advisory against a package that only ever runs on a
+maintainer's machine cannot reach a visitor's browser, and forcing an
+incompatible major version to silence one is how build systems get broken —
+which is exactly what happened the last time it was tried against the coverage
+reporter. Each advisory is judged on whether it can reach a visitor, and that
+judgement gets revisited whenever the tooling is updated.
 
 Dependabot raises **security** advisories against a dependency immediately and
 individually, so they are never delayed or buried. Routine version bumps are a
