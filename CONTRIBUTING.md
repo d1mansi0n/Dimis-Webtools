@@ -117,6 +117,19 @@ rows, and `role="gridcell"` may sit nowhere but inside one. The Sudoku board got
 this wrong for a while — 81 cells parented straight to the grid — and the sweep
 is what found it.
 
+### Offline support comes for free
+
+[`src/sw.ts`](src/sw.ts) precaches every page and asset the build emits, and the
+list is generated from the real output — so a new tool works offline without
+anyone doing anything, in the same way it inherits the security sweep.
+
+The worker is registered only in a production build. In development it would
+serve yesterday's modules over the top of hot reload, which is a memorable way to
+lose an afternoon. That also means offline behaviour is only observable through
+`npm run e2e`, which runs against the production build; see
+[`e2e/offline.spec.ts`](e2e/offline.spec.ts), which cuts the network for real
+rather than trusting that registration implies it works.
+
 ### Adding a tool
 
 1. Add one entry to [`src/config/site.ts`](src/config/site.ts).

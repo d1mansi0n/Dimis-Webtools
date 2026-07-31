@@ -77,6 +77,18 @@ Never claim work is done without running `npm run verify`. It is fast.
   cell — dismissal is via the overlay or Escape. Only the overlay path arms the
   reopen guard; arming it on every close puts dead time between consecutive entries
   and makes e2e tests flaky.
+- **The service worker's precache list is injected by the build, not written by
+  hand.** [`src/sw.ts`](src/sw.ts) ships two placeholder literals that
+  `serviceWorkerManifest` ([`build/plugins.ts`](build/plugins.ts)) replaces once
+  Rollup has emitted the hashed filenames — `define` cannot do it, because the
+  hashes do not exist until after transform. The build fails loudly if the
+  placeholders are ever not found, because a silently unreplaced one ships a
+  worker that caches nothing and reports nothing.
+- **Cache lookups pass `ignoreVary: true`.** `vite preview` answers with
+  `Vary: Origin`, the precache stores `no-cors` requests that carry no `Origin`,
+  and the browser's own module requests do — so without it every lookup misses
+  and the site is cached but unusable offline, serving the HTML while every
+  script alongside it fails. Do not "tidy" it away.
 - **Don't put raw control characters in source files.** It makes them binary to
   `grep` and other tools. Write them as `\u0000`-style escape sequences instead.
 

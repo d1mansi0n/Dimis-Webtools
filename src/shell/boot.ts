@@ -8,6 +8,7 @@
 
 import { el, onReady, requireElement } from '../core/dom.js';
 import { isPersistent } from '../core/storage.js';
+import { trustedWorkerUrl } from '../core/trusted-types.js';
 import { applyDocumentLanguage, t } from '../i18n/index.js';
 import { applyAccent } from './accent.js';
 import { mountAppBar } from './appbar.js';
@@ -37,7 +38,45 @@ export function boot(options: BootOptions): void {
     } catch (cause) {
       reportStartupFailure(cause);
     }
+    registerServiceWorker();
   });
+}
+
+/**
+ * Register the offline worker, after the page itself has finished loading.
+ *
+ * Deliberately outside the `try` above and last in the sequence: offline support
+ * is an enhancement, and a browser that refuses it — or a registration that
+ * fails behind a corporate proxy — must not cost the visitor the tool they came
+ * for.
+ *
+ * Only in a production build. In development the worker would serve yesterday's
+ * modules over the top of Vite's hot reload, which is a uniquely confusing way
+ * to lose an afternoon.
+ */
+function registerServiceWorker(): void {
+  if (!import.meta.env.PROD) return;
+  if (!('serviceWorker' in navigator)) return;
+
+  window.addEventListener(
+    'load',
+    () => {
+      const url = new URL('sw.js', new URL(import.meta.env.BASE_URL, window.location.href));
+
+      /* `register()` is a Trusted Types sink in the same way the `Worker`
+         constructor is, so it goes through the one policy this site defines —
+         which refuses anything not on our own origin. */
+      navigator.serviceWorker
+        .register(trustedWorkerUrl(url), {
+          type: 'module',
+          scope: import.meta.env.BASE_URL,
+        })
+        .catch((cause: unknown) => {
+          console.warn('[boot] offline support is unavailable', cause);
+        });
+    },
+    { once: true },
+  );
 }
 
 /**

@@ -72,6 +72,34 @@ The build also **fails** if any inline `<script>`, `<style>` or `style` attribut
 reaches the output ([`build/plugins.ts`](build/plugins.ts)), since the policy would
 silently block it at run time.
 
+### The service worker
+
+[`src/sw.ts`](src/sw.ts) makes every tool work offline. A service worker is
+persistent — it stays registered after the tab closes and answers later requests
+— so it is worth being explicit about what it can and cannot do here.
+
+- **It only ever answers same-origin `GET`s.** Anything else is passed straight
+  through to the network untouched.
+- **It caches only what the build emitted.** The precache list is generated at
+  build time from the actual output ([`serviceWorkerManifest`](build/plugins.ts)),
+  not assembled at run time from anything a page says, so a compromised page
+  could not persuade it to store an attacker's response under a real URL.
+- **It is registered through Trusted Types.** `register()` is a
+  `TrustedScriptURL` sink exactly as the `Worker` constructor is, so it goes
+  through the same single `dwt-worker` policy, which refuses any URL that is not
+  on this origin.
+- **It is written by hand rather than generated.** Workbox would be a _dev_
+  dependency that emits _runtime_ code, which is the one gap in
+  [`build/dependencies.test.ts`](build/dependencies.test.ts): that test can see a
+  package in `dependencies`, but not third-party code a build tool pastes into
+  the output. A hundred lines that can be read start to finish was the better
+  trade.
+
+Pages are network-first, so a visitor with a connection always gets the current
+deploy; the cache answers only when the network has failed. A new build lands in
+a new cache — named from a hash of the manifest — and the previous one is deleted
+on activation, so an old version cannot outlive its deploy.
+
 ### No third-party runtime code
 
 The site has **zero runtime dependencies**. Versions 1.0 and 2.0 loaded SheetJS

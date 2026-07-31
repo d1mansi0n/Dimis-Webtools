@@ -12,8 +12,12 @@ tracking, no servers, and no third-party code at run time.
 | [Picture Counter](counter/) | Mark and count objects in a photo, then save the annotated image                      |
 
 Every tool is available in English and German, follows your system's light or
-dark theme, takes whatever accent colour you pick for it, and works offline once
-loaded.
+dark theme, and takes whatever accent colour you pick for it.
+
+Everything works offline. Opening any one tool caches all of them, so the
+shopping list is there in a shop with no signal, and a puzzle still generates on
+a train. Pages are fetched from the network whenever there is one, so being
+offline-capable never means being served a stale version.
 
 ## Design principles
 

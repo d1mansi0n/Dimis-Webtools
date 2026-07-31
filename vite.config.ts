@@ -5,6 +5,7 @@ import {
   assertNoInlineCode,
   legacyRedirects,
   securityMeta,
+  serviceWorkerManifest,
 } from './build/plugins.js';
 import { TOOLS } from './src/config/site.js';
 
@@ -32,7 +33,13 @@ export default defineConfig(({ command, isPreview }) => {
   return {
     base,
 
-    plugins: [securityMeta(), legacyRedirects(base), assertNoInlineCode(), assertBundleBudget()],
+    plugins: [
+      securityMeta(),
+      legacyRedirects(base),
+      assertNoInlineCode(),
+      assertBundleBudget(),
+      serviceWorkerManifest(base),
+    ],
 
     build: {
       target: 'es2022',
@@ -51,6 +58,18 @@ export default defineConfig(({ command, isPreview }) => {
         input: {
           hub: here('index.html'),
           ...Object.fromEntries(TOOLS.map((tool) => [tool.id, here(`${tool.id}/index.html`)])),
+          /* The service worker is an entry of its own so Rollup bundles it like
+             any other module. */
+          sw: here('src/sw.ts'),
+        },
+        output: {
+          /*
+           * The worker needs a stable, unhashed name at the deployment root: its
+           * URL is what a browser records as the registration, and its scope is
+           * the directory it is served from, so a hashed name under `assets/`
+           * could control nothing above itself.
+           */
+          entryFileNames: (chunk) => (chunk.name === 'sw' ? 'sw.js' : 'assets/[name]-[hash].js'),
         },
       },
     },

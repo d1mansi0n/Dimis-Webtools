@@ -1,8 +1,9 @@
+import { createHash } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import type { OutputChunk } from 'rollup';
 import type { Plugin } from 'vite';
 import { contentSecurityPolicy } from './csp.js';
-import { TOOLS } from '../src/config/site.js';
+import { PAGES, TOOLS } from '../src/config/site.js';
 
 /**
  * Injects the security meta tags into every page.
@@ -129,6 +130,73 @@ export function assertNoInlineCode(): Plugin {
 }
 
 /**
+ * Fills in the service worker's precache list once the real filenames exist.
+ *
+ * The manifest cannot be written by hand or injected with Vite's `define`: every
+ * asset carries a content hash that is only decided when Rollup emits it, which
+ * is after any transform has run. So the worker ships two placeholder literals
+ * and this replaces them in the emitted chunk.
+ *
+ * Source maps are excluded on purpose — they exist for debugging and would
+ * roughly triple what every visitor downloads on first load — as are the legacy
+ * redirect stubs, which only matter to someone following an old bookmark and are
+ * useless without a network anyway.
+ */
+export function serviceWorkerManifest(base: string): Plugin {
+  return {
+    name: 'dwt:service-worker-manifest',
+    apply: 'build',
+    /* After the budget check, so the worker is weighed as written rather than
+       with a few kilobytes of filenames pasted into it. */
+    enforce: 'post',
+    generateBundle(_options, bundle) {
+      const worker = bundle['sw.js'];
+      if (worker?.type !== 'chunk') {
+        this.error(
+          'The service worker chunk (sw.js) is missing, so its precache manifest ' +
+            'cannot be filled in. Check the `sw` entry in vite.config.ts.',
+        );
+      }
+
+      /* Pages are listed as the directory URLs a navigation actually requests
+         (`/base/recipes/`), not as `recipes/index.html`. */
+      const pages = PAGES.map((path) => `${base}${path}`);
+
+      const assets = Object.keys(bundle)
+        .filter(
+          (fileName) =>
+            fileName !== 'sw.js' &&
+            !fileName.endsWith('.map') &&
+            !fileName.endsWith('.html') &&
+            !TOOLS.some((tool) => tool.legacyPaths.includes(fileName)),
+        )
+        .map((fileName) => `${base}${fileName}`);
+
+      const manifest = [...pages, ...assets].sort();
+      const version = createHash('sha256').update(manifest.join('\n')).digest('hex').slice(0, 12);
+
+      const before = worker.code;
+      worker.code = worker.code
+        .replace('"__PRECACHE_MANIFEST__"', JSON.stringify(manifest))
+        .replace("'__PRECACHE_MANIFEST__'", JSON.stringify(manifest))
+        .replace('"__CACHE_VERSION__"', JSON.stringify(`dwt-${version}`))
+        .replace("'__CACHE_VERSION__'", JSON.stringify(`dwt-${version}`));
+
+      /* A silent no-op here would ship a worker that caches nothing and reports
+         no error, which is the worst of both worlds. */
+      if (worker.code === before) {
+        this.error(
+          'The service worker placeholders were not found in the emitted chunk. ' +
+            'Minification may have altered them; check src/sw.ts.',
+        );
+      }
+
+      this.info(`service worker precaches ${String(manifest.length)} URLs (dwt-${version})`);
+    },
+  };
+}
+
+/**
  * Gzipped bytes each page is allowed to ship, counting its entry chunk, every
  * chunk it imports, and its stylesheets.
  *
@@ -154,6 +222,11 @@ const PAGE_BUDGETS: Readonly<Record<string, number>> = {
   time: 27_500,
   sudoku: 28_000,
   recipes: 32_500,
+  /* Not a page, but every visitor downloads and runs it, so it is weighed on the
+     same terms. It is measured before its precache manifest is pasted in — see
+     `serviceWorkerManifest`, which runs after this — so the number reflects the
+     code rather than the length of the filenames it happens to list. */
+  sw: 2_500,
 };
 
 /**
