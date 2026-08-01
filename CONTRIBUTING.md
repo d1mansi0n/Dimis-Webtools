@@ -15,19 +15,22 @@ npm run e2e      # Playwright on Chromium + mobile, against the production build
 ```
 
 `npm run verify` runs the same gates as CI, including the coverage thresholds, so
-if it passes locally CI will pass too. The e2e suite is separate because it builds
-the site and downloads a browser.
+if it passes locally CI will pass too. That promise is only worth making if it is
+true: `verify` once ran the tests without coverage while CI ran them with it, and
+a change that dropped branch coverage below the threshold went out green locally
+and failed on CI. The two run the same command now.
 
-`npm run e2e` runs two of the four projects, which takes about four minutes.
-`npm run e2e:all` adds Firefox and WebKit and takes about sixteen, which is what
-CI and the deploy run; locally it is worth it before touching anything to do with
-storage, dialogs or the service worker, and not otherwise. To debug one engine,
-use `npx playwright test --project=webkit`.
+The e2e suite is separate because it builds the site and downloads a browser.
+`npm run e2e` runs two of the four Playwright projects, which takes about four
+minutes. `npm run e2e:all` adds Firefox and WebKit and takes about sixteen; that
+is what CI and the deploy run, and locally it is worth it before touching
+anything to do with storage, dialogs or the service worker, and not otherwise. To
+debug a single engine, use `npx playwright test --project=webkit`.
 
-That promise is only worth making if it is true: `verify` once ran the tests
-without coverage while CI ran them with it, and a change that dropped branch
-coverage below the threshold went out green locally and failed on CI. The two run
-the same command now.
+On a Linux box without `libavif16` installed, WebKit refuses to start and
+`npm run e2e:install:all` cannot fix it without root. CI installs the browsers as
+root and is unaffected; locally, either install the system package or stay on the
+default two projects.
 
 ## Conventions
 
@@ -85,6 +88,10 @@ leave the old key in place so a rollback loses nothing.
 `de.ts` fail to compile until it is translated — that is the mechanism, not an
 oversight. Use `{placeholders}` for interpolation and `.one`/`.other` for plurals.
 Never hardcode a user-visible string in markup or a module.
+
+Switching language reloads the page, deliberately. Every string is produced at
+render time from `t()`, so a reload is correct by construction on a site with no
+server, and it costs nothing anyone notices.
 
 ### Store data in a locale-independent form
 

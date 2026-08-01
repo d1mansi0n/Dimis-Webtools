@@ -170,15 +170,40 @@ with ticks that survive a reload.
   never reaches its fallback. Three tests that genuinely need the network cut are
   skipped on WebKit, where Playwright refuses an offline navigation before the
   worker is consulted at all; the reason is written where the skip is.
-- **Confirmation dialogs are answered through a helper that waits for them to
-  arrive and to leave.** Clicking the button by its label alone was a race on
-  WebKit — a click issued while the dialog was still being promoted into the top
-  layer is swallowed — which flaked about two runs in five on the one test that
-  opens two dialogs in a row. The dialog code itself was not at fault; a probe
-  found it removing its dialog cleanly on every engine.
+- **Confirmation dialogs are answered through one helper**, which waits for the
+  dialog to arrive, forces the click, and then asserts it left. Two separate
+  WebKit problems sat behind this: a click issued while the dialog was still
+  being promoted into the top layer is swallowed, and Playwright's own
+  actionability check waits for two consecutive animation frames with an
+  identical box — which two parallel WebKit contexts starve each other of, so it
+  can hang on an element measured to be perfectly still. Forcing is safe because
+  the assertion after it fails if the click did not land. The application's
+  dialog code was not at fault, which was checked rather than assumed.
 - **The time export takes the latest session end rather than the last recorded
   one**, so hand-edited or migrated data cannot produce an entry that appears to
   have finished before it did.
+- **The deploy checks the site it just published.** A service worker answered
+  with a non-JavaScript `Content-Type` is rejected by the browser outright and
+  offline support silently never starts — a property of the host, not the
+  artifact, so nothing in the build or the test suite can see it. The workflow
+  now fetches the deployed `sw.js`, checks how it is served and that its precache
+  manifest was injected, and fails the run otherwise. This replaces a manual
+  "open DevTools and look" step, which is not a check at all.
+- **The page budgets have real headroom.** They were set within a percent or two
+  of each page's true weight, which sounds stricter and was worse: an ordinary
+  CSS tweak tripped the build and the fix was always to raise the number, so the
+  failure carried no information. They sit about a tenth above the real figure
+  now — wide enough that normal work never touches them, narrow enough to catch a
+  dependency or an unoptimised asset immediately.
+- **`HANDOFF.md` is gone.** It duplicated `CONTRIBUTING.md` and `CLAUDE.md`, and
+  the rest of it — test counts, "what changed last session", a list of things to
+  look out for — was stale within a day of being written, three times over. What
+  was durable moved into the two files people actually read; the history lives in
+  git and this changelog.
+- **Dead code removed:** an unused `findTool()` and the unused voice-language
+  type, and six exports that nothing outside their own module used are no longer
+  exported. The bundler was already dropping them; the point is that the public
+  surface of a module should say what it is for.
 
 ## 3.0.0 — full rewrite
 
