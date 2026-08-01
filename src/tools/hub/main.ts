@@ -5,6 +5,7 @@ import { el, requireElement } from '../../core/dom.js';
 import { TOOLS } from '../../config/site.js';
 import { t } from '../../i18n/index.js';
 import { boot } from '../../shell/boot.js';
+import { icon } from '../../shell/icons.js';
 
 const REPOSITORY_URL = 'https://github.com/d1mansi0n/Dimis-Webtools';
 
@@ -31,9 +32,9 @@ function toolCard(tool: (typeof TOOLS)[number]): HTMLElement {
     el(
       'a',
       { class: 'tool-card', attrs: { href: `${tool.id}/` } },
-      /* The emoji is decoration; the tool's name right beside it is the real
-         label, so hiding it keeps screen readers from announcing "abacus". */
-      el('span', { class: 'tool-card__icon', attrs: { 'aria-hidden': 'true' }, text: tool.icon }),
+      /* Decoration; the tool's name right beside it is the real label, which is
+         why the icon itself is `aria-hidden`. */
+      el('span', { class: 'tool-card__icon' }, icon(tool.icon, { size: 22 })),
       el(
         'span',
         { class: 'tool-card__body' },

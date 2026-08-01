@@ -94,7 +94,7 @@ export const de: Messages = {
   'time.showClock': 'HH:MM:SS anzeigen',
   'time.export': 'Nach Excel exportieren',
   'time.clearAll': 'Alle Einträge löschen',
-  'time.voice.push': '🎤 Zum Sprechen halten',
+  'time.voice.push': 'Zum Sprechen halten',
   'time.voice.hold': 'Zum Sprechen gedrückt halten',
   'time.voice.language': 'Sprache der Spracherkennung',
   'time.voice.unsupported': 'Dein Browser unterstützt keine Spracherkennung.',
@@ -140,7 +140,7 @@ export const de: Messages = {
   'time.export.sheet': 'Zeiteinträge',
 
   /* ------------------------------------------------------------ counter */
-  'counter.upload': '📁 Bild auswählen',
+  'counter.upload': 'Bild auswählen',
   'counter.markers.one': '{count} Markierung',
   'counter.markers.other': '{count} Markierungen',
   'counter.color': 'Farbe',
@@ -153,7 +153,7 @@ export const de: Messages = {
   'counter.lock': 'Zoom und Verschieben sperren',
   'counter.undo': 'Letzte zurücknehmen',
   'counter.clear': 'Alle entfernen',
-  'counter.save': '💾 Bild speichern',
+  'counter.save': 'Bild speichern',
   'counter.empty': 'Wähle ein Bild, um mit dem Zählen zu beginnen.',
   'counter.empty.hint':
     'Tippen setzt eine Markierung · Markierung ziehen verschiebt sie · Hintergrund ziehen verschiebt das Bild · Pinch oder Scrollen zoomt.',

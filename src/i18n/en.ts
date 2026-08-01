@@ -97,7 +97,7 @@ export const en = {
   'time.showClock': 'Show HH:MM:SS',
   'time.export': 'Export to Excel',
   'time.clearAll': 'Clear all entries',
-  'time.voice.push': '🎤 Push to talk',
+  'time.voice.push': 'Push to talk',
   'time.voice.hold': 'Hold to speak',
   'time.voice.language': 'Voice language',
   'time.voice.unsupported': 'Your browser does not support speech recognition.',
@@ -142,7 +142,7 @@ export const en = {
   'time.export.sheet': 'Time entries',
 
   /* ------------------------------------------------------------ counter */
-  'counter.upload': '📁 Choose image',
+  'counter.upload': 'Choose image',
   'counter.markers.one': '{count} marker',
   'counter.markers.other': '{count} markers',
   'counter.color': 'Colour',
@@ -155,7 +155,7 @@ export const en = {
   'counter.lock': 'Lock zoom and pan',
   'counter.undo': 'Undo last',
   'counter.clear': 'Clear all',
-  'counter.save': '💾 Save image',
+  'counter.save': 'Save image',
   'counter.empty': 'Choose an image to start counting.',
   'counter.empty.hint':
     'Tap to add a marker · drag a marker to move it · drag the background to pan · pinch or scroll to zoom.',

@@ -19,11 +19,10 @@ body {
   line-height: 1.5;
   color: var(--text);
 
-  /* Flat colour plus one soft halo at the top of the page. The gradient is
-     painted once and scrolls with the content; see `--bg-glow`. */
+  /* Flat, and one colour. The page used to carry a wide accent-tinted halo
+     behind the top of the content; it put a hue on a surface that has no reason
+     to have one and made every accent but the default look out of place. */
   background-color: var(--bg);
-  background-image: var(--bg-glow);
-  background-repeat: no-repeat;
 }
 
 h1,

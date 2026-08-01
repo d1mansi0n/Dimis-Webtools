@@ -9,13 +9,8 @@
 import { el, replaceChildren, requireElement } from '../core/dom.js';
 import { LOCALES, locale, setLocale, t, type Locale } from '../i18n/index.js';
 import { openAccentPicker } from './accent-picker.js';
-import { cycleTheme, theme, type ThemeChoice } from './theme.js';
-
-const THEME_ICON: Readonly<Record<ThemeChoice, string>> = {
-  system: '🖥️',
-  light: '☀️',
-  dark: '🌙',
-};
+import { icon } from './icons.js';
+import { cycleTheme, theme } from './theme.js';
 
 export interface AppBarOptions {
   /**
@@ -37,10 +32,17 @@ export function mountAppBar(options: AppBarOptions): void {
   const themeButton = el('button', {
     class: ['btn', 'btn--ghost', 'btn--icon'],
     attrs: { type: 'button', title: t('sudoku.theme'), 'aria-label': t('sudoku.theme') },
-    text: THEME_ICON[theme()],
   });
+  /* The icon *is* the state — monitor, sun, moon — so it is replaced rather than
+     restyled when the choice cycles. The accessible name never changes, because
+     the button always does the same thing. */
+  const showTheme = (): void => {
+    themeButton.replaceChildren(icon(theme()));
+  };
+  showTheme();
   themeButton.addEventListener('click', () => {
-    themeButton.textContent = THEME_ICON[cycleTheme()];
+    cycleTheme();
+    showTheme();
   });
 
   /* On the hub the left slot stays empty: it used to repeat the site name a

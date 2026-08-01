@@ -141,10 +141,10 @@ describe('derivePalette', () => {
     THEMES.map((theme) => ({ seed, theme, palette: derivePalette(seed, theme) })),
   );
 
-  it('produces six valid colours for every seed and theme', () => {
+  it('produces five valid colours for every seed and theme', () => {
     for (const { seed, theme, palette } of palettes) {
       const entries: [string, string][] = Object.entries(palette);
-      expect(entries).toHaveLength(6);
+      expect(entries).toHaveLength(5);
       for (const [name, value] of entries) {
         expect(parseHexColor(value), `${seed}/${theme}/${name} is not a colour`).toBeDefined();
       }
@@ -192,11 +192,10 @@ describe('derivePalette', () => {
     }
   });
 
-  it('keeps the soft tint and the glow close to the theme background', () => {
+  it('keeps the soft tint close to the theme background', () => {
     for (const { seed, theme, palette } of palettes) {
       const towards = theme === 'light' ? '#ffffff' : '#000000';
       expect(ratio(palette.accentSoft, towards), `${seed}/${theme} soft`).toBeLessThan(2);
-      expect(ratio(palette.accentGlow, towards), `${seed}/${theme} glow`).toBeLessThan(3);
     }
   });
 

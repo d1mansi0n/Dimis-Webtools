@@ -17,33 +17,36 @@
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   box-shadow: var(--shadow);
+  /* No lift on hover. A row that jumps a couple of pixels under the cursor is
+     the sort of motion that reads as a demo; the border and the surface say
+     "this is the one" without moving the page. */
   transition:
-    transform var(--transition),
+    background-color var(--transition),
     border-color var(--transition);
 }
 
 .tool-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent);
-  box-shadow: var(--shadow-lg);
-}
-
-.tool-card:hover .tool-card__icon {
-  background: var(--accent);
-  color: var(--text-on-accent);
+  border-color: var(--border-strong);
+  background: var(--surface-sunken);
 }
 
 .tool-card__icon {
-  flex: 0 0 2.875rem;
-  height: 2.875rem;
+  flex: 0 0 2.75rem;
+  height: 2.75rem;
   display: grid;
   place-items: center;
-  background: var(--accent-soft);
+  /* Neutral, not accent-tinted. The accent is the site's one colour and it is
+     worth spending on things that mean something — a primary action, a focus
+     ring, a live value — rather than on six decorative tiles. */
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  font-size: 1.4rem;
-  transition:
-    background-color var(--transition),
-    color var(--transition);
+  color: var(--text-muted);
+}
+
+.tool-card:hover .tool-card__icon {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .tool-card__body {

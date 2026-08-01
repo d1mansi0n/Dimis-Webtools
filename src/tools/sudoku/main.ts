@@ -7,6 +7,7 @@ import { clamp } from '../../core/math.js';
 import { trustedWorkerUrl } from '../../core/trusted-types.js';
 import { intlTag, t, type TranslationKey } from '../../i18n/index.js';
 import { boot } from '../../shell/boot.js';
+import { icon } from '../../shell/icons.js';
 import { confirmDialog } from '../../shell/dialog.js';
 import generatorWorkerUrl from './generator.worker.ts?worker&url';
 import { BOX_SIZE, CELL_COUNT, columnOf, DIGITS, GRID_SIZE, indexOf, rowOf } from './board.js';
@@ -80,7 +81,7 @@ boot({
     undoButton.textContent = t('sudoku.undo');
     requireElement('[data-sudoku="check"]').textContent = t('sudoku.check');
     /* An icon, so the label lives in the title and the accessible name instead. */
-    validationButton.textContent = '👁';
+    validationButton.replaceChildren(icon('eye'));
     validationButton.title = t('sudoku.instantValidation');
     validationButton.setAttribute('aria-label', t('sudoku.instantValidation'));
 
@@ -516,7 +517,7 @@ boot({
       if (won) return;
       paused = next;
       wrapper.toggleAttribute('data-paused', paused);
-      pauseButton.textContent = paused ? '▶' : '❙❙';
+      pauseButton.replaceChildren(icon(paused ? 'play' : 'pause'));
       pauseButton.setAttribute('aria-label', paused ? t('sudoku.resume') : t('sudoku.pause'));
       if (paused) stopTimer();
       else resumeTimer();

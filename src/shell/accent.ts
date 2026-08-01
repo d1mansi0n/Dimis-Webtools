@@ -25,7 +25,6 @@ const PROPERTIES: Readonly<Record<keyof AccentPalette, string>> = {
   accent: '--accent',
   accentHover: '--accent-hover',
   accentSoft: '--accent-soft',
-  accentGlow: '--accent-glow',
   control: '--control',
   textOnAccent: '--text-on-accent',
 };

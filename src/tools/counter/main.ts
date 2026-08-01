@@ -6,6 +6,7 @@ import { toIsoDate } from '../../core/format.js';
 import { clamp } from '../../core/math.js';
 import { plural, t } from '../../i18n/index.js';
 import { boot } from '../../shell/boot.js';
+import { icon } from '../../shell/icons.js';
 import { confirmDialog } from '../../shell/dialog.js';
 import {
   addMarker,
@@ -89,14 +90,20 @@ boot({
     /* ----------------------------------------------------------------- chrome */
     document.title = `${t('tool.counter.name')} · ${t('app.name')}`;
     requireElement('[data-counter="title"]').textContent = t('tool.counter.name');
-    requireElement('[data-counter="upload"]').textContent = t('counter.upload');
+    requireElement('[data-counter="upload"]').replaceChildren(
+      icon('upload'),
+      document.createTextNode(t('counter.upload')),
+    );
     requireElement('[data-counter="colorLabel"]').textContent = t('counter.color');
     requireElement('[data-counter="sizeLabel"]').textContent = t('counter.size');
     requireElement('[data-counter="zoomLabel"]').textContent = t('counter.zoom');
     requireElement('[data-counter="lockLabel"]').textContent = t('counter.lock');
     requireElement('[data-counter="undo"]').textContent = t('counter.undo');
     requireElement('[data-counter="clear"]').textContent = t('counter.clear');
-    requireElement('[data-counter="save"]').textContent = t('counter.save');
+    requireElement('[data-counter="save"]').replaceChildren(
+      icon('download'),
+      document.createTextNode(t('counter.save')),
+    );
     requireElement('[data-counter="help"]').textContent = t('counter.help');
     requireElement('[data-counter="fit"]').textContent = t('counter.fit');
     requireElement('[data-counter="fit"]').title = t('counter.fit.title');

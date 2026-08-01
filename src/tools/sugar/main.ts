@@ -1,11 +1,12 @@
 import '../../styles/app.css';
 import './sugar.css';
 
-import { el, requireElement } from '../../core/dom.js';
+import { el, replaceChildren, requireElement } from '../../core/dom.js';
 import { formatNumber } from '../../core/format.js';
 import { parseDecimal } from '../../core/math.js';
 import { intlTag, locale, t } from '../../i18n/index.js';
 import { boot } from '../../shell/boot.js';
+import { icon } from '../../shell/icons.js';
 import { analyse, compare, MAX_CUBE_ICONS } from './sugar.js';
 
 boot({
@@ -46,12 +47,19 @@ boot({
       const breakdown = analyse(grams);
       cubesValue.textContent = format(breakdown.cubes);
       percentValue.textContent = `${format(breakdown.percentOfDailyMax)} %`;
-      cubeStrip.textContent =
-        breakdown.wholeCubes > MAX_CUBE_ICONS
-          ? `${'🧊'.repeat(MAX_CUBE_ICONS)} ${t('sugar.cubes.overflow', {
-              total: format(breakdown.wholeCubes),
-            })}`
-          : '🧊'.repeat(breakdown.wholeCubes);
+      /* Drawn rather than spelled with an emoji: the ice-cube glyph rendered at
+         a different size, weight and colour on every platform, and none of them
+         looked like the sugar cube the number beside it is counting. */
+      const shown = Math.min(breakdown.wholeCubes, MAX_CUBE_ICONS);
+      replaceChildren(
+        cubeStrip,
+        ...Array.from({ length: shown }, () => icon('cube', { size: 18 })),
+        breakdown.wholeCubes > MAX_CUBE_ICONS &&
+          el('span', {
+            class: 'sugar-cubes__overflow',
+            text: t('sugar.cubes.overflow', { total: format(breakdown.wholeCubes) }),
+          }),
+      );
       resultCard.hidden = false;
 
       const { window, closest } = compare(grams);

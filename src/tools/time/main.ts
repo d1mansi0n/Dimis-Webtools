@@ -11,6 +11,7 @@ import {
 } from '../../core/format.js';
 import { intlTag, t } from '../../i18n/index.js';
 import { boot } from '../../shell/boot.js';
+import { icon } from '../../shell/icons.js';
 import { confirmDialog } from '../../shell/dialog.js';
 import { buildSheet, downloadWorkbook, exportFileName } from './export.js';
 import {
@@ -82,7 +83,7 @@ boot({
     requireElement('[data-time="toggleComments"]').textContent = t('time.comments.toggle');
     clearCommentsButton.textContent = t('time.comments.clear');
     emptyMessage.textContent = t('time.empty');
-    voiceButton.textContent = t('time.voice.push');
+    voiceButton.replaceChildren(icon('microphone'), document.createTextNode(t('time.voice.push')));
     voiceButton.title = t('time.voice.hold');
     voiceLanguage.setAttribute('aria-label', t('time.voice.language'));
     updateFormatButton();

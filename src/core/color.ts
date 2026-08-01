@@ -51,7 +51,7 @@ const AA_TEXT = 4.5;
  */
 export const THEME_SURFACE: Readonly<Record<ThemeMode, string>> = {
   light: '#ffffff',
-  dark: '#161a23',
+  dark: '#1a1a1a',
 };
 
 /**
@@ -62,7 +62,7 @@ export const THEME_SURFACE: Readonly<Record<ThemeMode, string>> = {
  * light theme's accent is always the dark one — a pale yellow accent breaks that
  * assumption immediately.
  */
-const ON_ACCENT_CANDIDATES = ['#ffffff', '#10131f'] as const;
+const ON_ACCENT_CANDIDATES = ['#ffffff', '#141414'] as const;
 
 const HEX = /^#[0-9a-f]{6}$/i;
 
@@ -202,7 +202,6 @@ export interface AccentPalette {
   readonly accent: string;
   readonly accentHover: string;
   readonly accentSoft: string;
-  readonly accentGlow: string;
   readonly control: string;
   readonly textOnAccent: string;
 }
@@ -214,10 +213,7 @@ export interface AccentPalette {
  * move away from them until the contrast requirements hold. The chroma ceilings
  * are what stop a fully saturated seed from turning the page into a highlighter
  * — the accent is a colour the eye lives with on every control of every page.
- *
- * The dark theme's glow is a dark tint rather than a dimmed light one: the same
- * pale colour over a near-black page reads as a grey smear instead of as light.
- */
+ * */
 const TARGETS: Readonly<
   Record<
     ThemeMode,
@@ -228,8 +224,6 @@ const TARGETS: Readonly<
       readonly controlShift: number;
       readonly softL: number;
       readonly softChroma: number;
-      readonly glowL: number;
-      readonly glowChroma: number;
       /** Direction the accent moves in when it is not yet legible enough. */
       readonly rescue: 1 | -1;
     }
@@ -242,8 +236,6 @@ const TARGETS: Readonly<
     controlShift: 0.07,
     softL: 0.965,
     softChroma: 0.03,
-    glowL: 0.94,
-    glowChroma: 0.05,
     rescue: -1,
   },
   dark: {
@@ -253,8 +245,6 @@ const TARGETS: Readonly<
     controlShift: -0.06,
     softL: 0.31,
     softChroma: 0.06,
-    glowL: 0.29,
-    glowChroma: 0.07,
     rescue: 1,
   },
 };
@@ -352,9 +342,6 @@ export function derivePalette(seed: string, theme: ThemeMode): AccentPalette {
     accent: formatHexColor(accent),
     accentHover: formatHexColor(oklchToRgb({ l: accentL + target.hoverShift, c: chroma, h })),
     accentSoft: formatHexColor(soft),
-    accentGlow: formatHexColor(
-      oklchToRgb({ l: target.glowL, c: Math.min(c, target.glowChroma), h }),
-    ),
     control: formatHexColor(control),
     textOnAccent: onAccent.hex,
   };

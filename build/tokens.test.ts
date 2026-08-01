@@ -58,7 +58,6 @@ describe('the accent tokens in tokens.css', () => {
       expect(declared.get('--accent')).toBe(derived.accent);
       expect(declared.get('--accent-hover')).toBe(derived.accentHover);
       expect(declared.get('--accent-soft')).toBe(derived.accentSoft);
-      expect(declared.get('--accent-glow')).toBe(derived.accentGlow);
       expect(declared.get('--control')).toBe(derived.control);
       expect(declared.get('--text-on-accent')).toBe(derived.textOnAccent);
     });

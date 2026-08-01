@@ -21,10 +21,17 @@ body {
 
 .sugar-cubes {
   margin-top: var(--space-3);
-  line-height: 1.7;
-  font-size: 1.05rem;
-  letter-spacing: 0.1em;
-  overflow-wrap: anywhere;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--accent);
+}
+
+.sugar-cubes__overflow {
+  margin-left: var(--space-2);
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 .sugar-compare {

@@ -79,6 +79,30 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
+/**
+ * Build an SVG element.
+ *
+ * Separate from `el` because SVG elements live in their own namespace and
+ * `createElement` would produce an `HTMLUnknownElement` that renders as nothing.
+ * It is still `createElementNS` plus `setAttribute`, so it inherits the same
+ * guarantee as everything else here: no string is ever parsed as markup, and the
+ * Trusted Types policy has nothing to catch.
+ */
+export function svgEl(
+  tag: string,
+  attrs: Readonly<Record<string, string | number>> = {},
+  ...children: readonly Element[]
+): SVGElement {
+  const node = document.createElementNS(SVG_NAMESPACE, tag);
+  for (const [name, value] of Object.entries(attrs)) {
+    node.setAttribute(name, String(value));
+  }
+  node.append(...children);
+  return node;
+}
+
 /** Set or remove a single attribute, following the `true`/`false` convention above. */
 export function setAttr(
   node: Element,
