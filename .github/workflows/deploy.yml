@@ -51,9 +51,10 @@ jobs:
       # only test of it that means anything. Publishing a broken one without
       # running that would be publishing the most persistent artifact on the
       # site — it outlives the tab — with nothing checking it.
-      # `e2e:all`, not `e2e`: the local default is Chromium and the mobile
-      # viewport, because sixteen minutes on every change is not a price worth
-      # paying for a site this size. The gate that publishes still runs all four.
+      #
+      # `e2e:all` rather than `e2e`: the local default is two projects, because
+      # sixteen minutes on every change is not worth it for a site this size.
+      # The gate that publishes still runs all four.
       - name: End-to-end tests
         run: npm run e2e:all
 
@@ -92,6 +93,72 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
+
+  # Everything above this point tests the site as built. This tests the site as
+  # *served*, which is the one thing a local run can never do.
+  #
+  # The failure it exists for: a service worker answered with a non-JavaScript
+  # `Content-Type` is rejected by the browser outright, and offline support
+  # silently never turns on. Nothing in the build or the end-to-end suite can see
+  # that, because it is a property of the host rather than the artifact. This used
+  # to be a manual "open DevTools and look" step written down in the handoff; a
+  # check nobody is reminded to run is not a check.
+  verify-deployment:
+    name: Verify the deployed worker
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: The served worker must be JavaScript, and have its manifest filled in
+        env:
+          PAGE_URL: ${{ needs.deploy.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          base="${PAGE_URL%/}/"
+          echo "Checking $base"
+
+          # Pages can take a few seconds to answer with the new deployment.
+          worker=""
+          for attempt in 1 2 3 4 5; do
+            if worker=$(curl -fsS --max-time 30 "${base}sw.js"); then break; fi
+            echo "sw.js not ready yet (attempt $attempt); retrying in 10s"
+            sleep 10
+          done
+          if [ -z "$worker" ]; then
+            echo "::error::${base}sw.js could not be fetched after five attempts."
+            exit 1
+          fi
+
+          type=$(curl -fsSI --max-time 30 "${base}sw.js" \
+            | tr -d '\r' \
+            | awk -F': ' 'tolower($1) == "content-type" { print tolower($2) }')
+          echo "sw.js Content-Type: ${type:-<none>}"
+          case "$type" in
+            *javascript*) ;;
+            *)
+              echo "::error::sw.js is served as '${type:-<none>}'. A service worker must be"
+              echo "::error::served as JavaScript or the browser refuses to register it."
+              exit 1
+              ;;
+          esac
+
+          # The precache list is pasted in after Rollup hashes the filenames. An
+          # unreplaced placeholder ships a worker that caches nothing and says
+          # nothing about it.
+          if printf '%s' "$worker" | grep -q '__PRECACHE_MANIFEST__\|__CACHE_VERSION__'; then
+            echo "::error::sw.js still contains build placeholders."
+            exit 1
+          fi
+          if ! printf '%s' "$worker" | grep -q 'dwt-'; then
+            echo "::error::sw.js carries no cache name, so its manifest was not injected."
+            exit 1
+          fi
+
+          # And the site it caches is actually being served.
+          curl -fsS --max-time 30 -o /dev/null "$base"
+
+          echo "The deployed worker is served as JavaScript with its manifest in place."
