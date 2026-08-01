@@ -12,6 +12,26 @@ const seedOf = (id: string): string => {
 };
 
 /**
+ * Answer a `confirmDialog()`, waiting for it both to arrive and to leave.
+ *
+ * Clicking the button by its label alone is a race on WebKit: a click issued
+ * while the dialog is still being promoted into the top layer is swallowed, and
+ * the test then sits there until it times out. It flaked roughly two runs in
+ * five, and only ever on the *second* dialog of a test — the one opened while
+ * the previous one was still being torn down.
+ *
+ * Waiting for `dialog[open]` first, and for its removal afterwards, makes the
+ * sequence deterministic on every engine. `confirmDialog()` itself is fine: the
+ * dialog is removed on close, and a probe found no leftovers on any engine.
+ */
+const answerDialog = async (page: Page, label: string): Promise<void> => {
+  const dialog = page.locator('dialog[open]');
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: label, exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+};
+
+/**
  * A 100×100 PNG, built here rather than committed as a fixture.
  *
  * It has to be a *valid* one. The version of this constant that these tests
@@ -287,6 +307,29 @@ test.describe('picture counter', () => {
     await page.goto('counter/');
     await expect(page.locator('[data-counter="overlay"]')).toBeVisible();
     await expect(page.locator('[data-counter="count"]')).toHaveText('0 markers');
+  });
+
+  test('takes the prompt away once a picture is on the canvas', async ({ page }) => {
+    await page.goto('counter/');
+
+    const overlay = page.locator('[data-counter="overlay"]');
+    const canvas = page.locator('[data-counter="canvas"]');
+
+    await expect(overlay).toBeVisible();
+    /* Hidden until there is something to draw on it. */
+    await expect(canvas).toBeHidden();
+
+    await page.setInputFiles('#counter-file', {
+      name: 'test.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(TEST_PNG, 'base64'),
+    });
+
+    await expect(canvas).toBeVisible();
+    /* Setting the `hidden` property was never enough on its own: the stylesheet
+       gives both of these elements a `display`, which beats the user agent's
+       `[hidden]` rule, so the grey prompt went on sitting over the picture. */
+    await expect(overlay).toBeHidden();
   });
 
   test('loads an image and places markers where it is tapped', async ({ page }) => {
@@ -767,13 +810,13 @@ test.describe('recipes and shopping list', () => {
     await oil.locator('input').check();
 
     await page.getByRole('button', { name: 'Clear the ticks above' }).click();
-    await page.getByRole('button', { name: 'Yes' }).click();
+    await answerDialog(page, 'Yes');
 
     await expect(oats.locator('input')).not.toBeChecked();
     await expect(oil.locator('input')).toBeChecked();
 
     await page.getByRole('button', { name: 'Clear the staple ticks' }).click();
-    await page.getByRole('button', { name: 'Yes' }).click();
+    await answerDialog(page, 'Yes');
 
     await expect(oil.locator('input')).not.toBeChecked();
   });

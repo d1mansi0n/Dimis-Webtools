@@ -69,3 +69,19 @@ body {
   text-align: center;
   padding: var(--space-4);
 }
+
+/*
+ * `hidden` has to be spelled out, because the two rules above already set
+ * `display` on these elements.
+ *
+ * The user agent's `[hidden] { display: none }` comes from a weaker cascade
+ * origin, so an author `display` always beats it — which meant `overlay.hidden
+ * = true` set the attribute and changed nothing on screen: the grey "choose an
+ * image" prompt stayed sitting on top of the picture that had just loaded. It
+ * was easy to miss because the overlay is `pointer-events: none`, so it never
+ * swallowed a tap and nothing but the text itself was wrong.
+ */
+.counter-overlay[hidden],
+.counter-stage canvas[hidden] {
+  display: none;
+}
