@@ -22,8 +22,47 @@ const waitForControl = async (page: Page): Promise<void> => {
   });
 };
 
+/**
+ * Why the tests below that cut the network do not run on WebKit.
+ *
+ * Playwright's WebKit refuses a navigation made while `setOffline(true)` before
+ * the service worker is consulted at all: the call fails with "WebKit
+ * encountered an internal error" rather than reaching a `fetch` the worker could
+ * answer from its cache. There is nothing the site can do about it, and the
+ * worker itself does intercept correctly on WebKit — verified by hand, by
+ * renaming a precached file out of `dist/` while online and watching the request
+ * still come back 200.
+ *
+ * This is deliberately a skip on three tests rather than dropping WebKit from
+ * the suite: everything else, including the whole of `tools.spec.ts` and the
+ * accessibility sweep, does run there, and Safari is the engine those matter
+ * most on.
+ */
+const WEBKIT_OFFLINE = 'WebKit refuses offline navigations before the worker sees them';
+
+/**
+ * Read back what the cache would answer with for the current page.
+ *
+ * Used instead of an offline navigation wherever a test only needs to know what
+ * is *in* the cache. Firefox's offline emulation leaves its own HTTP cache
+ * answering, so the worker's `fetch` succeeds against a page just visited and
+ * network-first never reaches its fallback — an offline reload there proves
+ * nothing about the cache. Reading the entry directly works on every engine.
+ */
+const cachedPage = async (page: Page): Promise<string | null> =>
+  page.evaluate(async () => {
+    const hit = await caches.match(location.href, { ignoreVary: true });
+    return hit === undefined ? null : await hit.text();
+  });
+
 test.describe('offline support', () => {
-  test('serves a tool that was never visited, with the network off', async ({ page, context }) => {
+  test('serves a tool that was never visited, with the network off', async ({
+    page,
+    context,
+    browserName,
+  }) => {
+    test.skip(browserName === 'webkit', WEBKIT_OFFLINE);
+
     /* Open one tool. Its worker precaches every page, not just this one. */
     await page.goto('recipes/');
     await waitForControl(page);
@@ -39,7 +78,9 @@ test.describe('offline support', () => {
     await expect(page.locator('.sudoku-cell').first()).toBeVisible();
   });
 
-  test('every page loads offline', async ({ page, context }) => {
+  test('every page loads offline', async ({ page, context, browserName }) => {
+    test.skip(browserName === 'webkit', WEBKIT_OFFLINE);
+
     await page.goto('');
     await waitForControl(page);
 
@@ -62,7 +103,13 @@ test.describe('offline support', () => {
     }
   });
 
-  test('the recipes shopping list survives going offline mid-use', async ({ page, context }) => {
+  test('the recipes shopping list survives going offline mid-use', async ({
+    page,
+    context,
+    browserName,
+  }) => {
+    test.skip(browserName === 'webkit', WEBKIT_OFFLINE);
+
     await page.goto('recipes/');
     await waitForControl(page);
 
@@ -145,16 +192,14 @@ test.describe('service worker upgrades', () => {
     ).toBe(1);
   });
 
-  test('never serves a cached page to someone who is online', async ({ page, context }) => {
-    await page.goto('recipes/');
-    await waitForControl(page);
-
-    /*
-     * Replace the cached copy of this page with something unmistakable. If the
-     * worker ever preferred its cache over the network, this is what a visitor
-     * would see after a deploy — which is the failure that makes service workers
-     * infamous, and the whole reason pages here are network-first.
-     */
+  /**
+   * Replace the cached copy of the current page with something unmistakable.
+   *
+   * If the worker ever preferred its cache over the network, this is what a
+   * visitor would see after a deploy — the failure that makes service workers
+   * infamous, and the whole reason pages here are network-first.
+   */
+  const poisonCache = async (page: Page): Promise<void> => {
     await page.evaluate(async () => {
       const names = await caches.keys();
       const name = names.find((candidate) => candidate.startsWith('dwt-'));
@@ -168,47 +213,46 @@ test.describe('service worker upgrades', () => {
         ),
       );
     });
+  };
 
-    /* Offline first: this proves the poisoned entry really is what the cache
-       would answer with, so the online half below is a meaningful comparison
-       rather than a test that could pass on an empty cache. */
-    await context.setOffline(true);
-    await page.reload();
-    await expect(page.locator('#stale-marker')).toBeVisible();
+  test('never serves a cached page to someone who is online', async ({ page }) => {
+    await page.goto('recipes/');
+    await waitForControl(page);
 
-    /* Back online, the network answer must win. */
-    await context.setOffline(false);
+    await poisonCache(page);
+
+    /* The control, without which this test would also pass against an empty
+       cache: the poisoned entry really is what the cache would answer with. */
+    expect(await cachedPage(page), 'the cache should be holding the poison').toContain('STALE');
+
+    /* Online, the network answer must win. */
     await page.reload();
     await expect(page.locator('#stale-marker')).toHaveCount(0);
     await expect(page.locator('.skip-link')).not.toBeEmpty();
   });
 
-  test('refreshes the cached copy from the network as it goes', async ({ page, context }) => {
+  test('refreshes the cached copy from the network as it goes', async ({ page }) => {
     /* The upgrade path only works if a successful navigation writes back to the
        cache; otherwise the offline fallback freezes at whatever was precached at
        install time and drifts further from the site with every deploy. */
     await page.goto('recipes/');
     await waitForControl(page);
 
-    await page.evaluate(async () => {
-      const names = await caches.keys();
-      const cache = await caches.open(names.find((n) => n.startsWith('dwt-')) ?? '');
-      await cache.put(
-        location.href,
-        new Response('<!doctype html><body><p id="stale-marker">STALE</p>', {
-          headers: { 'content-type': 'text/html' },
-        }),
-      );
-    });
+    await poisonCache(page);
+    expect(await cachedPage(page), 'the cache should be holding the poison').toContain('STALE');
 
     /* One online visit should overwrite it. */
     await page.reload();
     await expect(page.locator('#stale-marker')).toHaveCount(0);
 
-    /* So going offline now serves the real page, not the poisoned one. */
-    await context.setOffline(true);
-    await page.reload();
-    await expect(page.locator('#stale-marker')).toHaveCount(0);
-    await expect(page.locator('.skip-link')).not.toBeEmpty();
+    /* The assertion that matters is about the *cache*, not the page: what a
+       later offline visit would be served is now the real page. Polled because
+       `networkFirst` deliberately does not await its write-back — the response
+       should not wait on a cache write. */
+    await expect
+      .poll(async () => await cachedPage(page), {
+        message: 'the successful navigation should have refreshed the cached copy',
+      })
+      .toContain('skip-link');
   });
 });
