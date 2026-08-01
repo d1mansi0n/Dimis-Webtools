@@ -15,18 +15,20 @@ illustration — and fixed two bugs that the first of those turned up.
 ```bash
 npm ci
 npm run verify          # format, lint, typecheck, unit tests + coverage, build
-npm run e2e:install     # once, downloads Chromium, Firefox and WebKit
-npm run e2e             # Playwright, against the production build
+npm run e2e:install     # once, downloads Chromium
+npm run e2e             # Playwright on Chromium + mobile, against the built site
 ```
 
 `npm run verify` is exactly what CI and the deploy both run — that is enforced by
 both workflows calling this one command rather than listing the gates themselves.
 If it passes locally it passes there.
 
-`npm run e2e` now drives four projects and takes about fifteen minutes locally.
-CI runs them as four parallel jobs instead, so the wall-clock cost there is the
-browser download rather than four suite runs. To iterate on one engine, use
-`npx playwright test --project=chromium`.
+`npm run e2e` runs two of the four projects, in about four minutes.
+`npm run e2e:all` runs all four and takes about sixteen — it needs
+`npm run e2e:install:all` first, and it is what CI and the deploy run. CI splits
+it into four parallel jobs, so the wall-clock cost there is a browser download
+rather than four suite runs. To debug one engine, use
+`npx playwright test --project=webkit`.
 
 ## Where things stand
 
@@ -37,7 +39,7 @@ Everything below was measured, not assumed:
 | `npm run verify`       | passes                                                                          |
 | Unit tests             | 546 passing, 22 files                                                           |
 | Coverage               | 96.6% statements, 87.2% branches; thresholds 90/90/85/90                        |
-| `npm run e2e`          | 338 passing, 6 skipped, across Chromium, Firefox, WebKit and a Pixel 7 viewport |
+| `npm run e2e:all`      | 338 passing, 6 skipped, across Chromium, Firefox, WebKit and a Pixel 7 viewport |
 | `npm audit --omit=dev` | 0 vulnerabilities — the site has no runtime dependencies                        |
 | `npm audit` (all)      | 0 vulnerabilities                                                               |
 

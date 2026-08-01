@@ -154,6 +154,10 @@ with ticks that survive a reload.
   join Chromium and the Pixel 7 viewport. CI runs them as four parallel jobs, so
   the wall-clock cost is a browser download rather than three more suite runs,
   and one engine's failure no longer hides another's.
+- **`npm run e2e` stays fast, though.** All four projects take about sixteen
+  minutes, which is not a price worth paying on every change to a site of six
+  small tools. The default is Chromium plus the mobile viewport, at about four;
+  `npm run e2e:all` is the full sweep, and is what CI and the deploy run.
 - **It found a bug in its own fixture first.** The test PNG the Picture Counter
   tests upload had a corrupt zlib checksum: Chromium decoded it anyway, Firefox
   refused it, and the tool then had no image to put a marker on. It looked like a

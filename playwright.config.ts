@@ -26,13 +26,19 @@ export default defineConfig({
   },
 
   /*
-   * Three engines, not one.
+   * Four projects are defined, but `npm run e2e` runs two of them.
    *
-   * Safari is the reason: it is the browser where `localStorage` actually throws
-   * on access — private browsing and the lockdown profiles — which is the path
-   * `core/storage.ts` exists for, and it is also the engine furthest from
-   * Chromium on Trusted Types, service workers and `<dialog>`. Firefox is cheap
-   * to add alongside and catches the other direction.
+   * All four together take about sixteen minutes, and paying that on every
+   * change is not worth it for a site of six small tools. `npm run e2e` is
+   * therefore Chromium plus the mobile viewport — around four minutes — and
+   * `npm run e2e:all` is the full sweep, which is what CI and the deploy run.
+   *
+   * They stay defined here rather than being added conditionally under `CI`, so
+   * that `--project=webkit` works locally when something needs debugging on it.
+   * That happens: WebKit is where `localStorage` actually throws on access —
+   * private browsing and the lockdown profiles, the path `core/storage.ts`
+   * exists for — and it is the engine furthest from Chromium on Trusted Types,
+   * service workers and `<dialog>`. Firefox catches the other direction.
    *
    * The mobile project stays on Chromium: touch emulation is what it is for, and
    * it is where the radial picker's synthesised-click behaviour is reproducible.

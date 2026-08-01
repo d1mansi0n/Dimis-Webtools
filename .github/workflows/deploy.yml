@@ -42,7 +42,7 @@ jobs:
         run: npm run verify
 
       - name: Install Playwright browsers
-        run: npm run e2e:install
+        run: npm run e2e:install:all
 
       # The end-to-end suite gates the deploy, not just CI. It is the only thing
       # that covers `src/sw.ts` at all: a service worker is excluded from unit
@@ -51,8 +51,11 @@ jobs:
       # only test of it that means anything. Publishing a broken one without
       # running that would be publishing the most persistent artifact on the
       # site — it outlives the tab — with nothing checking it.
+      # `e2e:all`, not `e2e`: the local default is Chromium and the mobile
+      # viewport, because sixteen minutes on every change is not a price worth
+      # paying for a site this size. The gate that publishes still runs all four.
       - name: End-to-end tests
-        run: npm run e2e
+        run: npm run e2e:all
 
       - name: Upload the Playwright report on failure
         if: failure()

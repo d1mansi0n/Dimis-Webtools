@@ -11,12 +11,18 @@ Node 22 or newer ([`.nvmrc`](.nvmrc)). Before pushing:
 
 ```bash
 npm run verify   # format, lint, typecheck, unit tests, build
-npm run e2e      # Playwright, against the production build
+npm run e2e      # Playwright on Chromium + mobile, against the production build
 ```
 
 `npm run verify` runs the same gates as CI, including the coverage thresholds, so
 if it passes locally CI will pass too. The e2e suite is separate because it builds
 the site and downloads a browser.
+
+`npm run e2e` runs two of the four projects, which takes about four minutes.
+`npm run e2e:all` adds Firefox and WebKit and takes about sixteen, which is what
+CI and the deploy run; locally it is worth it before touching anything to do with
+storage, dialogs or the service worker, and not otherwise. To debug one engine,
+use `npx playwright test --project=webkit`.
 
 That promise is only worth making if it is true: `verify` once ran the tests
 without coverage while CI ran them with it, and a change that dropped branch

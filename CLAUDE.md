@@ -7,7 +7,8 @@ This file only lists the things that are easy to get wrong here.
 
 ```bash
 npm run verify   # format, lint, typecheck, unit tests, build — the CI gate
-npm run e2e      # Playwright, against the production build
+npm run e2e      # Playwright on Chromium + mobile, against the production build
+npm run e2e:all  # all four projects, as CI and the deploy run them
 ```
 
 Never claim work is done without running `npm run verify`. It is fast.

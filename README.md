@@ -10,6 +10,7 @@ tracking, no servers, and no third-party code at run time.
 | [Time Tracking](time/)      | Start/pause/stop timers, voice control, export to a spreadsheet                       |
 | [Sugar Calculator](sugar/)  | Grams of sugar as cubes, as a share of the WHO daily maximum, and as comparable foods |
 | [Picture Counter](counter/) | Mark and count objects in a photo, then save the annotated image                      |
+| [Recipes](recipes/)         | Pick what to cook; the shopping list adds it up by aisle and scales with the people   |
 
 Every tool is available in English and German, follows your system's light or
 dark theme, and takes whatever accent colour you pick for it.
@@ -54,19 +55,20 @@ npm install
 npm run dev        # dev server with hot reload
 ```
 
-| Command                 | What it does                                  |
-| ----------------------- | --------------------------------------------- |
-| `npm run dev`           | Dev server                                    |
-| `npm run build`         | Typecheck, then build to `dist/`              |
-| `npm run preview`       | Serve the built output, exactly as deployed   |
-| `npm test`              | Unit tests                                    |
-| `npm run test:watch`    | Unit tests in watch mode                      |
-| `npm run test:coverage` | Unit tests with coverage thresholds enforced  |
-| `npm run e2e`           | Playwright tests against the production build |
-| `npm run lint`          | ESLint                                        |
-| `npm run typecheck`     | `tsc` over both projects                      |
-| `npm run format`        | Prettier, writing changes                     |
-| `npm run verify`        | Everything CI runs, in one command            |
+| Command                 | What it does                                            |
+| ----------------------- | ------------------------------------------------------- |
+| `npm run dev`           | Dev server                                              |
+| `npm run build`         | Typecheck, then build to `dist/`                        |
+| `npm run preview`       | Serve the built output, exactly as deployed             |
+| `npm test`              | Unit tests                                              |
+| `npm run test:watch`    | Unit tests in watch mode                                |
+| `npm run test:coverage` | Unit tests with coverage thresholds enforced            |
+| `npm run e2e`           | Playwright on Chromium + mobile, against the built site |
+| `npm run e2e:all`       | The same, on all four projects — what CI runs           |
+| `npm run lint`          | ESLint                                                  |
+| `npm run typecheck`     | `tsc` over both projects                                |
+| `npm run format`        | Prettier, writing changes                               |
+| `npm run verify`        | Everything CI runs, in one command                      |
 
 Before opening a pull request, `npm run verify` is the single command that tells
 you whether CI will be happy.
@@ -103,12 +105,13 @@ Two conventions matter when adding to this:
 
 Two layers, deliberately:
 
-- **Unit tests** (Vitest, jsdom) cover the pure logic — 380-odd tests with
-  coverage thresholds enforced in CI.
-- **End-to-end tests** (Playwright) drive the real built site in Chromium and a
-  mobile viewport. They cover what unit tests structurally cannot: the Content
-  Security Policy, the Web Worker, canvas interaction, file downloads and the
-  redirects from the old URLs.
+- **Unit tests** (Vitest, jsdom) cover the pure logic — 546 tests with coverage
+  thresholds enforced in CI.
+- **End-to-end tests** (Playwright) drive the real built site. They cover what
+  unit tests structurally cannot: the Content Security Policy, the Web Worker,
+  canvas interaction, file downloads and the redirects from the old URLs.
+  `npm run e2e` uses Chromium and a mobile viewport; CI and the deploy add
+  Firefox and WebKit.
 
 The e2e suite runs against `vite preview`, not the dev server, because the strict
 policy and the bundled worker only exist in the production build.
