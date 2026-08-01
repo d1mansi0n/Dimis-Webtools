@@ -40,7 +40,7 @@ import {
   type Unit,
 } from './data.js';
 
-export const MIN_PERSONS = 1;
+const MIN_PERSONS = 1;
 export const MAX_PERSONS = 6;
 
 /** Most own items kept. Generous for a shop, bounded for storage. */

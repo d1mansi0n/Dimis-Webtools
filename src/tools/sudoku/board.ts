@@ -34,7 +34,7 @@ export function columnOf(index: number): number {
 }
 
 /** Read a cell, treating anything out of range as empty. */
-export function cellAt(board: readonly Cell[], index: number): Cell {
+function cellAt(board: readonly Cell[], index: number): Cell {
   return board[index] ?? 0;
 }
 
