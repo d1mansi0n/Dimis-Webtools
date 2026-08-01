@@ -6,6 +6,7 @@ import {
   formatDuration,
   formatIsoDate,
   formatTimeOfDay,
+  parseDuration,
   toDecimalHours,
   toIsoDate,
 } from '../../core/format.js';
@@ -26,8 +27,10 @@ import {
   recoverInterrupted,
   rememberComment,
   remove,
+  reopen,
   runningEntry,
   setComment,
+  setElapsed,
   start,
   stop,
   totalElapsed,
@@ -110,7 +113,10 @@ boot({
      */
 
     interface Row {
-      readonly elapsed: HTMLElement;
+      /** Live read-out. Absent on a finished entry, which shows `duration` instead. */
+      readonly elapsed: HTMLElement | undefined;
+      /** Editable total. Present only on a finished entry. */
+      readonly duration: HTMLInputElement | undefined;
       readonly sessions: HTMLElement;
       readonly root: HTMLElement;
     }
@@ -126,7 +132,15 @@ boot({
     function entryRow(entry: Entry): HTMLElement {
       const running = entry.active !== null;
 
-      const elapsed = el('p', { class: 'time-entry__elapsed' });
+      /*
+       * A finished entry shows its total in a field rather than as text, because
+       * a total that cannot be corrected is the thing that makes this tool
+       * useless the moment a timer is left running through lunch. A live entry
+       * keeps the read-only read-out: writing into a number that the heartbeat
+       * overwrites a second later would be a trap.
+       */
+      const elapsed = entry.isStopped ? undefined : el('p', { class: 'time-entry__elapsed' });
+      const duration = entry.isStopped ? durationField(entry) : undefined;
       const sessions = el('div', { class: 'time-entry__sessions' });
 
       const comment = el('input', {
@@ -136,7 +150,6 @@ boot({
           value: entry.comment,
           placeholder: t('time.comment.placeholder'),
           list: 'comment-suggestions',
-          disabled: entry.isStopped,
           'aria-label': t('time.comment.placeholder'),
         },
         on: {
@@ -192,6 +205,13 @@ boot({
             persist();
             render();
           }),
+          /* Stopping is one click away from Pause and easy to hit by accident.
+             Before this, that accident ended the entry for good. */
+          controlButton(t('time.reopen'), !entry.isStopped, () => {
+            entries = reopen(entries, entry.id);
+            persist();
+            render();
+          }),
         ),
         el(
           'div',
@@ -201,14 +221,65 @@ boot({
             text: `${formatIsoDate(entry.date, intlTag())}${entry.isStopped ? ` · ${t('time.finished')}` : ''}`,
           }),
           elapsed,
+          duration?.field,
           sessions,
           comment,
         ),
         deleteButton,
       );
 
-      rows.set(entry.id, { elapsed, sessions, root });
+      rows.set(entry.id, { elapsed, duration: duration?.input, sessions, root });
       return root;
+    }
+
+    /**
+     * The editable total shown on a finished entry.
+     *
+     * Committed on `change` rather than on every keystroke: half-typed input is
+     * always invalid, and warning about it while someone is still typing would
+     * be noise.
+     */
+    function durationField(entry: Entry): { field: HTMLElement; input: HTMLInputElement } {
+      const input = el('input', {
+        class: ['input', 'time-entry__duration', 'numeric'],
+        attrs: {
+          type: 'text',
+          inputmode: 'numeric',
+          autocomplete: 'off',
+          value: formatElapsed(entry.accumulated),
+        },
+      });
+
+      input.addEventListener('change', () => {
+        const parsed = parseDuration(input.value);
+        if (parsed === undefined) {
+          say(t('time.duration.invalid'), true);
+          input.value = formatElapsed(currentElapsed(entry.id));
+          return;
+        }
+
+        entries = setElapsed(entries, entry.id, parsed);
+        persist();
+        say(t('time.duration.saved'));
+        /* Re-read rather than echoing what was typed: the stored value is
+           rounded and clamped, and the field should show what was kept. */
+        input.value = formatElapsed(currentElapsed(entry.id));
+        tick();
+      });
+
+      return {
+        field: el(
+          'label',
+          { class: 'time-entry__duration-field' },
+          el('span', { class: 'stat__label', text: t('time.duration.label') }),
+          input,
+        ),
+        input,
+      };
+    }
+
+    function currentElapsed(id: number): number {
+      return entries.find((entry) => entry.id === id)?.accumulated ?? 0;
     }
 
     function controlButton(label: string, disabled: boolean, onClick: () => void): HTMLElement {
@@ -227,7 +298,15 @@ boot({
         const row = rows.get(entry.id);
         if (row === undefined) continue;
 
-        row.elapsed.textContent = formatElapsed(elapsedOf(entry, now));
+        if (row.elapsed !== undefined) {
+          row.elapsed.textContent = formatElapsed(elapsedOf(entry, now));
+        }
+        /* The finished entry's field is left alone while it has focus — the
+           format toggle must still be able to rewrite it, but not underneath
+           someone who is mid-correction. */
+        if (row.duration !== undefined && document.activeElement !== row.duration) {
+          row.duration.value = formatElapsed(entry.accumulated);
+        }
 
         const live =
           entry.active === null

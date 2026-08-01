@@ -6,6 +6,7 @@ import {
   formatStopwatch,
   formatTimeOfDay,
   legacyDateToIso,
+  parseDuration,
   parseIsoDate,
   toDecimalHours,
   toIsoDate,
@@ -67,6 +68,40 @@ describe('formatTimeOfDay', () => {
   it('degrades to zeroes for an invalid date', () => {
     expect(formatTimeOfDay(new Date(NaN))).toBe('00:00:00');
   });
+});
+
+describe('parseDuration', () => {
+  it('round-trips whatever formatDuration produced', () => {
+    for (const ms of [0, 1_000, 61_000, 3_661_000, 30 * 3_600_000]) {
+      expect(parseDuration(formatDuration(ms))).toBe(ms);
+    }
+  });
+
+  it('reads two parts as minutes and seconds, the way a stopwatch does', () => {
+    expect(parseDuration('01:30')).toBe(90_000);
+  });
+
+  it('reads one part as hours, because that is the other format on the screen', () => {
+    /* The time tracker toggles between HH:MM:SS and decimal hours, and whichever
+       is showing is what someone will type back. */
+    expect(parseDuration('1.5')).toBe(5_400_000);
+    expect(parseDuration('0.25')).toBe(900_000);
+  });
+
+  it('accepts a decimal comma, which a German keyboard and locale produce', () => {
+    expect(parseDuration('1,5')).toBe(5_400_000);
+  });
+
+  it('does not wrap hours at 24, since this is a duration and not a time of day', () => {
+    expect(parseDuration('30:00:00')).toBe(30 * 3_600_000);
+  });
+
+  it.each(['', '   ', ':', 'half an hour', '1:2:3:4', '00:75:00', '00:00:60', '-1', '1e3:00'])(
+    'rejects %s rather than silently storing a zero',
+    (value) => {
+      expect(parseDuration(value)).toBeUndefined();
+    },
+  );
 });
 
 describe('ISO dates', () => {

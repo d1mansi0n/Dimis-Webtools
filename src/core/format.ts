@@ -52,6 +52,41 @@ export function formatDuration(ms: number): string {
   return `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`;
 }
 
+/**
+ * The inverse of `formatDuration` and `toDecimalHours`, for an edited entry.
+ *
+ * Both forms are accepted because both are shown: the time tracker has a toggle
+ * between `HH:MM:SS` and decimal hours, and whichever one is on the screen is
+ * the one someone will type back. A colon anywhere means the clock form.
+ *
+ * `MM:SS` is read as minutes and seconds rather than hours and minutes, which
+ * matches how a stopwatch reads and how the field itself fills up. Returns
+ * `undefined` for anything unparseable, so the caller can refuse it rather than
+ * silently storing a zero.
+ */
+export function parseDuration(text: string): number | undefined {
+  const trimmed = text.trim();
+  if (trimmed === '') return undefined;
+
+  if (!trimmed.includes(':')) {
+    /* Both separators, because a German keyboard and a German locale produce a
+       comma and the field is plain text. */
+    const hours = Number(trimmed.replace(',', '.'));
+    if (!Number.isFinite(hours) || hours < 0) return undefined;
+    return Math.round(hours * MS_PER_HOUR);
+  }
+
+  const parts = trimmed.split(':');
+  if (parts.length > 3 || parts.some((part) => !/^\d{1,3}$/.test(part.trim()))) return undefined;
+
+  /* Right-aligned against `HH:MM:SS`, so two parts read as minutes and seconds.
+     That is what a stopwatch shows and the order the field fills up in. */
+  const [hours = 0, minutes = 0, seconds = 0] = [0, 0, 0, ...parts.map(Number)].slice(-3);
+  if (minutes > 59 || seconds > 59) return undefined;
+
+  return ((hours * 60 + minutes) * 60 + seconds) * MS_PER_SECOND;
+}
+
 /** Elapsed milliseconds as decimal hours, rounded to two places. */
 export function toDecimalHours(ms: number): number {
   const safe = Number.isFinite(ms) && ms > 0 ? ms : 0;

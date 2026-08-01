@@ -284,10 +284,57 @@ export function remove(entries: readonly Entry[], id: number): Entry[] {
   return entries.filter((entry) => entry.id !== id);
 }
 
+/**
+ * Set an entry's comment.
+ *
+ * Deliberately allowed on a finished entry, unlike in versions 1.0 and 2.0,
+ * where stopping the timer locked the comment for good. Remembering what a
+ * stretch of work was about is something people do *after* finishing it, and
+ * having no way to write it down was the sharpest edge this tool had.
+ */
 export function setComment(entries: readonly Entry[], id: number, comment: string): Entry[] {
   const trimmed = comment.slice(0, MAX_COMMENT_LENGTH);
+  return entries.map((entry) => (entry.id === id ? { ...entry, comment: trimmed } : entry));
+}
+
+/**
+ * The longest duration an entry may be corrected to: a thousand hours.
+ *
+ * A bound rather than no bound, because this value is typed by hand and then
+ * stored, and every other stored number in this codebase is bounded too.
+ */
+export const MAX_ELAPSED_MS = 1000 * 60 * 60 * 1000;
+
+/**
+ * Correct a finished entry's total.
+ *
+ * The case this exists for is the timer left running through lunch, or over a
+ * whole night. Until now the only remedy was to delete the entry and lose the
+ * comment and the session times with it.
+ *
+ * Only finished entries can be corrected: rewriting the total of an entry whose
+ * timer is still running would be undone by the next heartbeat a second later.
+ */
+export function setElapsed(entries: readonly Entry[], id: number, ms: number): Entry[] {
+  if (!Number.isFinite(ms) || ms < 0 || ms > MAX_ELAPSED_MS) return [...entries];
+
   return entries.map((entry) =>
-    entry.id === id && !entry.isStopped ? { ...entry, comment: trimmed } : entry,
+    entry.id === id && entry.isStopped && entry.active === null
+      ? { ...entry, accumulated: Math.round(ms) }
+      : entry,
+  );
+}
+
+/**
+ * Undo a stop, so tracking can continue on the same entry.
+ *
+ * Stopping is a single click next to Pause and is easy to hit by mistake; before
+ * this, that mistake cost the entry. The banked time and the recorded sessions
+ * are untouched — reopening only makes the entry writable again.
+ */
+export function reopen(entries: readonly Entry[], id: number): Entry[] {
+  return entries.map((entry) =>
+    entry.id === id && entry.isStopped ? { ...entry, isStopped: false } : entry,
   );
 }
 

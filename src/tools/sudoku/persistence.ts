@@ -56,6 +56,10 @@ export interface SavedGame {
   readonly initialBoard: Board;
   readonly currentBoard: Board;
   readonly notes: number[][];
+  /** Cells whose digit came from a hint. */
+  readonly revealed: number[];
+  /** Hints taken, including any since undone. */
+  readonly hints: number;
 }
 
 const savedGameDecoder: Decoder<SavedGame> = objectOf({
@@ -66,6 +70,10 @@ const savedGameDecoder: Decoder<SavedGame> = objectOf({
   initialBoard: boardDecoder,
   currentBoard: boardDecoder,
   notes: withDefault(notesDecoder, emptyNotesArray()),
+  /* Both default, so a game saved before hints existed still loads — as an
+     unassisted one, which is exactly what it was. */
+  revealed: withDefault(lenientArrayOf(inRange(integer, 0, CELL_COUNT - 1)), []),
+  hints: withDefault(inRange(integer, 0, CELL_COUNT), 0),
 });
 
 function emptyNotesArray(): number[][] {
@@ -133,6 +141,9 @@ const legacySavedGameDecoder: Decoder<SavedGame> = (input, path) => {
       initialBoard: game.initialBoard,
       currentBoard: game.currentBoard,
       notes: game.notesBoard.length === GRID_SIZE ? game.notesBoard.flat() : emptyNotesArray(),
+      /* Version 2.0 had no hints to record. */
+      revealed: [],
+      hints: 0,
     },
   };
 };

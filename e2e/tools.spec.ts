@@ -11,6 +11,22 @@ const seedOf = (id: string): string => {
   return preset.seed;
 };
 
+/**
+ * A 100×100 PNG, built here rather than committed as a fixture.
+ *
+ * It has to be a *valid* one. The version of this constant that these tests
+ * originally carried had a corrupt zlib checksum in its `IDAT` chunk; Chromium
+ * decodes it anyway, Firefox refuses it, and the Picture Counter then had no
+ * image to place a marker on. The failure looked like a browser difference in
+ * the tool and was nothing of the sort — which is a fair summary of why running
+ * these on one engine was never enough.
+ */
+const TEST_PNG =
+  'iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAp0lEQVR42u3RQREAAAQAQZ100klaahizjytwG1k9ulOY' +
+  'AERAgAgIEAEBIiBAjAAiIEAEBIiAABEQIAIiIEAEBIiAABEQIAIiIEAEBIiAABEQIAIiIEAEBIiAABEQIAIiIEAEBIiA' +
+  'ABEQIAIiIEAEBIiAABEQIAIiIEAEBIiAABEQIAIiIEAEBIiAABEQIAIiIEAEBIiAABEQIAICxAQgAgJEQIAIyPcWKgmf' +
+  'DCH3rR4AAAAASUVORK5CYII=';
+
 test.describe('hub', () => {
   test('lists every tool and links to it', async ({ page }) => {
     await page.goto('');
@@ -95,6 +111,21 @@ test.describe('rice cup converter', () => {
     await expect(page.locator('[data-rice="total"]')).toContainText('4.40');
   });
 
+  test('shows the rice-bowl illustration, and hides it from assistive tech', async ({ page }) => {
+    await page.goto('rice/');
+
+    const banner = page.locator('.rice-banner');
+    await expect(banner).toBeVisible();
+    /* Decorative: an empty `alt` is what keeps a screen reader from announcing a
+       picture that adds nothing to the heading beneath it. */
+    await expect(banner).toHaveAttribute('alt', '');
+
+    /* A broken reference still "shows", so this checks the file actually decoded
+       — and that its real width matches the one the markup declares, which is
+       what keeps the layout from jumping as it loads. */
+    await expect(banner).toHaveJSProperty('naturalWidth', 921);
+  });
+
   test('the stepper moves in half cups', async ({ page }) => {
     await page.goto('rice/');
 
@@ -160,6 +191,63 @@ test.describe('time tracking', () => {
     await expect(entry).not.toHaveAttribute('data-running', '');
   });
 
+  test('lets a finished entry be commented, corrected and reopened', async ({ page }) => {
+    await page.goto('time/');
+    await page.getByRole('button', { name: '+ New entry' }).click();
+
+    const entry = page.locator('.time-entry').first();
+    await entry.getByRole('button', { name: 'Start', exact: true }).click();
+    await entry.getByRole('button', { name: 'Stop', exact: true }).click();
+
+    /* Versions 1.0 and 2.0 locked the comment the moment the timer stopped. */
+    const comment = entry.getByPlaceholder('Add a comment');
+    await expect(comment).toBeEnabled();
+    await comment.fill('Client call');
+    await comment.blur();
+
+    /* The case this exists for is a timer left running over lunch. */
+    const duration = entry.getByLabel('Recorded time');
+    await duration.fill('01:30:00');
+    await duration.blur();
+    await expect(page.locator('[data-time="feedback"]')).toContainText('updated');
+    await expect(page.locator('[data-time="total"]')).toHaveText('01:30:00');
+
+    await page.reload();
+    await expect(page.locator('.time-entry').first().getByLabel('Recorded time')).toHaveValue(
+      '01:30:00',
+    );
+    await expect(page.locator('.time-entry').first().getByPlaceholder('Add a comment')).toHaveValue(
+      'Client call',
+    );
+
+    /* Stop sits next to Pause and is easy to hit by mistake; reopening undoes it
+       without losing the time already banked. */
+    await page
+      .locator('.time-entry')
+      .first()
+      .getByRole('button', { name: 'Reopen', exact: true })
+      .click();
+    await expect(
+      page.locator('.time-entry').first().getByRole('button', { name: 'Start', exact: true }),
+    ).toBeEnabled();
+  });
+
+  test('refuses a duration it cannot read, instead of storing a zero', async ({ page }) => {
+    await page.goto('time/');
+    await page.getByRole('button', { name: '+ New entry' }).click();
+
+    const entry = page.locator('.time-entry').first();
+    await entry.getByRole('button', { name: 'Start', exact: true }).click();
+    await entry.getByRole('button', { name: 'Stop', exact: true }).click();
+
+    const duration = entry.getByLabel('Recorded time');
+    await duration.fill('half an hour');
+    await duration.blur();
+
+    await expect(page.locator('[data-time="feedback"]')).toContainText('HH:MM:SS');
+    await expect(duration).toHaveValue(/^\d{2}:\d{2}:\d{2}$/);
+  });
+
   test('keeps entries across a reload', async ({ page }) => {
     await page.goto('time/');
     await page.getByRole('button', { name: '+ New entry' }).click();
@@ -204,14 +292,10 @@ test.describe('picture counter', () => {
   test('loads an image and places markers where it is tapped', async ({ page }) => {
     await page.goto('counter/');
 
-    /* A tiny PNG, built here rather than committed as a fixture. */
     await page.setInputFiles('#counter-file', {
       name: 'test.png',
       mimeType: 'image/png',
-      buffer: Buffer.from(
-        'iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAKklEQVR4nO3BAQ0AAADCoPdPbQ8HFAAAAAAAAAAAAAAAAAAAAAAAAHwbXsAAAeC0G0oAAAAASUVORK5CYII=',
-        'base64',
-      ),
+      buffer: Buffer.from(TEST_PNG, 'base64'),
     });
 
     const canvas = page.locator('[data-counter="canvas"]');
@@ -241,10 +325,7 @@ test.describe('picture counter', () => {
     await page.setInputFiles('#counter-file', {
       name: 'test.png',
       mimeType: 'image/png',
-      buffer: Buffer.from(
-        'iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAKklEQVR4nO3BAQ0AAADCoPdPbQ8HFAAAAAAAAAAAAAAAAAAAAAAAAHwbXsAAAeC0G0oAAAAASUVORK5CYII=',
-        'base64',
-      ),
+      buffer: Buffer.from(TEST_PNG, 'base64'),
     });
 
     const box = await page.locator('[data-counter="canvas"]').boundingBox();
@@ -472,6 +553,54 @@ test.describe('sudoku', () => {
 
     await page.keyboard.press('Delete');
     await expect(empty.locator('.sudoku-cell__value')).toHaveText('');
+  });
+
+  test('fills in one correct digit on request, and marks it as a hint', async ({ page }) => {
+    await page.goto('sudoku/');
+    await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({ timeout: 15_000 });
+
+    const before = await page.locator('.sudoku-cell:not([data-given])').count();
+    await page.getByRole('button', { name: 'Hint', exact: true }).click();
+
+    await expect(page.locator('[data-sudoku="message"]')).toContainText('Filled in row');
+    await expect(page.locator('.sudoku-cell[data-hint]')).toHaveCount(1);
+
+    /* Correct by construction — a hint comes from the solved grid — so the board
+       must still be free of conflicts. */
+    await page.getByRole('button', { name: 'Check', exact: true }).click();
+    await expect(page.locator('[data-sudoku="message"]')).toContainText('Correct');
+
+    /* The cell keeps its digit; only the count of *empty* cells goes down. */
+    expect(await page.locator('.sudoku-cell:not([data-given])').count()).toBe(before);
+  });
+
+  test('undoing a hint takes its mark with it', async ({ page }) => {
+    await page.goto('sudoku/');
+    await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole('button', { name: 'Hint', exact: true }).click();
+    await expect(page.locator('.sudoku-cell[data-hint]')).toHaveCount(1);
+
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(page.locator('.sudoku-cell[data-hint]')).toHaveCount(0);
+  });
+
+  test('fills every empty cell with its possible digits, and undoes that in one press', async ({
+    page,
+  }) => {
+    await page.goto('sudoku/');
+    await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole('button', { name: 'Fill notes' }).click();
+    await expect(page.locator('[data-sudoku="message"]')).toContainText('Notes filled in');
+
+    const withNotes = await page.locator('.sudoku-cell__note[data-on]').count();
+    expect(withNotes).toBeGreaterThan(20);
+
+    /* One undo, not one per cell — otherwise the button would be unusable right
+       after pressing this one. */
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(page.locator('.sudoku-cell__note[data-on]')).toHaveCount(0);
   });
 
   test('runs the timer and pauses it', async ({ page }) => {

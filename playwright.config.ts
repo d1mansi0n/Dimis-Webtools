@@ -25,8 +25,22 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
+  /*
+   * Three engines, not one.
+   *
+   * Safari is the reason: it is the browser where `localStorage` actually throws
+   * on access — private browsing and the lockdown profiles — which is the path
+   * `core/storage.ts` exists for, and it is also the engine furthest from
+   * Chromium on Trusted Types, service workers and `<dialog>`. Firefox is cheap
+   * to add alongside and catches the other direction.
+   *
+   * The mobile project stays on Chromium: touch emulation is what it is for, and
+   * it is where the radial picker's synthesised-click behaviour is reproducible.
+   */
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
     { name: 'mobile', use: { ...devices['Pixel 7'] } },
   ],
 
