@@ -95,6 +95,16 @@ body {
   color: var(--danger);
 }
 
+/*
+ * A digit that came from a hint. Marked so the board stays an honest record of
+ * what was worked out and what was given away — the same reason an assisted
+ * solve is not offered as a best time.
+ */
+.sudoku-cell[data-hint] .sudoku-cell__value {
+  color: var(--ok);
+  font-style: italic;
+}
+
 .sudoku-cell:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: -3px;

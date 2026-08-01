@@ -104,11 +104,7 @@ export function svgEl(
 }
 
 /** Set or remove a single attribute, following the `true`/`false` convention above. */
-export function setAttr(
-  node: Element,
-  name: string,
-  value: string | number | boolean | undefined,
-): void {
+function setAttr(node: Element, name: string, value: string | number | boolean | undefined): void {
   if (value === undefined || value === false) {
     node.removeAttribute(name);
   } else if (value === true) {

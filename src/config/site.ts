@@ -43,8 +43,3 @@ export const TOOLS: readonly Tool[] = [
 
 /** Every page the site ships, hub first. Relative to the deployment base. */
 export const PAGES: readonly string[] = ['', ...TOOLS.map((tool) => `${tool.id}/`)];
-
-/** Look up a tool by id, or `undefined` when the id is not one of ours. */
-export function findTool(id: string): Tool | undefined {
-  return TOOLS.find((tool) => tool.id === id);
-}

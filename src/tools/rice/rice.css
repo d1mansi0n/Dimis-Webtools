@@ -2,6 +2,41 @@ body {
   --page-width: 30rem;
 }
 
+/*
+ * The rice-bowl illustration, restored from version 1.0.
+ *
+ * Full-bleed across the card rather than behind the page: as a background it
+ * sat under the whole converter and the text on top of it only became readable
+ * once a translucent white panel was laid over the lot. Here nothing is written
+ * over it, so it costs no contrast anywhere.
+ *
+ * The negative margins cancel the card's own padding so the image reaches the
+ * card's edges; the radius matches the card's, minus the border it sits inside.
+ */
+.rice-banner {
+  display: block;
+  width: calc(100% + 2 * var(--space-5));
+  height: auto;
+  margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-5)) 0;
+  border-radius: calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px) 0 0;
+}
+
+/*
+ * The illustration is painted on a bright cyan ground, which glares against a
+ * dark surface. Dimming it slightly is enough; both selectors are needed for the
+ * same reason `tokens.css` carries both — the media query supplies the default
+ * and an explicit `data-theme` has to be able to override it either way.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .rice-banner {
+    filter: brightness(0.85);
+  }
+}
+
+:root[data-theme='dark'] .rice-banner {
+  filter: brightness(0.85);
+}
+
 .stepper {
   display: flex;
   gap: var(--space-2);

@@ -73,8 +73,30 @@ jobs:
         run: npm audit --audit-level=high || true
 
   e2e:
-    name: End-to-end tests
+    name: End-to-end tests (${{ matrix.project }})
     runs-on: ubuntu-latest
+
+    strategy:
+      # One engine's failure must not hide another's.
+      fail-fast: false
+      matrix:
+        # A job per engine rather than one job running all four. The suite takes
+        # the same time either way, but these run at once, so adding Firefox and
+        # WebKit costs wall-clock time only for the browser download. WebKit is
+        # the one that matters most: it is where `localStorage` actually throws
+        # on access, which is the path `core/storage.ts` exists for, and the
+        # engine furthest from Chromium on Trusted Types and service workers.
+        include:
+          - project: chromium
+            browser: chromium
+          # A Pixel 7 viewport, driven by Chromium.
+          - project: mobile
+            browser: chromium
+          - project: firefox
+            browser: firefox
+          - project: webkit
+            browser: webkit
+
     steps:
       - uses: actions/checkout@v7
 
@@ -85,18 +107,20 @@ jobs:
 
       - run: npm ci
 
+      # Only the engine this job runs, rather than all three every time.
       - name: Install Playwright browsers
-        run: npm run e2e:install
+        run: npx playwright install --with-deps ${{ matrix.browser }}
 
       # Runs against the production build via `vite preview`, which is the only
-      # place the strict Content Security Policy and the real worker exist.
+      # place the strict Content Security Policy, the service worker and the real
+      # generator worker exist.
       - name: Run Playwright
-        run: npm run e2e
+        run: npx playwright test --project=${{ matrix.project }}
 
       - name: Upload the report on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.project }}
           path: playwright-report
           retention-days: 7

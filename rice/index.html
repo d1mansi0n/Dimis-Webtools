@@ -17,6 +17,21 @@
     <header class="appbar"></header>
     <main id="main" class="page">
       <section class="card stack">
+        <!--
+          Decorative only, hence the empty `alt`: the illustration says nothing
+          the heading below it does not. It is a banner inside the card rather
+          than the full-page background version 1.0 used, which needed a
+          translucent panel laid over it before the text was legible. The
+          intrinsic size is declared so the layout does not jump when it loads.
+        -->
+        <img
+          class="rice-banner"
+          src="../src/tools/rice/rice-bowl.webp"
+          alt=""
+          width="921"
+          height="419"
+          decoding="async"
+        />
         <h1 data-rice="title"></h1>
         <p class="lead" data-rice="lead"></p>
 

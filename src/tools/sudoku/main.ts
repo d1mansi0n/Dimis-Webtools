@@ -5,13 +5,23 @@ import { el, queryAll, requireElement } from '../../core/dom.js';
 import { formatStopwatch, formatTimestamp } from '../../core/format.js';
 import { clamp } from '../../core/math.js';
 import { trustedWorkerUrl } from '../../core/trusted-types.js';
-import { intlTag, t, type TranslationKey } from '../../i18n/index.js';
+import { intlTag, plural, t, type TranslationKey } from '../../i18n/index.js';
 import { boot } from '../../shell/boot.js';
 import { icon } from '../../shell/icons.js';
 import { confirmDialog } from '../../shell/dialog.js';
 import generatorWorkerUrl from './generator.worker.ts?worker&url';
-import { BOX_SIZE, CELL_COUNT, columnOf, DIGITS, GRID_SIZE, indexOf, rowOf } from './board.js';
+import {
+  BOX_SIZE,
+  CELL_COUNT,
+  columnOf,
+  DIGITS,
+  GRID_SIZE,
+  indexOf,
+  mostConstrainedCell,
+  rowOf,
+} from './board.js';
 import { Game } from './game.js';
+import { solve } from './generator.js';
 import type { GenerateRequest, GenerateResponse } from './generator.worker.js';
 import { EXPERT_PUZZLES } from './puzzles.js';
 import {
@@ -50,6 +60,15 @@ boot({
     let instantValidation = validationStore.read();
     let pendingRequestId = 0;
     let lastExpertIndex = -1;
+    /**
+     * The solved grid for the puzzle in play, or `undefined` until it is needed.
+     *
+     * The generator worker already computes one, so a generated puzzle costs
+     * nothing here. A saved game or an expert board is solved on demand, the
+     * first time a hint is asked for — which is a few milliseconds, and paying
+     * it up front on every load would be a few milliseconds nobody asked for.
+     */
+    let solution: readonly number[] | undefined;
 
     /* ---------------------------------------------------------------- elements */
     const gridHost = requireElement('[data-sudoku="grid"]');
@@ -65,6 +84,8 @@ boot({
     const loadButton = requireElement<HTMLButtonElement>('[data-sudoku="load"]');
     const undoButton = requireElement<HTMLButtonElement>('[data-sudoku="undo"]');
     const validationButton = requireElement<HTMLButtonElement>('[data-sudoku="validation"]');
+    const hintButton = requireElement<HTMLButtonElement>('[data-sudoku="hint"]');
+    const notesButton = requireElement<HTMLButtonElement>('[data-sudoku="notes"]');
 
     /* ------------------------------------------------------------------ chrome */
     document.title = `${t('tool.sudoku.name')} · ${t('app.name')}`;
@@ -80,6 +101,9 @@ boot({
     requireElement('[data-sudoku="reset"]').textContent = t('sudoku.reset');
     undoButton.textContent = t('sudoku.undo');
     requireElement('[data-sudoku="check"]').textContent = t('sudoku.check');
+    hintButton.textContent = t('sudoku.hint');
+    notesButton.textContent = t('sudoku.autoNotes');
+    notesButton.title = t('sudoku.autoNotes.title');
     /* An icon, so the label lives in the title and the accessible name instead. */
     validationButton.replaceChildren(icon('eye'));
     validationButton.title = t('sudoku.instantValidation');
@@ -124,7 +148,9 @@ boot({
         say(t('sudoku.generateFailed'), false);
         return;
       }
-      startPuzzle(response.puzzle);
+      /* The worker solved the grid on its way to carving the puzzle out of it,
+         so hints on a generated board never need a solve on the main thread. */
+      startPuzzle(response.puzzle, undefined, response.solution);
       say('');
     });
 
@@ -420,6 +446,9 @@ boot({
         }
 
         cell.toggleAttribute('data-given', game.isGiven(index));
+        /* Only while the digit is actually there: undoing a hint should take the
+           mark with it. */
+        cell.toggleAttribute('data-hint', value !== 0 && game.isRevealed(index));
         cell.toggleAttribute('data-conflict', conflicts.has(index));
         cell.toggleAttribute('data-selected', index === selected);
         cell.toggleAttribute('data-picking', index === radialTarget);
@@ -476,6 +505,59 @@ boot({
       if (game.erase(selected)) render();
     }
 
+    /**
+     * Reveal one correct digit.
+     *
+     * It lands on the selected cell when that cell is empty, and otherwise on
+     * the most constrained empty cell on the board — the one a player would have
+     * found next anyway, rather than an arbitrary one in reading order.
+     */
+    function giveHint(): void {
+      if (paused || won) return;
+
+      const answer = solutionFor();
+      if (answer === undefined) {
+        say(t('sudoku.hint.unavailable'), false);
+        return;
+      }
+
+      const target =
+        selected !== undefined && game.valueAt(selected) === 0
+          ? selected
+          : mostConstrainedCell(game.board);
+      if (target === undefined) {
+        say(t('sudoku.hint.complete'), false);
+        return;
+      }
+
+      const digit = answer[target] ?? 0;
+      if (!game.reveal(target, digit)) return;
+
+      select(target);
+      say(t('sudoku.hint.given', { row: rowOf(target) + 1, col: columnOf(target) + 1 }));
+      checkForWin();
+    }
+
+    /** The solved grid, solved on demand and remembered for the rest of the game. */
+    function solutionFor(): readonly number[] | undefined {
+      /* Solved from the *givens*, never from the board as it stands: a board
+         carrying one of the player's mistakes has no solution at all, and a hint
+         is exactly what someone in that position is reaching for. */
+      solution ??= solve([...game.givens]);
+      return solution;
+    }
+
+    function fillNotes(): void {
+      if (paused || won) return;
+
+      const filled = game.autoNotes();
+      render();
+      say(
+        filled === 0 ? t('sudoku.autoNotes.none') : plural('sudoku.autoNotes.done', filled),
+        filled > 0,
+      );
+    }
+
     function checkForWin(): void {
       if (!game.isSolved()) return;
       won = true;
@@ -525,17 +607,25 @@ boot({
 
     /* ------------------------------------------------------------- new games */
 
-    function startPuzzle(puzzle: readonly number[], resumeFrom?: SavedGame): void {
+    function startPuzzle(
+      puzzle: readonly number[],
+      resumeFrom?: SavedGame,
+      knownSolution?: readonly number[],
+    ): void {
       won = false;
       wrapper.removeAttribute('data-won');
       setPaused(false);
       saveButton.disabled = false;
+      solution = knownSolution;
 
       if (resumeFrom === undefined) {
         game.reset(puzzle);
         startTimer(0);
       } else {
-        game.reset(resumeFrom.initialBoard, resumeFrom.currentBoard, resumeFrom.notes);
+        game.reset(resumeFrom.initialBoard, resumeFrom.currentBoard, resumeFrom.notes, {
+          revealed: resumeFrom.revealed,
+          hints: resumeFrom.hints,
+        });
         startTimer(resumeFrom.seconds);
       }
 
@@ -580,6 +670,19 @@ boot({
     /* --------------------------------------------------------------- dialogs */
 
     async function showWinDialog(): Promise<void> {
+      /*
+       * A solve that leaned on hints is congratulated but not ranked. A best
+       * times list that mixes the two would mean nothing, and quietly recording
+       * an assisted time would be the more annoying of the two surprises.
+       */
+      if (game.hintsUsed > 0) {
+        say(
+          plural('sudoku.win.assisted', game.hintsUsed, { time: formatStopwatch(seconds) }),
+          false,
+        );
+        return;
+      }
+
       const save = await confirmDialog({
         message: `${t('sudoku.win.solvedIn', { time: formatStopwatch(seconds) })} ${t('sudoku.win.question')}`,
         confirmLabel: t('common.yes'),
@@ -755,6 +858,8 @@ boot({
         initialBoard: snapshot.initial,
         currentBoard: snapshot.current,
         notes: snapshot.notes,
+        revealed: snapshot.revealed,
+        hints: snapshot.hints,
       };
       const result = saveStore.write(addSave(saveStore.read(), saved));
       say(
@@ -793,6 +898,9 @@ boot({
       selected = index;
       render();
     });
+
+    hintButton.addEventListener('click', giveHint);
+    notesButton.addEventListener('click', fillNotes);
 
     requireElement('[data-sudoku="check"]').addEventListener('click', () => {
       const conflicts = game.conflicts();

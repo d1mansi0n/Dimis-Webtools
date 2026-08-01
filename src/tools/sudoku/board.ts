@@ -34,7 +34,7 @@ export function columnOf(index: number): number {
 }
 
 /** Read a cell, treating anything out of range as empty. */
-export function cellAt(board: readonly Cell[], index: number): Cell {
+function cellAt(board: readonly Cell[], index: number): Cell {
   return board[index] ?? 0;
 }
 
@@ -127,6 +127,46 @@ export function isLegalPlacement(board: readonly Cell[], index: number, value: n
   }
 
   return true;
+}
+
+/**
+ * Every digit that could still go in a cell, given what is already on the board.
+ *
+ * This is the same reasoning a player does by hand when filling in pencil marks,
+ * which is why auto-notes uses it directly: the notes it writes are exactly the
+ * ones a careful player would have written, and no more. It deliberately does
+ * *not* consult the solution — a note is a record of what a cell might be, not a
+ * leaked answer.
+ */
+export function candidatesAt(board: readonly Cell[], index: number): number[] {
+  if (cellAt(board, index) !== 0) return [];
+  return DIGITS.filter((digit) => isLegalPlacement(board, index, digit));
+}
+
+/**
+ * The empty cell with the fewest remaining candidates, or `undefined` if the
+ * board is full.
+ *
+ * Which cell a hint lands on matters. The first empty cell in reading order is
+ * arbitrary and often the hardest one on the board; the most constrained cell is
+ * the one a player would have found next themselves, so revealing it teaches the
+ * step rather than just skipping it.
+ */
+export function mostConstrainedCell(board: readonly Cell[]): number | undefined {
+  let best: number | undefined;
+  let fewest = Number.POSITIVE_INFINITY;
+
+  for (let index = 0; index < CELL_COUNT; index++) {
+    if (cellAt(board, index) !== 0) continue;
+    const count = candidatesAt(board, index).length;
+    if (count < fewest) {
+      best = index;
+      fewest = count;
+      if (count <= 1) break; // nothing can beat a forced cell
+    }
+  }
+
+  return best;
 }
 
 export function isComplete(board: readonly Cell[]): boolean {

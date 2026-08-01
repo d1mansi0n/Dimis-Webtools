@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Game, MAX_HISTORY } from './game.js';
-import { CELL_COUNT, emptyBoard, indexOf } from './board.js';
+import { candidatesAt, CELL_COUNT, emptyBoard, indexOf, mostConstrainedCell } from './board.js';
 import { EXPERT_PUZZLES } from './puzzles.js';
 import { solve } from './generator.js';
 
@@ -18,6 +18,12 @@ describe('Game', () => {
   it('starts from the givens with no history', () => {
     expect(game.board).toEqual(EXPERT_PUZZLES[0]);
     expect(game.canUndo).toBe(false);
+  });
+
+  it('keeps the givens unchanged as the board is played, which is what a hint solves from', () => {
+    game.place(firstEmpty(), 5);
+    expect(game.givens).toEqual(EXPERT_PUZZLES[0]);
+    expect(game.board).not.toEqual(EXPERT_PUZZLES[0]);
   });
 
   it('places a digit in an empty cell', () => {
@@ -212,5 +218,167 @@ describe('Game', () => {
       expect(() => restored.notesAt(CELL_COUNT - 1)).not.toThrow();
       expect(restored.notesAt(CELL_COUNT - 1).size).toBe(0);
     });
+
+    it('takes the hints back too, so saving and loading cannot launder them away', () => {
+      const restored = new Game();
+      restored.reset(EXPERT_PUZZLES[0]!, undefined, undefined, { revealed: [4], hints: 3 });
+
+      expect(restored.isRevealed(4)).toBe(true);
+      expect(restored.hintsUsed).toBe(3);
+    });
+
+    it('treats a game saved before hints existed as an unassisted one', () => {
+      const restored = new Game();
+      restored.reset(EXPERT_PUZZLES[0]!);
+      expect(restored.hintsUsed).toBe(0);
+    });
+  });
+
+  describe('auto-notes', () => {
+    it('pencils in exactly the digits still legal in each empty cell', () => {
+      const index = firstEmpty();
+      game.autoNotes();
+
+      const notes = [...game.notesAt(index)].sort();
+      expect(notes).toEqual(candidatesAt(EXPERT_PUZZLES[0]!, index).sort());
+      expect(notes.length).toBeGreaterThan(0);
+    });
+
+    it('never writes a note the solution would contradict', () => {
+      const answer = solve(EXPERT_PUZZLES[0]!)!;
+      game.autoNotes();
+
+      for (let index = 0; index < CELL_COUNT; index++) {
+        if (game.valueAt(index) !== 0) continue;
+        expect([...game.notesAt(index)]).toContain(answer[index]);
+      }
+    });
+
+    it('leaves cells that already hold a digit alone', () => {
+      const index = firstGiven();
+      game.autoNotes();
+      expect(game.notesAt(index).size).toBe(0);
+    });
+
+    it('undoes in one step, not one per cell', () => {
+      /* Eighty separate undo entries would make the button useless right after
+         pressing this one. */
+      game.autoNotes();
+      expect(game.canUndo).toBe(true);
+
+      game.undo();
+      expect(game.canUndo).toBe(false);
+      expect(game.notesAt(firstEmpty()).size).toBe(0);
+    });
+
+    it('does nothing, and records nothing, when the notes already say this', () => {
+      game.autoNotes();
+      expect(game.autoNotes()).toBe(0);
+
+      game.undo();
+      expect(game.canUndo).toBe(false);
+    });
+
+    it('replaces stale marks rather than merging with them', () => {
+      const index = firstEmpty();
+      /* 0 is never a candidate; a digit that conflicts stands in for a mark left
+         over from an earlier position. */
+      const impossible = [1, 2, 3, 4, 5, 6, 7, 8, 9].find(
+        (digit) => !candidatesAt(EXPERT_PUZZLES[0]!, index).includes(digit),
+      )!;
+      game.toggleNote(index, impossible);
+      game.autoNotes();
+
+      expect(game.notesAt(index).has(impossible)).toBe(false);
+    });
+  });
+
+  describe('hints', () => {
+    it('writes the digit and marks the cell as given away', () => {
+      const index = firstEmpty();
+      const answer = solve(EXPERT_PUZZLES[0]!)!;
+
+      expect(game.reveal(index, answer[index]!)).toBe(true);
+      expect(game.valueAt(index)).toBe(answer[index]);
+      expect(game.isRevealed(index)).toBe(true);
+      expect(game.hintsUsed).toBe(1);
+    });
+
+    it('clears the cell’s notes, as any confirmed digit does', () => {
+      const index = firstEmpty();
+      game.toggleNote(index, 5);
+      game.reveal(index, solve(EXPERT_PUZZLES[0]!)![index]!);
+
+      expect(game.notesAt(index).size).toBe(0);
+    });
+
+    it('never empties the cell it was asked about, unlike place()', () => {
+      const index = firstEmpty();
+      const digit = solve(EXPERT_PUZZLES[0]!)![index]!;
+      game.reveal(index, digit);
+
+      /* `place` toggles a repeated digit off; a hint that erased its own answer
+         would be absurd. */
+      expect(game.reveal(index, digit)).toBe(false);
+      expect(game.valueAt(index)).toBe(digit);
+    });
+
+    it('refuses a given', () => {
+      expect(game.reveal(firstGiven(), 1)).toBe(false);
+      expect(game.hintsUsed).toBe(0);
+    });
+
+    it('takes the mark back when the hint is undone, but not the count', () => {
+      const index = firstEmpty();
+      game.reveal(index, solve(EXPERT_PUZZLES[0]!)![index]!);
+      game.undo();
+
+      expect(game.isRevealed(index)).toBe(false);
+      /* Undoing puts the digit back; it does not unsee it, so the solve stays an
+         assisted one. */
+      expect(game.hintsUsed).toBe(1);
+    });
+
+    it('stops counting a cell as hinted once the player types over it', () => {
+      const index = firstEmpty();
+      const digit = solve(EXPERT_PUZZLES[0]!)![index]!;
+      game.reveal(index, digit);
+      game.place(index, digit === 9 ? 1 : 9);
+
+      expect(game.isRevealed(index)).toBe(false);
+    });
+
+    it('is forgotten when the puzzle is restarted', () => {
+      const index = firstEmpty();
+      game.reveal(index, solve(EXPERT_PUZZLES[0]!)![index]!);
+      game.restart();
+
+      expect(game.hintsUsed).toBe(0);
+      expect(game.isRevealed(index)).toBe(false);
+    });
   });
 });
+
+describe('mostConstrainedCell', () => {
+  it('is the empty cell a player would have solved next, not the first in reading order', () => {
+    const board = emptyBoard();
+    /* Eight of the nine digits in the last row leave exactly one candidate for
+       the ninth cell, while cell 0 still takes any digit at all. */
+    for (let column = 0; column < 8; column++) board[indexOf(8, column)] = column + 1;
+
+    expect(mostConstrainedCell(board)).toBe(indexOf(8, 8));
+    expect(candidatesAt(board, indexOf(8, 8))).toEqual([9]);
+  });
+
+  it('is undefined for a full board, so a hint has something to say instead of throwing', () => {
+    expect(mostConstrainedCell(solve(EXPERT_PUZZLES[0]!)!)).toBeUndefined();
+  });
+
+  it('reports no candidates for a cell that already holds a digit', () => {
+    expect(candidatesAt(EXPERT_PUZZLES[0]!, firstGivenOf(EXPERT_PUZZLES[0]!))).toEqual([]);
+  });
+});
+
+function firstGivenOf(puzzle: readonly number[]): number {
+  return puzzle.findIndex((value) => value !== 0);
+}

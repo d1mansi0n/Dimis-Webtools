@@ -12,7 +12,7 @@
 import { defineStore } from '../core/storage.js';
 import { literals } from '../core/schema.js';
 
-export const THEME_CHOICES = ['system', 'light', 'dark'] as const;
+const THEME_CHOICES = ['system', 'light', 'dark'] as const;
 export type ThemeChoice = (typeof THEME_CHOICES)[number];
 
 const DARK_QUERY = '(prefers-color-scheme: dark)';
@@ -54,7 +54,7 @@ export function applyTheme(): void {
   }
 }
 
-export function setTheme(next: ThemeChoice): void {
+function setTheme(next: ThemeChoice): void {
   choice = next;
   void store.write(next);
   applyTheme();

@@ -50,6 +50,18 @@ describe('buildSheet', () => {
     expect(entry?.[2]).toBe('10:30:00');
   });
 
+  it('reports the latest end time even when the sessions are not in order', () => {
+    /* Sessions are appended in the order they closed, which is chronological for
+       a paused-and-resumed entry — but the export takes the *latest* end rather
+       than the last recorded one, so that hand-edited or migrated data cannot
+       produce an entry that appears to have finished before it did. */
+    const [entry] = finished();
+    const scrambled: Entry[] = [{ ...entry!, sessions: [...entry!.sessions].reverse() }];
+
+    const [, row] = buildSheet(scrambled, LABELS, identity, T0 + minutes(90)).rows;
+    expect(row?.[2]).toBe('10:30:00');
+  });
+
   it('writes the elapsed time in both formats, the decimal one as a number', () => {
     const [, entry] = buildSheet(finished(), LABELS, identity, T0 + minutes(90)).rows;
     expect(entry?.[3]).toBe('01:15:00');

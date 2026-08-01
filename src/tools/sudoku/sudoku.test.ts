@@ -188,13 +188,17 @@ describe('countSolutions', () => {
 });
 
 describe('solve', () => {
+  /* Given a generous timeout for the same reason as the uniqueness sweep below:
+     these puzzles are chosen to be hard, the search is deep, and under V8
+     coverage instrumentation on a loaded machine it comfortably outruns the
+     five-second default. */
   it('solves every expert puzzle', () => {
     for (const puzzle of EXPERT_PUZZLES) {
       const solution = solve(puzzle);
       expect(solution).toBeDefined();
       expect(isSolved(solution!)).toBe(true);
     }
-  });
+  }, 60_000);
 
   it('keeps the original clues in place', () => {
     const puzzle = EXPERT_PUZZLES[0]!;
@@ -290,6 +294,8 @@ const sampleGame = (id: number): SavedGame => ({
   initialBoard: EXPERT_PUZZLES[0]!,
   currentBoard: EXPERT_PUZZLES[0]!,
   notes: Array.from({ length: CELL_COUNT }, () => []),
+  revealed: [],
+  hints: 0,
 });
 
 describe('saved games', () => {

@@ -67,6 +67,23 @@ body {
   color: var(--ok);
 }
 
+/*
+ * The editable total on a finished entry. Sized to read as the entry's headline
+ * number, like the `.time-entry__elapsed` text it replaces, so switching between
+ * the two does not make the row jump.
+ */
+.time-entry__duration-field {
+  display: grid;
+  gap: 0;
+  max-width: 11rem;
+}
+
+.time-entry__duration {
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+}
+
 .time-entry__sessions {
   font-size: 0.75rem;
   color: var(--text-muted);

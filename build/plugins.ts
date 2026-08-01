@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
-import type { OutputChunk } from 'rollup';
-import type { Plugin } from 'vite';
+import type { Plugin, Rollup } from 'vite';
 import { contentSecurityPolicy } from './csp.js';
 import { PAGES, TOOLS } from '../src/config/site.js';
 
@@ -214,14 +213,26 @@ export function serviceWorkerManifest(base: string): Plugin {
  * its own plugin list, so it never reaches this bundle; it is also fetched on
  * demand rather than with the page, so it does not belong in a page's total.
  */
+/*
+ * Each number is roughly a tenth above what the page actually weighs today.
+ *
+ * That margin is chosen, not incidental. These were once set within one or two
+ * percent of the real figure, which sounds stricter and was in practice worse:
+ * an ordinary CSS tweak tripped the build, and the fix was always to bump the
+ * number, so the failure carried no information and trained everyone to raise
+ * the limit without looking. A tenth is wide enough that day-to-day work never
+ * touches it and narrow enough that the things this exists to catch — a
+ * dependency, an unoptimised asset, a module imported into every page — clear it
+ * immediately. `npm run build` prints the real figures.
+ */
 const PAGE_BUDGETS: Readonly<Record<string, number>> = {
-  hub: 19_000,
-  rice: 19_500,
-  sugar: 22_000,
-  counter: 23_500,
-  time: 27_500,
-  sudoku: 28_000,
-  recipes: 32_500,
+  hub: 20_000,
+  rice: 21_000,
+  sugar: 23_000,
+  counter: 25_000,
+  time: 29_000,
+  sudoku: 30_500,
+  recipes: 33_500,
   /* Not a page, but every visitor downloads and runs it, so it is weighed on the
      same terms. It is measured before its precache manifest is pasted in — see
      `serviceWorkerManifest`, which runs after this — so the number reflects the
@@ -242,7 +253,7 @@ export function assertBundleBudget(): Plugin {
     name: 'dwt:assert-bundle-budget',
     apply: 'build',
     generateBundle(_options, bundle) {
-      const chunks = new Map<string, OutputChunk>();
+      const chunks = new Map<string, Rollup.OutputChunk>();
       for (const output of Object.values(bundle)) {
         if (output.type === 'chunk') chunks.set(output.fileName, output);
       }
@@ -250,7 +261,7 @@ export function assertBundleBudget(): Plugin {
       const gzipped = (source: string | Uint8Array): number => gzipSync(source).length;
 
       /** An entry plus everything it pulls in, following imports transitively. */
-      const weigh = (entry: OutputChunk): { total: number; css: readonly string[] } => {
+      const weigh = (entry: Rollup.OutputChunk): { total: number; css: readonly string[] } => {
         const seen = new Set<string>();
         const css = new Set<string>();
         let total = 0;

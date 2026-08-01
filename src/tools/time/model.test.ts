@@ -8,12 +8,15 @@ import {
   heartbeat,
   MAX_COMMENT_LENGTH,
   MAX_COMMENTS,
+  MAX_ELAPSED_MS,
   pause,
   recoverInterrupted,
   rememberComment,
   remove,
+  reopen,
   runningEntry,
   setComment,
+  setElapsed,
   start,
   stop,
   totalElapsed,
@@ -184,9 +187,12 @@ describe('setComment and remove', () => {
     expect(setComment([entryAt(T0)], T0, 'Client call')[0]?.comment).toBe('Client call');
   });
 
-  it('refuses to change a stopped entry', () => {
+  it('sets a comment on a finished entry, which versions 1.0 and 2.0 refused', () => {
+    /* Stopping used to lock the comment for good. Writing down what a stretch of
+       work was about is something people do once it is over, so that lock was
+       the sharpest edge this tool had. */
     const stopped = stop([entryAt(T0)], T0, CLOCK, T0);
-    expect(setComment(stopped, T0, 'too late')[0]?.comment).toBe('');
+    expect(setComment(stopped, T0, 'Client call')[0]?.comment).toBe('Client call');
   });
 
   it('truncates an over-long comment rather than storing it', () => {
@@ -196,6 +202,57 @@ describe('setComment and remove', () => {
 
   it('removes an entry by id', () => {
     expect(remove([entryAt(1), entryAt(2)], 1).map((entry) => entry.id)).toEqual([2]);
+  });
+});
+
+describe('setElapsed', () => {
+  const finished = (elapsedMs: number): Entry[] => {
+    const started = start([entryAt(T0)], T0, T0);
+    return stop(started, T0, CLOCK, T0 + elapsedMs);
+  };
+
+  it('corrects the total of a finished entry, for a timer left running through lunch', () => {
+    const corrected = setElapsed(finished(minutes(300)), T0, minutes(45));
+    expect(corrected[0]?.accumulated).toBe(minutes(45));
+  });
+
+  it('keeps the recorded sessions, which are the evidence of what actually happened', () => {
+    const corrected = setElapsed(finished(minutes(300)), T0, minutes(45));
+    expect(corrected[0]?.sessions).toHaveLength(1);
+  });
+
+  it('refuses to rewrite a running entry, whose total the next heartbeat owns', () => {
+    const running = start([entryAt(T0)], T0, T0);
+    expect(setElapsed(running, T0, minutes(45))[0]?.accumulated).toBe(0);
+  });
+
+  it.each([-1, Number.NaN, Number.POSITIVE_INFINITY, MAX_ELAPSED_MS + 1])(
+    'refuses %s rather than storing it',
+    (value) => {
+      const before = finished(minutes(10));
+      expect(setElapsed(before, T0, value)[0]?.accumulated).toBe(minutes(10));
+    },
+  );
+});
+
+describe('reopen', () => {
+  it('makes a finished entry writable again, so a mis-clicked Stop is recoverable', () => {
+    const stopped = stop(start([entryAt(T0)], T0, T0), T0, CLOCK, T0 + minutes(30));
+    const reopened = reopen(stopped, T0);
+
+    expect(reopened[0]?.isStopped).toBe(false);
+    /* Reopening is not a reset: the banked time and the session stay. */
+    expect(reopened[0]?.accumulated).toBe(minutes(30));
+    expect(reopened[0]?.sessions).toHaveLength(1);
+  });
+
+  it('can then be started again', () => {
+    const reopened = reopen(stop([entryAt(T0)], T0, CLOCK, T0), T0);
+    expect(start(reopened, T0, T0)[0]?.active).not.toBeNull();
+  });
+
+  it('leaves an entry that was never stopped alone', () => {
+    expect(reopen([entryAt(T0)], T0)[0]?.isStopped).toBe(false);
   });
 });
 

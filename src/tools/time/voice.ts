@@ -6,10 +6,6 @@
  * wrapper around the browser API that the DOM layer talks to.
  */
 
-/** Languages the recogniser is offered in, matching the tool's own locales. */
-export const VOICE_LANGUAGES = ['en-US', 'de-DE'] as const;
-export type VoiceLanguage = (typeof VOICE_LANGUAGES)[number];
-
 export type Command =
   | { readonly kind: 'newEntry' }
   | { readonly kind: 'start' }
