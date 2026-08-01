@@ -115,10 +115,17 @@ policy and the bundled worker only exist in the production build.
 
 ## Deployment
 
-Pushing to `main` runs [`deploy.yml`](.github/workflows/deploy.yml), which
-verifies, builds and publishes to GitHub Pages. `BASE_PATH` controls the
-deployment base and defaults to `/<repo>/`; set it to `/` if you configure a
-custom domain.
+Pushing to `main` runs [`deploy.yml`](.github/workflows/deploy.yml), which runs
+`npm run verify`, then the end-to-end suite, then builds and publishes to GitHub
+Pages. `BASE_PATH` controls the deployment base and defaults to `/<repo>/`; set
+it to `/` if you configure a custom domain.
+
+Both workflows call `npm run verify` rather than listing the gates themselves, so
+there is one definition of "verified" and it is the one you run locally. The
+deploy runs the end-to-end suite as well because that is the only thing covering
+[`src/sw.ts`](src/sw.ts) — a service worker cannot be exercised in jsdom, and it
+is the most persistent thing the site ships, since it outlives the tab that
+installed it.
 
 Because there is now a build step, the source is no longer editable directly in
 the GitHub web UI — clone, change, and let CI publish.

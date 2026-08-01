@@ -33,13 +33,34 @@ jobs:
 
       - run: npm ci
 
-      # The same gates as CI. Nothing reaches the live site without passing them.
+      # The same command CI runs and the same one a contributor runs locally.
+      # This used to inline its own copy of the steps and had fallen behind —
+      # still running the unit tests without the coverage thresholds — so the
+      # path that publishes the site was the one gate nobody was actually
+      # watching. There is one definition now, in package.json.
       - name: Verify
-        run: |
-          npm run format:check
-          npm run lint
-          npm run typecheck
-          npm run test
+        run: npm run verify
+
+      - name: Install Playwright browsers
+        run: npm run e2e:install
+
+      # The end-to-end suite gates the deploy, not just CI. It is the only thing
+      # that covers `src/sw.ts` at all: a service worker is excluded from unit
+      # coverage because jsdom has no ServiceWorkerGlobalScope, Cache API or
+      # fetch interception, so Playwright cutting the network for real is the
+      # only test of it that means anything. Publishing a broken one without
+      # running that would be publishing the most persistent artifact on the
+      # site — it outlives the tab — with nothing checking it.
+      - name: End-to-end tests
+        run: npm run e2e
+
+      - name: Upload the Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-deploy
+          path: playwright-report
+          retention-days: 7
 
       - name: Build
         # `BASE_PATH` has to match where Pages serves the site from. For a project

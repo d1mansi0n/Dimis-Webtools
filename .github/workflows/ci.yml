@@ -33,20 +33,14 @@ jobs:
       # package.json and the lockfile disagree.
       - run: npm ci
 
-      - name: Check formatting
-        run: npm run format:check
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Unit tests with coverage
-        run: npm run test:coverage
-
-      - name: Build
-        run: npm run build
+      # One command rather than a step per gate, so there is exactly one
+      # definition of what "verified" means and it is the one a contributor runs
+      # locally. Listing the steps here reads better in the Actions UI, and that
+      # is precisely how this drifted: the deploy workflow kept its own copy and
+      # was still running the tests without coverage thresholds long after
+      # `verify` had gained them.
+      - name: Verify
+        run: npm run verify
 
       - name: Upload the built site
         uses: actions/upload-artifact@v7
@@ -92,7 +86,7 @@ jobs:
       - run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npm run e2e:install
 
       # Runs against the production build via `vite preview`, which is the only
       # place the strict Content Security Policy and the real worker exist.
