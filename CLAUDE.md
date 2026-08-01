@@ -89,6 +89,22 @@ Never claim work is done without running `npm run verify`. It is fast.
   and the browser's own module requests do — so without it every lookup misses
   and the site is cached but unusable offline, serving the HTML while every
   script alongside it fails. Do not "tidy" it away.
+- **An author `display` beats `[hidden]`.** Setting `element.hidden = true` does
+  nothing to an element the stylesheet gives a `display` to — the user agent's
+  `[hidden] { display: none }` is a weaker cascade origin, so it always loses.
+  The stylesheet has to say it itself. This shipped in the Picture Counter, where
+  the "choose an image" prompt went on sitting over the picture that had just
+  loaded, and nobody noticed because the overlay is `pointer-events: none` and so
+  never swallowed a tap.
+- **Playwright's WebKit refuses offline navigations before the service worker
+  sees them.** `context.setOffline(true)` followed by a navigation fails with
+  "WebKit encountered an internal error" however complete the cache is, so three
+  tests in [`e2e/offline.spec.ts`](e2e/offline.spec.ts) are skipped there.
+  **Firefox has the opposite problem:** its offline emulation leaves its own HTTP
+  cache answering, so the worker's `fetch` succeeds for a page that was just
+  visited and network-first never reaches its fallback. A test that wants to know
+  what is in the cache must read it with `caches.match`, not infer it from an
+  offline navigation.
 - **Don't put raw control characters in source files.** It makes them binary to
   `grep` and other tools. Write them as `\u0000`-style escape sequences instead.
 

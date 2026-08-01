@@ -5,17 +5,17 @@ Read [`README.md`](README.md) for what the project is,
 [`CLAUDE.md`](CLAUDE.md) for the traps. This file covers what is _done_, what is
 _deliberately not done_, and what to pick up next.
 
-Last updated after a review pass focused on efficiency, security and the
-machinery that keeps both from rotting. The previous version of this file was
-written at the end of the 3.0 rewrite; its "no offline support yet" item is now
-done, and its test counts were stale.
+Last updated after a session that closed out the five open items the previous
+version of this file listed — cross-browser end-to-end tests, the coverage
+headroom, editable time entries, Sudoku hints and auto-notes, and the rice-bowl
+illustration — and fixed two bugs that the first of those turned up.
 
 ## Start here
 
 ```bash
 npm ci
 npm run verify          # format, lint, typecheck, unit tests + coverage, build
-npm run e2e:install     # once, downloads Chromium
+npm run e2e:install     # once, downloads Chromium, Firefox and WebKit
 npm run e2e             # Playwright, against the production build
 ```
 
@@ -23,29 +23,39 @@ npm run e2e             # Playwright, against the production build
 both workflows calling this one command rather than listing the gates themselves.
 If it passes locally it passes there.
 
+`npm run e2e` now drives four projects and takes about fifteen minutes locally.
+CI runs them as four parallel jobs instead, so the wall-clock cost there is the
+browser download rather than four suite runs. To iterate on one engine, use
+`npx playwright test --project=chromium`.
+
 ## Where things stand
 
 Everything below was measured, not assumed:
 
-| Gate                   | Result                                                   |
-| ---------------------- | -------------------------------------------------------- |
-| `npm run verify`       | passes                                                   |
-| Unit tests             | 502 passing, 22 files                                    |
-| Coverage               | 96.7% statements, 86.4% branches; thresholds 90/90/85/90 |
-| `npm run e2e`          | 157 passing, 1 skipped (Chromium + Pixel 7 viewport)     |
-| `npm audit --omit=dev` | 0 vulnerabilities — the site has no runtime dependencies |
-| `npm audit` (all)      | 0 vulnerabilities                                        |
+| Gate                   | Result                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------- |
+| `npm run verify`       | passes                                                                          |
+| Unit tests             | 546 passing, 22 files                                                           |
+| Coverage               | 96.6% statements, 87.2% branches; thresholds 90/90/85/90                        |
+| `npm run e2e`          | 338 passing, 6 skipped, across Chromium, Firefox, WebKit and a Pixel 7 viewport |
+| `npm audit --omit=dev` | 0 vulnerabilities — the site has no runtime dependencies                        |
+| `npm audit` (all)      | 0 vulnerabilities                                                               |
+
+The six skips are deliberate and annotated where they are: three offline tests
+that WebKit's harness cannot run (see below), and one touch gesture that needs a
+touch-capable context, which is therefore skipped on the three desktop projects
+and runs on the mobile one.
 
 ## The one thing outstanding
 
-**Confirm the service worker actually registers on the live site.** It is new, it
-has only ever run against `vite preview`, and it is the most persistent thing the
-site ships — it outlives the tab that installed it.
+**Confirm the service worker actually registers on the live site.** It has only
+ever run against `vite preview`, and it is the most persistent thing the site
+ships — it outlives the tab that installed it.
 
 1. Open the deployed site, then DevTools → **Application → Service Workers**.
    Expect one worker, **activated and is running**, source `sw.js`.
 2. Application → **Cache Storage** should show one cache named `dwt-` plus a
-   twelve-character hash, holding **26 entries**.
+   twelve-character hash, holding **27 entries**.
 3. Network → tick **Offline**, then navigate to a tool you have not opened in
    that browser. It should load normally — that exercises the precache rather
    than the page you are already on.
@@ -59,90 +69,117 @@ If it is broken, the recovery is ordinary: pages are network-first, and the
 worker script itself bypasses the HTTP cache on update checks, so a fix deploys
 normally. Nobody gets stuck.
 
-**Also worth one glance:** the CI and deploy workflows were changed in `6b31f03`
-and are the only work from that session not proven by running it — GitHub Actions
-cannot be exercised locally. Both files parse, every `npm run` reference in them
-resolves, and the step order is right, but the first run on `main` is the real
-test. A failure there fails the deploy rather than publishing a bad site.
+**Also worth one glance:** the CI workflow's end-to-end job is now a four-way
+matrix, and workflow changes cannot be exercised locally. It parses, every `npm
+run` and `npx` reference in it resolves, and the step order is right, but the
+first run on `main` is the real test. A failure there fails the deploy rather
+than publishing a bad site.
 
 ## What changed in the last session
 
-Seven commits, oldest first:
+The five open items this file used to list are done:
 
-| Commit    | What                                                                                                 |
-| --------- | ---------------------------------------------------------------------------------------------------- |
-| `90f262d` | Cached `Intl` formatters, made Recipes render only the visible panel, made the mention patterns lazy |
-| `293cdea` | Added the page size budgets, the zero-runtime-dependency test, and the `Intl` lint rule              |
-| `6bea875` | Added the axe sweep and a startup error boundary; fixed an invalid ARIA grid in Sudoku               |
-| `3fc07d0` | Added the service worker — offline for the whole site                                                |
-| `4379488` | Put the coverage thresholds into `npm run verify`, where they were promised                          |
-| `57789d8` | Tested the service worker upgrade path; coalesced canvas painting to one per frame                   |
-| `6b31f03` | Gave the gate one definition and made it gate the deploy too                                         |
+| Item                             | Outcome                                                                              |
+| -------------------------------- | ------------------------------------------------------------------------------------ |
+| Only Chromium tested             | Firefox and WebKit added, as parallel CI jobs                                        |
+| Branch coverage headroom         | 86.4% → 87.2%, against an unchanged threshold of 85%                                 |
+| Time entries could not be edited | Comment unlocked, total editable, Stop undoable                                      |
+| Sudoku had no hints              | Hints and auto-notes, both undoable, with assisted solves kept out of the best times |
+| The rice illustration was gone   | Restored as a WebP banner, 1 MB → 39 kB                                              |
 
-Two of those are worth knowing about because they were bugs found rather than
+Four of those are worth knowing about because they were bugs found rather than
 features added:
 
-- **The Sudoku board's ARIA was invalid.** All 81 cells were parented straight to
-  `role="grid"`, but a grid may contain only rows. Screen readers had no defined
-  way to walk it. Cells now sit in nine `role="row"` wrappers with
-  `display: contents`, so the CSS grid is untouched and the board is
-  pixel-identical.
-- **The service worker cached everything and served none of it.** `vite preview`
-  answers with `Vary: Origin`, the Cache API honours `Vary` by default, and the
-  requests stored at install are `no-cors` and carry no `Origin` header while the
-  browser's own module requests do. Every lookup missed: the HTML came back and
-  every script alongside it failed. Lookups pass `ignoreVary: true` now. See
-  `CLAUDE.md` — do not "tidy" it away.
-
-## Open items, in the order I would take them
-
-None of these are blocking, and the codebase is in good shape without them.
-
-1. **Only Chromium is tested end to end.** Adding WebKit and Firefox projects to
-   `playwright.config.ts` is a few lines; left out to keep CI fast. Worth doing
-   before relying on Safari, particularly because Safari is where the
-   `localStorage`-unavailable path actually triggers — and now also where service
-   worker behaviour is most likely to differ.
-2. **Branch coverage has 1.4 points of headroom** (86.4% against a threshold of
-   85%). The next tool that lands with a few unexercised branches will trip it.
-   When that happens the right response is almost certainly to write the missing
-   tests rather than lower the number — but it will look like an unrelated failure
-   at an annoying moment, so it is worth knowing in advance.
-3. **Time Tracking has no way to edit a finished entry.** Stopping an entry locks
-   its comment. That matches 2.0, but it is the most likely thing to frustrate
-   someone using it in anger.
-4. **Sudoku has no hint or auto-notes feature.** Both are common expectations, and
-   `generator.ts` already provides everything needed: `solve()` gives the answer
-   for a hint, and the candidate masks give the digits for auto-notes.
-5. **The rice-bowl illustration was deleted** in the 3.0 rewrite (a 1 MB
-   unoptimised PNG used as a full-page background). Recoverable from
-   `v1.0-archive`. If it comes back, convert it to WebP and treat it as a
-   decorative header, not a background — full-bleed backgrounds hurt text
-   contrast, which is why the old version needed a translucent panel over it.
+- **The Picture Counter's "choose an image" prompt never went away.** The code
+  set `hidden` on it, but the stylesheet gives it `display: flex`, and an author
+  `display` beats the user agent's `[hidden]` rule — so the attribute was set and
+  the grey text went on sitting over the picture that had just loaded. The empty
+  canvas had the same bug. It survived this long because the overlay is
+  `pointer-events: none`, so it never swallowed a tap.
+- **The test PNG the counter tests upload was corrupt.** Its `IDAT` chunk had a
+  bad zlib checksum. Chromium decoded it anyway and Firefox refused it, so the
+  tool had no image to place a marker on — a failure that looked like a browser
+  difference in the tool and was nothing of the sort. This is what adding the
+  second engine bought, on its first run.
+- **Two service worker tests were proving their point through offline emulation
+  they did not need.** They now read the Cache API directly, which is portable
+  and a closer statement of what they mean. See the next section.
+- **Answering a confirmation dialog by its button label alone races WebKit.** A
+  click issued while the dialog is still being promoted into the top layer is
+  swallowed, and the test then sits there until it times out — about two runs in
+  five, and only ever on the second dialog of a test. `answerDialog()` in
+  [`e2e/tools.spec.ts`](e2e/tools.spec.ts) waits for `dialog[open]` and for its
+  removal; use it rather than clicking "Yes" directly. `confirmDialog()` itself
+  is not at fault, which was checked rather than assumed.
 
 ## Things that will bite you
 
-All written up in [`CLAUDE.md`](CLAUDE.md); the ones that cost the most time:
+Most are written up in [`CLAUDE.md`](CLAUDE.md). The ones this session added:
+
+- **Playwright's WebKit refuses a navigation made while `setOffline(true)`**,
+  before the service worker is consulted at all — the call fails with "WebKit
+  encountered an internal error" however complete the cache is. Three tests in
+  [`e2e/offline.spec.ts`](e2e/offline.spec.ts) are skipped there for that reason,
+  and the reason is written at the skip. The worker itself does intercept
+  correctly on WebKit; that was verified by hand, by renaming a precached file
+  out of `dist/` while online and watching the request still come back 200.
+- **Firefox's offline emulation leaves its own HTTP cache answering.** The
+  worker's `fetch` therefore succeeds for a page that was just visited, so
+  network-first never reaches its fallback and an offline reload proves nothing
+  about what is in the cache. Any test that wants to know what the cache holds
+  should read it with `caches.match`, which works on every engine.
+- **Running WebKit locally needs `libavif16` staged by hand** if the system does
+  not have it. CI is unaffected, because it installs the browsers as root.
+- **An author `display` beats `[hidden]`.** Setting the property is not enough on
+  an element the stylesheet gives a `display` to; the stylesheet has to say
+  `[hidden] { display: none }` itself. This has now bitten twice in one file.
+
+And the ones that were already here and still cost the most time:
 
 - **The service worker's precache list is injected by the build**, not written by
   hand. `src/sw.ts` ships two placeholder literals that a Vite plugin replaces
   once Rollup has emitted the hashed filenames. The build fails loudly if they are
   ever not found, because an unreplaced one ships a worker that caches nothing and
   reports nothing.
-- **Cache lookups pass `ignoreVary: true`** for the reason above. It is a fix, not
-  a shortcut.
+- **Cache lookups pass `ignoreVary: true`.** It is a fix, not a shortcut.
 - **Every page has a gzipped budget** in `PAGE_BUDGETS` (`build/plugins.ts`). A new
-  entry with no budget fails the build on purpose. Current headroom is ~15%;
-  `npm run build` prints the real weights.
+  entry with no budget fails the build on purpose. Current headroom is ~5% on
+  Sudoku, which is the tightest; `npm run build` prints the real weights.
 - **No `new Intl.*` outside `core/format.ts` and `i18n/index.ts`.** ESLint errors
-  on it. Constructing a formatter per call is tens of microseconds and lands in
-  render loops.
+  on it.
 - The Sudoku worker URL **must** be imported as `./generator.worker.ts?worker&url`.
 - `vite preview` reports `command: 'serve'`; the config keys off `isPreview`.
 - `optional()` in the schema module does not accept `null` — use `nullish()` in
   migration decoders, or every affected record is silently dropped.
 - Header-only CSP directives must stay out of the `<meta>` policy.
 - Never put raw control characters in source files.
+
+## Open items, in the order I would take them
+
+None of these are blocking, and the codebase is in good shape without them.
+
+1. **Nothing automated covers offline behaviour on WebKit**, for the harness
+   reason above. If the worker's strategy is ever changed, a WebKit-only
+   regression would not be caught — the manual check in the previous section is
+   the only cover. Worth redoing that check by hand after any change to
+   `src/sw.ts`.
+2. **Branch coverage has 2.2 points of headroom** (87.2% against a threshold of
+   85%). Better than it was, but the next tool that lands with a few unexercised
+   branches will still trip it, and it will look like an unrelated failure at an
+   annoying moment. The right response is almost certainly to write the missing
+   tests rather than lower the number.
+3. **Time Tracking can correct an entry's total, but not its individual
+   sessions.** The sessions are shown and are what the export reports start and
+   end times from, so an entry whose total has been corrected can disagree with
+   the sessions listed under it. That is deliberate — the sessions are the record
+   of what actually happened — but it is the next thing someone will ask for.
+4. **Sudoku's hint reveals a digit rather than explaining a technique.** The
+   machinery for the better version already exists: `candidatesAt()` gives the
+   pencil marks and `mostConstrainedCell()` finds the cell, so "this cell is the
+   only place a 7 can go in this box" is reachable without new solving code.
+5. **The rice bowl is the only raster asset on the site**, at 39 kB. If a second
+   one is ever added, it is worth checking whether the precache should still
+   carry images at all — 27 URLs is currently every asset the site has.
 
 ## Deliberate non-goals
 
@@ -157,6 +194,9 @@ Worth knowing so they are not "fixed" by accident:
 - **The Sudoku radial picker stays.** It is the owner's own design and the reason
   the tool exists. An earlier draft replaced it with a number pad; that was
   reverted at the owner's request. Do not remove it again.
+- **Sudoku hints are counted, and counting up only.** Undoing a hint puts the
+  digit back but does not unsee it, and the count is saved with the game, so
+  reloading a save is not a way to launder an assisted solve into a best time.
 - **The service worker is not registered in development.** It would serve
   yesterday's modules over hot reload. Offline behaviour is therefore only
   observable through `npm run e2e`.
