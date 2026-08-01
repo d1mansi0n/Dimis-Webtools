@@ -18,16 +18,30 @@ const seedOf = (id: string): string => {
  * while the dialog is still being promoted into the top layer is swallowed, and
  * the test then sits there until it times out. It flaked roughly two runs in
  * five, and only ever on the *second* dialog of a test — the one opened while
- * the previous one was still being torn down.
+ * the previous one was still being torn down. Waiting for `dialog[open]` first
+ * fixes that much.
  *
- * Waiting for `dialog[open]` first, and for its removal afterwards, makes the
- * sequence deterministic on every engine. `confirmDialog()` itself is fine: the
- * dialog is removed on close, and a probe found no leftovers on any engine.
+ * The click is forced, which needs justifying because a forced click can hide a
+ * real bug. Playwright's actionability check waits for the element's box to be
+ * identical across two consecutive animation frames, and that check needs frames
+ * to be produced at all. Two WebKit contexts running in parallel starve each
+ * other of them, so the check can hang on an element that is not moving —
+ * measured, not assumed: a probe sampled this dialog's box over twenty frames
+ * and got one distinct value every time, while the run that failed never got
+ * past "waiting for element to be visible, enabled and stable". There is no
+ * animation or transition on `dialog` for it to be waiting on.
+ *
+ * What makes forcing safe here is the assertion after it. If the click did not
+ * land, the dialog does not close and `toHaveCount(0)` fails — so the check
+ * being skipped cannot turn a broken button into a passing test.
+ *
+ * `confirmDialog()` itself is not at fault: a probe found it removing its dialog
+ * cleanly, with no leftovers, on every engine.
  */
 const answerDialog = async (page: Page, label: string): Promise<void> => {
   const dialog = page.locator('dialog[open]');
   await expect(dialog).toBeVisible();
-  await dialog.getByRole('button', { name: label, exact: true }).click();
+  await dialog.getByRole('button', { name: label, exact: true }).click({ force: true });
   await expect(dialog).toHaveCount(0);
 };
 
