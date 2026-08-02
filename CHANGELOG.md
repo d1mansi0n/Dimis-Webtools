@@ -10,10 +10,17 @@ green glow around the board, which _states_ that the puzzle is solved without
 ever celebrating it, and no changelog entry ever admitted to the loss. Finishing
 a Sudoku is the one moment on this site that has earned a flourish.
 
-- **Confetti and a gold, pulsing headline** on a solve, for about seven seconds.
-  It starts after the best-time question is answered, because a modal `<dialog>`
-  renders in the top layer and anything thrown while it is open falls behind its
-  backdrop — which is what 1.0 waited for too.
+- **Confetti and a gold, pulsing headline** on a solve, running until the player
+  starts another puzzle, resets or loads a game. Even 1.0 put the moment on a
+  five-second timer, which takes it away while the board that earned it is still
+  on screen. It starts after the best-time question is answered, because a modal
+  `<dialog>` renders in the top layer and anything thrown while it is open falls
+  behind its backdrop — which is what 1.0 waited for too.
+- **The rain recycles rather than running out.** A piece that falls off the
+  bottom climbs back to the top and falls again, so an endless shower is 280
+  looping CSS animations and no timer, allocation or garbage after the first
+  frame. The population comes from 1.0's own density — ten pieces every 200ms,
+  each falling for four seconds, is about two hundred in the air at once.
 - **The gold is legible this time.** `#FFD700` on a white page sits at 1.6:1, so
   the light theme uses a deep gold at 4.6:1 and the dark theme keeps the
   original.

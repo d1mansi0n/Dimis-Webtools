@@ -411,9 +411,14 @@ body {
   width: 0.5rem;
   height: 1rem;
   border-radius: 1px;
-  /* `both`, so a piece waiting out its delay is already at the top of the fall
-     rather than sitting visibly at the start position for a moment. */
-  animation: sudoku-confetti-fall var(--duration) linear var(--delay) both;
+  /*
+   * `infinite`, because the celebration ends when the player starts another
+   * puzzle and not before: a piece that has fallen off the bottom climbs back
+   * to the top and falls again, so the rain never runs out and the script needs
+   * no timer to keep it going. `both` covers the stagger — a piece waiting out
+   * its delay holds the top of the fall rather than sitting visibly in place.
+   */
+  animation: sudoku-confetti-fall var(--duration) linear var(--delay) infinite both;
 }
 
 @keyframes sudoku-confetti-fall {

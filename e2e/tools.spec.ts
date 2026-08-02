@@ -641,8 +641,8 @@ test.describe('sudoku', () => {
 
   test('celebrates a solved puzzle with confetti and a gold headline', async ({ page }) => {
     /* Solving a board is fifty round trips through the driver — twenty seconds
-       of them in WebKit — and the celebration then has to be waited out. This is
-       the one test here that genuinely needs longer than the default. */
+       of them in WebKit. This is the one test here that genuinely needs longer
+       than the default. */
     test.slow();
 
     await page.goto('sudoku/');
@@ -664,9 +664,17 @@ test.describe('sudoku', () => {
     await expect(page.locator('[data-sudoku="title"]')).toHaveAttribute('data-celebrating', '');
     expect(await page.locator('.sudoku-confetti__piece').count()).toBeGreaterThan(0);
 
-    /* And it clears up after itself: a fixed layer left on the page would sit
-       over every control on it for the rest of the session. */
-    await expect(page.locator('.sudoku-confetti')).toHaveCount(0, { timeout: 15_000 });
+    /* It keeps going: the pieces loop, and no timer takes the moment away while
+       the board that earned it is still on screen. Ten seconds is well past the
+       longest single fall, so a rain that did not recycle would have run dry. */
+    await page.waitForTimeout(10_000);
+    await expect(page.locator('[data-sudoku="title"]')).toHaveAttribute('data-celebrating', '');
+    expect(await page.locator('.sudoku-confetti__piece').count()).toBeGreaterThan(0);
+
+    /* The next puzzle ends it. A fixed layer left over a fresh board would rain
+       on it for the rest of the session. */
+    await page.getByRole('button', { name: 'New game' }).click();
+    await expect(page.locator('.sudoku-confetti')).toHaveCount(0);
     await expect(page.locator('[data-sudoku="title"]')).not.toHaveAttribute('data-celebrating');
   });
 

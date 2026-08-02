@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { CELEBRATION_MS, createCelebration } from './celebration.js';
+import { createCelebration } from './celebration.js';
 
 describe('createCelebration', () => {
   let heading: HTMLElement;
@@ -50,9 +50,23 @@ describe('createCelebration', () => {
     expect([...tones].sort()).toEqual(['0', '1', '2', '3', '4', '5']);
   });
 
-  it('takes everything back off the page once the last piece has fallen', () => {
+  it('keeps going until it is stopped, however long the player looks at the board', () => {
     createCelebration(heading).start();
-    vi.advanceTimersByTime(CELEBRATION_MS);
+
+    /* The pieces loop in CSS and nothing is scheduled to end them, so an hour of
+       pending timers must leave the celebration exactly as it was. It was on a
+       five-second timer to begin with, which took the moment away while the
+       board that earned it was still on screen. */
+    vi.advanceTimersByTime(60 * 60 * 1000);
+
+    expect(document.querySelectorAll('.sudoku-confetti')).toHaveLength(1);
+    expect(heading.hasAttribute('data-celebrating')).toBe(true);
+  });
+
+  it('ends on request, which is how a new game or a reset clears it', () => {
+    const celebration = createCelebration(heading);
+    celebration.start();
+    celebration.stop();
 
     expect(document.querySelector('.sudoku-confetti')).toBeNull();
     expect(heading.hasAttribute('data-celebrating')).toBe(false);
@@ -61,27 +75,9 @@ describe('createCelebration', () => {
   it('restarts rather than stacking a second layer over the first', () => {
     const celebration = createCelebration(heading);
     celebration.start();
-    vi.advanceTimersByTime(CELEBRATION_MS / 2);
     celebration.start();
 
     expect(document.querySelectorAll('.sudoku-confetti')).toHaveLength(1);
-
-    /* The clock restarted with it: the first celebration's remaining time must
-       not carry the second one away early. */
-    vi.advanceTimersByTime(CELEBRATION_MS / 2);
-    expect(document.querySelector('.sudoku-confetti')).not.toBeNull();
-
-    vi.advanceTimersByTime(CELEBRATION_MS / 2);
-    expect(document.querySelector('.sudoku-confetti')).toBeNull();
-  });
-
-  it("stops on request, so a new puzzle does not begin under the last one's confetti", () => {
-    const celebration = createCelebration(heading);
-    celebration.start();
-    celebration.stop();
-
-    expect(document.querySelector('.sudoku-confetti')).toBeNull();
-    expect(heading.hasAttribute('data-celebrating')).toBe(false);
   });
 
   it('is harmless to stop when nothing is running', () => {
@@ -92,15 +88,17 @@ describe('createCelebration', () => {
 
   it('drops the confetti but keeps the gold when less motion is asked for', () => {
     prefersReducedMotion(true);
-    createCelebration(heading).start();
+    const celebration = createCelebration(heading);
+    celebration.start();
 
     /* `base.css` collapses every animation to nothing under that preference, so
-       the pieces would hang motionless across the top of the screen. Colour is
+       the pieces would hang motionless across the top of the screen — and with
+       nothing on a timer, they would hang there until the next puzzle. Colour is
        not motion, so the headline still gets its moment. */
     expect(document.querySelector('.sudoku-confetti')).toBeNull();
     expect(heading.hasAttribute('data-celebrating')).toBe(true);
 
-    vi.advanceTimersByTime(CELEBRATION_MS);
+    celebration.stop();
     expect(heading.hasAttribute('data-celebrating')).toBe(false);
   });
 
