@@ -434,6 +434,23 @@ test.describe('sudoku', () => {
     expect(givens).toBeLessThan(81);
   });
 
+  test('starts with nothing selected, and stays reachable from the keyboard', async ({ page }) => {
+    await page.goto('sudoku/');
+    await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({ timeout: 15_000 });
+
+    /* A fresh board is the puzzle and nothing else — no selected cell, and so no
+       tinted row, column or box around a cell picked by reading order. */
+    await expect(page.locator('.sudoku-cell[data-selected]')).toHaveCount(0);
+    await expect(page.locator('.sudoku-cell[data-peer]')).toHaveCount(0);
+
+    /* The roving tabindex still leaves exactly one way in, and the first arrow
+       key takes the selection from there. */
+    await expect(page.locator('.sudoku-cell[tabindex="0"]')).toHaveCount(1);
+    await page.locator('.sudoku-cell').first().focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.locator('.sudoku-cell[data-selected]')).toHaveCount(1);
+  });
+
   test('opens the radial picker on the tapped cell and enters a digit', async ({ page }) => {
     await page.goto('sudoku/');
     await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({

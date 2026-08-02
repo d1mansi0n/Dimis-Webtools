@@ -635,15 +635,17 @@ boot({
         startTimer(resumeFrom.seconds);
       }
 
-      selected = firstEmptyCell();
+      /*
+       * A new board starts with nothing selected, so it is just the puzzle.
+       * Selecting the first empty cell put a tinted cell, a tinted row, a
+       * tinted column and a tinted box on screen before the player had done
+       * anything — a decision the tool had made on their behalf, and one that
+       * pointed at a cell chosen by reading order rather than by playability.
+       * `render` keeps cell 0 tabbable while nothing is selected, so the grid
+       * is still reachable from the keyboard, and the first arrow key selects.
+       */
+      selected = undefined;
       render();
-    }
-
-    function firstEmptyCell(): number {
-      for (let index = 0; index < CELL_COUNT; index++) {
-        if (!game.isGiven(index)) return index;
-      }
-      return 0;
     }
 
     function newGame(): void {

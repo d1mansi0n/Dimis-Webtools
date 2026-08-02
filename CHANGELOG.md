@@ -24,15 +24,23 @@ a Sudoku is the one moment on this site that has earned a flourish.
 - **The gold is legible this time.** `#FFD700` on a white page sits at 1.6:1, so
   the light theme uses a deep gold at 4.6:1 and the dark theme keeps the
   original.
-- **140 pieces, one timer, no `style` attribute.** Each piece gets its column,
-  drift, spin, delay and speed as custom properties and its colour from the
-  stylesheet by `data-tone`, so the Content Security Policy has nothing to
-  refuse. 1.0 span up 250 nodes from a `setInterval` and wrote colours from
-  script.
+- **No `style` attribute anywhere in it.** Each piece gets its column, drift,
+  spin, delay and speed as custom properties and its colour from the stylesheet
+  by `data-tone`, so the Content Security Policy has nothing to refuse. 1.0 span
+  up its nodes from a `setInterval` and wrote colours from script.
 - **Under `prefers-reduced-motion` the confetti is not built at all.** The site
   collapses every animation to nothing under that preference, which would have
-  left 140 motionless rectangles across the top of the screen. The heading still
-  turns gold; colour is not motion.
+  left hundreds of motionless rectangles across the top of the screen until the
+  next puzzle. The heading still turns gold; colour is not motion.
+
+### A new Sudoku board starts clean
+
+Nothing is selected until the player selects something. The tool used to select
+the first empty cell in reading order for them, which put a tinted cell, a
+tinted row, a tinted column and a tinted box on screen before anyone had
+touched the board, and pointed at a cell chosen by position rather than by
+playability. The grid is still reachable from the keyboard — one cell remains
+the tab stop, and the first arrow key takes the selection.
 
 ### About 2,500 lines were removed
 
