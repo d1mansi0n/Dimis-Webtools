@@ -20,6 +20,7 @@ import {
   mostConstrainedCell,
   rowOf,
 } from './board.js';
+import { createCelebration } from './celebration.js';
 import { Game } from './game.js';
 import { solve } from './generator.js';
 import type { GenerateRequest, GenerateResponse } from './generator.worker.js';
@@ -86,10 +87,14 @@ boot({
     const validationButton = requireElement<HTMLButtonElement>('[data-sudoku="validation"]');
     const hintButton = requireElement<HTMLButtonElement>('[data-sudoku="hint"]');
     const notesButton = requireElement<HTMLButtonElement>('[data-sudoku="notes"]');
+    const heading = requireElement('[data-sudoku="title"]');
+
+    /** Confetti and a gold headline, for the moment the last digit goes in. */
+    const celebration = createCelebration(heading);
 
     /* ------------------------------------------------------------------ chrome */
     document.title = `${t('tool.sudoku.name')} · ${t('app.name')}`;
-    requireElement('[data-sudoku="title"]').textContent = t('tool.sudoku.name');
+    heading.textContent = t('tool.sudoku.name');
     requireElement('[data-sudoku="difficultyLabel"]').textContent = t('sudoku.difficulty');
     requireElement('[data-sudoku="pausedOverlay"]').textContent = t('sudoku.paused');
     requireElement('[data-sudoku="radialHint"]').textContent = t('sudoku.radialHint');
@@ -614,6 +619,7 @@ boot({
     ): void {
       won = false;
       wrapper.removeAttribute('data-won');
+      celebration.stop();
       setPaused(false);
       saveButton.disabled = false;
       solution = knownSolution;
@@ -680,6 +686,7 @@ boot({
           plural('sudoku.win.assisted', game.hintsUsed, { time: formatStopwatch(seconds) }),
           false,
         );
+        celebration.start();
         return;
       }
 
@@ -698,6 +705,12 @@ boot({
         bestTimeStore.write(times);
       }
       say(t('sudoku.win.message'));
+
+      /* After the dialog, not before it: a modal `<dialog>` renders in the top
+         layer, above any z-index a page can name, so confetti thrown while the
+         question about the best time is up would fall behind its backdrop. 1.0
+         waited for the same reason. */
+      celebration.start();
     }
 
     function openDialog(title: string, body: HTMLElement): HTMLDialogElement {
@@ -886,6 +899,7 @@ boot({
         game.restart();
         won = false;
         wrapper.removeAttribute('data-won');
+        celebration.stop();
         saveButton.disabled = false;
         startTimer(0);
         render();

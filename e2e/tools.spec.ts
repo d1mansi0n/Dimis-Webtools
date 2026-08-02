@@ -639,6 +639,37 @@ test.describe('sudoku', () => {
     expect(await page.locator('.sudoku-cell:not([data-given])').count()).toBe(before);
   });
 
+  test('celebrates a solved puzzle with confetti and a gold headline', async ({ page }) => {
+    /* Solving a board is fifty round trips through the driver — twenty seconds
+       of them in WebKit — and the celebration then has to be waited out. This is
+       the one test here that genuinely needs longer than the default. */
+    test.slow();
+
+    await page.goto('sudoku/');
+    await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({ timeout: 15_000 });
+
+    /*
+     * Solved by hint, which is the only way to fill a generated board from a
+     * test without knowing its solution. It also takes the assisted path, where
+     * no dialog stands between the last digit and the celebration — the ranked
+     * path opens the best-time question first, and 1.0 waited for that too.
+     */
+    const empty = page.locator('.sudoku-cell__value:empty');
+    const hint = page.getByRole('button', { name: 'Hint', exact: true });
+    for (let remaining = await empty.count(); remaining > 0; remaining--) {
+      await hint.click();
+    }
+
+    await expect(page.locator('.sudoku-grid-wrapper')).toHaveAttribute('data-won', '');
+    await expect(page.locator('[data-sudoku="title"]')).toHaveAttribute('data-celebrating', '');
+    expect(await page.locator('.sudoku-confetti__piece').count()).toBeGreaterThan(0);
+
+    /* And it clears up after itself: a fixed layer left on the page would sit
+       over every control on it for the rest of the session. */
+    await expect(page.locator('.sudoku-confetti')).toHaveCount(0, { timeout: 15_000 });
+    await expect(page.locator('[data-sudoku="title"]')).not.toHaveAttribute('data-celebrating');
+  });
+
   test('undoing a hint takes its mark with it', async ({ page }) => {
     await page.goto('sudoku/');
     await expect(page.locator('.sudoku-cell[data-given]').first()).toBeVisible({ timeout: 15_000 });

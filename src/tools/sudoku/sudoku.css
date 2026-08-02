@@ -344,6 +344,118 @@ body {
   }
 }
 
+/*
+ * The celebration.
+ *
+ * `--sudoku-gold` is a real gold in the dark theme and a deep one in the light,
+ * where the 1.0 `#FFD700` on white sat at 1.6:1 and was barely a colour at all.
+ * The value below clears 4.6:1 against the page, so the heading is as readable
+ * gold as it is in the site's own ink. Both selectors are needed for the reason
+ * `tokens.css` gives: the media query supplies the default and an explicit
+ * `data-theme` has to override it in either direction.
+ */
+.sudoku-header {
+  --sudoku-gold: #976e00;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .sudoku-header {
+    --sudoku-gold: #ffd700;
+  }
+}
+
+:root[data-theme='dark'] .sudoku-header {
+  --sudoku-gold: #ffd700;
+}
+
+/* Only as wide as the word, so the pulse below scales the heading rather than
+   the full width of the grid column it sits in. */
+.sudoku-header h1 {
+  justify-self: start;
+}
+
+.sudoku-header h1[data-celebrating] {
+  color: var(--sudoku-gold);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--sudoku-gold) 40%, transparent);
+  transform-origin: left center;
+  animation: sudoku-celebrate 1.5s ease-in-out infinite;
+}
+
+@keyframes sudoku-celebrate {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+/*
+ * Confetti. A fixed layer over everything, clipped so the pieces that fall past
+ * the bottom of the screen cannot lengthen the page, and transparent to the
+ * pointer so the board underneath stays playable while it rains.
+ */
+.sudoku-confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sudoku-confetti__piece {
+  position: absolute;
+  top: -5vh;
+  left: var(--x);
+  width: 0.5rem;
+  height: 1rem;
+  border-radius: 1px;
+  /* `both`, so a piece waiting out its delay is already at the top of the fall
+     rather than sitting visibly at the start position for a moment. */
+  animation: sudoku-confetti-fall var(--duration) linear var(--delay) both;
+}
+
+@keyframes sudoku-confetti-fall {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(var(--drift), 115vh, 0) rotate(var(--spin));
+  }
+}
+
+/*
+ * The six colours, cycled by `celebration.ts`. These are literals rather than
+ * tokens on purpose: confetti is not part of the interface's palette, and the
+ * accent is a setting the visitor chose for the chrome — spending it here would
+ * turn a shower of colour into 140 rectangles of the same blue. Saturated
+ * enough to read against both the white page and the near-black one.
+ */
+.sudoku-confetti__piece[data-tone='0'] {
+  background: #f5c518;
+}
+
+.sudoku-confetti__piece[data-tone='1'] {
+  background: #ef476f;
+}
+
+.sudoku-confetti__piece[data-tone='2'] {
+  background: #06d6a0;
+}
+
+.sudoku-confetti__piece[data-tone='3'] {
+  background: #4d8bf5;
+}
+
+.sudoku-confetti__piece[data-tone='4'] {
+  background: #b47cf0;
+}
+
+.sudoku-confetti__piece[data-tone='5'] {
+  background: #ff9f43;
+}
+
 .sudoku-best-list {
   list-style: none;
   margin: 0;

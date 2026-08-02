@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+### Sudoku celebrates again
+
+The 1.0 tool rained confetti across the screen and turned its heading gold for
+five seconds when the last digit went in. The rewrite replaced all of it with a
+green glow around the board, which _states_ that the puzzle is solved without
+ever celebrating it, and no changelog entry ever admitted to the loss. Finishing
+a Sudoku is the one moment on this site that has earned a flourish.
+
+- **Confetti and a gold, pulsing headline** on a solve, for about seven seconds.
+  It starts after the best-time question is answered, because a modal `<dialog>`
+  renders in the top layer and anything thrown while it is open falls behind its
+  backdrop — which is what 1.0 waited for too.
+- **The gold is legible this time.** `#FFD700` on a white page sits at 1.6:1, so
+  the light theme uses a deep gold at 4.6:1 and the dark theme keeps the
+  original.
+- **140 pieces, one timer, no `style` attribute.** Each piece gets its column,
+  drift, spin, delay and speed as custom properties and its colour from the
+  stylesheet by `data-tone`, so the Content Security Policy has nothing to
+  refuse. 1.0 span up 250 nodes from a `setInterval` and wrote colours from
+  script.
+- **Under `prefers-reduced-motion` the confetti is not built at all.** The site
+  collapses every animation to nothing under that preference, which would have
+  left 140 motionless rectangles across the top of the screen. The heading still
+  turns gold; colour is not motion.
+
 ### About 2,500 lines were removed
 
 None of it changed what the site can do, beyond one narrowed setting. Each was a
