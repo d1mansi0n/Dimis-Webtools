@@ -94,18 +94,56 @@ body {
 }
 
 .recipe {
-  padding: var(--space-2) 0;
+  position: relative;
 }
 
 .recipe + .recipe {
   border-top: 1px solid var(--border);
 }
 
+/*
+ * The whole row is the disclosure control.
+ *
+ * `list-style: none` plus the WebKit pseudo-element removes the browser's own
+ * marker, because the chevron below is drawn to the site's own weight and has
+ * to rotate. Safari still needs the vendor rule; the standard property alone is
+ * not enough there.
+ */
 .recipe__head {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: 2.5rem;
+  min-height: 3rem;
+  /* Room for the Add button, which is positioned over the end of this row. */
+  padding: var(--space-1) 8rem var(--space-1) var(--space-2);
+  margin: 0 calc(-1 * var(--space-2));
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  list-style: none;
+  transition: background-color var(--transition);
+}
+
+.recipe__head::-webkit-details-marker {
+  display: none;
+}
+
+.recipe__head:hover {
+  background: var(--surface-sunken);
+}
+
+.recipe__head::before {
+  content: '';
+  flex: none;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  transform: rotate(-45deg);
+  transition: transform var(--transition);
+}
+
+.recipe__details[open] > .recipe__head::before {
+  transform: rotate(45deg);
 }
 
 .recipe__name {
@@ -115,12 +153,20 @@ body {
   min-width: 0;
 }
 
-/* Quiet until it means something. Twenty-five identical outlined buttons down
-   the right of a list is a lot of ink for an action taken a handful of times;
-   the pressed state, which says the recipe is on the list, is what earns the
-   accent. */
+/*
+ * Quiet until it means something. Twenty-five identical outlined buttons down
+ * the right of a list is a lot of ink for an action taken a handful of times;
+ * the pressed state, which says the recipe is on the list, is what earns the
+ * accent.
+ *
+ * Positioned rather than laid out, because it has to sit in the summary's row
+ * without being inside the summary — a button nested in a disclosure control
+ * would both add the recipe and open it on one tap.
+ */
 .recipe__toggle {
-  flex: none;
+  position: absolute;
+  top: var(--space-2);
+  right: 0;
   border-color: var(--border);
   color: var(--text-muted);
 }
@@ -129,17 +175,9 @@ body {
   border-color: var(--accent);
 }
 
-.recipe__details {
-  margin-top: var(--space-2);
-}
-
-.recipe__details[open] summary {
-  margin-bottom: var(--space-3);
-}
-
 .recipe__body {
   border-top: 1px solid var(--border);
-  padding-top: var(--space-3);
+  padding: var(--space-3) 0 var(--space-4);
 }
 
 .recipe__label {
@@ -170,12 +208,13 @@ body {
   gap: var(--space-2);
 }
 
-/* The scaled amount is the thing that changes with the stepper, so it leads
-   the line and keeps a fixed column rather than drifting with the name. */
+/* The scaled amount is the thing that changes with the stepper, so it leads the
+   line, keeps a fixed column rather than drifting with the name, and carries the
+   accent — it is the number this tool computes. */
 .recipe__amount {
   flex: 0 0 5.5rem;
   font-weight: var(--weight-semibold);
-  color: var(--text-muted);
+  color: var(--accent);
 }
 
 .recipe__steps {

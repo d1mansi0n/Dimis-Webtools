@@ -68,7 +68,7 @@ jobs:
       # Build-time tooling is reported but does not fail the build: an advisory
       # against a dev-only package cannot reach a visitor, and forcing an
       # incompatible major to silence one is how build systems get broken.
-      # See SECURITY.md.
+      # See the dependency policy in README.md.
       - name: Report development dependency advisories
         run: npm audit --audit-level=high || true
 

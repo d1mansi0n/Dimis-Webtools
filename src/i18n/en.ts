@@ -24,7 +24,6 @@ export const en = {
   'accent.title': 'Accent colour',
   'accent.hint':
     'Every button, link and highlight takes this colour. It is adjusted for the light and dark theme so text stays legible in both.',
-  'accent.custom': 'Your own colour',
   'accent.preset.ocean': 'Ocean',
   'accent.preset.teal': 'Teal',
   'accent.preset.forest': 'Forest',
@@ -184,14 +183,13 @@ export const en = {
   'recipes.tab.shopping': 'Shopping list',
   'recipes.collection.title': 'The collection',
   'recipes.collection.hint':
-    'Tap a recipe to put it on the shopping list. “Method” shows the ingredients for the number of people set above, and how to cook it. New recipes are added to the app itself, so there is nothing to fill in here.',
+    'Tap a recipe to see the ingredients for the number of people set above, and how to cook it. “Add to list” puts it on the shopping list. New recipes are added to the app itself, so there is nothing to fill in here.',
   'recipes.selected.one': '{count} recipe on the list',
   'recipes.selected.other': '{count} recipes on the list',
   'recipes.selectAll': 'Add everything',
   'recipes.clearSelection': 'Empty the list',
   'recipes.add': 'Add to list',
   'recipes.added': '✓ On the list',
-  'recipes.method': 'Method',
   'recipes.ingredients.one': 'Ingredients for {count} person',
   'recipes.ingredients.other': 'Ingredients for {count} people',
   'recipes.steps': 'How to cook it',

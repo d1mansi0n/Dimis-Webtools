@@ -75,19 +75,25 @@ body {
 
 /* Sunken, unlike the buttons either side of it. The field starts empty, and
    with the stepper's single border around all three a transparent middle read
-   as a gap in the control rather than as somewhere to type. */
+   as a gap in the control rather than as somewhere to type.
+
+   `flex: 1` because `.input` is `width: 100%`, which as a flex item resolves
+   against the content rather than the free space — the fill stopped short of
+   the plus button and left a white notch inside the control. */
 .stepper .input {
+  flex: 1;
+  min-width: 0;
   border: 0;
   border-radius: 0;
   background: var(--surface-sunken);
 }
 
 /*
- * The answer.
+ * The answer: the accent on a quiet ground.
  *
- * A sunken well rather than an accent-tinted panel with accent-coloured digits:
- * the number is the point, and it reads better as ink on a quiet ground than as
- * colour on colour.
+ * The digits used to be accent on an accent-tinted panel, which is colour on
+ * colour and left the number with nothing to stand against. The well is neutral
+ * so the figure inside it can carry the colour.
  */
 .rice-result {
   background: var(--surface-sunken);
@@ -102,6 +108,7 @@ body {
   font-weight: var(--weight-bold);
   letter-spacing: var(--tracking-tighter);
   line-height: 1.1;
+  color: var(--accent);
 }
 
 .rice-settings {

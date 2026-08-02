@@ -96,6 +96,7 @@ body {
   font-weight: var(--weight-bold);
   letter-spacing: var(--tracking-tight);
   font-variant-numeric: tabular-nums;
+  color: var(--accent);
 }
 
 .time-entry[data-running] .time-entry__elapsed {

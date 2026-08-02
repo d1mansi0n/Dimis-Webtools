@@ -1,5 +1,5 @@
 import { expect, test, type ConsoleMessage, type Page } from '@playwright/test';
-import { PAGES, TOOLS } from '../src/config/site.js';
+import { PAGES } from '../src/config/site.js';
 
 /**
  * These run against the production build served by `vite preview`, which is the
@@ -108,18 +108,4 @@ test.describe('no third-party requests', () => {
     /* The 1.0 and 2.0 time trackers fetched xlsx from cdnjs on every visit. */
     expect(foreign).toEqual([]);
   });
-});
-
-test.describe('legacy URLs', () => {
-  for (const tool of TOOLS) {
-    for (const legacy of tool.legacyPaths) {
-      test(`${legacy} still resolves, and redirects to /${tool.id}/`, async ({ page }) => {
-        /* Relative to `baseURL`, which already ends in a slash. A leading `../`
-           would climb out of the deployment base entirely. */
-        await page.goto(legacy);
-        await page.waitForURL(new RegExp(`/${tool.id}/$`));
-        expect(page.url()).toMatch(new RegExp(`/${tool.id}/$`));
-      });
-    }
-  }
 });

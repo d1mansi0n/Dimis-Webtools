@@ -1,15 +1,8 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { ACCENT_PRESETS, DEFAULT_ACCENT } from '../src/config/accent.js';
+import { DEFAULT_ACCENT_ID, presetById } from '../src/config/accent.js';
 import { TOOLS } from '../src/config/site.js';
-import { derivePalette } from '../src/core/color.js';
 
 /** Smoke tests: each tool boots, renders and does the one thing it exists for. */
-
-const seedOf = (id: string): string => {
-  const preset = ACCENT_PRESETS.find((candidate) => candidate.id === id);
-  if (preset === undefined) throw new Error(`There is no accent preset "${id}".`);
-  return preset.seed;
-};
 
 /**
  * Answer a `confirmDialog()`, waiting for it both to arrive and to leave.
@@ -98,15 +91,14 @@ test.describe('hub', () => {
     const root = page.locator('html');
 
     await page.goto('');
-    await expect(root).toHaveCSS('--accent', derivePalette(DEFAULT_ACCENT, 'light').accent);
+    await expect(root).toHaveCSS('--accent', presetById(DEFAULT_ACCENT_ID).light.accent);
 
     await page.getByRole('button', { name: 'Change the accent colour' }).click();
     await page.getByRole('button', { name: 'Amber' }).click();
 
-    /* Asserting the exact derived colour, rather than merely that something
-       changed, is what ties the palette the unit tests check to the one the page
-       actually paints. */
-    const amber = derivePalette(seedOf('amber'), 'light').accent;
+    /* Asserting the exact colour, rather than merely that something changed, is
+       what ties the table the unit tests check to the one the page paints. */
+    const amber = presetById('amber').light.accent;
     await expect(root).toHaveCSS('--accent', amber);
     await expect(page.getByRole('button', { name: 'Amber' })).toHaveAttribute(
       'aria-pressed',
@@ -118,21 +110,21 @@ test.describe('hub', () => {
     await expect(root).toHaveCSS('--accent', amber);
   });
 
-  test('re-derives the accent when the device switches to dark', async ({ page }) => {
+  test('swaps to the dark palette when the device switches to dark', async ({ page }) => {
     const root = page.locator('html');
-    const rose = seedOf('rose');
+    const rose = presetById('rose');
 
     await page.goto('');
     await page.getByRole('button', { name: 'Change the accent colour' }).click();
     await page.getByRole('button', { name: 'Rose' }).click();
     await page.getByRole('button', { name: 'Close' }).click();
-    await expect(root).toHaveCSS('--accent', derivePalette(rose, 'light').accent);
+    await expect(root).toHaveCSS('--accent', rose.light.accent);
 
     /* The stylesheet cannot do this part on its own. Its dark block only knows
-       the default accent, so a chosen one has to be re-derived in script when
+       the default accent, so a chosen one has to be re-applied in script when
        the device flips — with the theme left on `system`, nothing else fires. */
     await page.emulateMedia({ colorScheme: 'dark' });
-    await expect(root).toHaveCSS('--accent', derivePalette(rose, 'dark').accent);
+    await expect(root).toHaveCSS('--accent', rose.dark.accent);
   });
 });
 
@@ -291,7 +283,7 @@ test.describe('time tracking', () => {
     await expect(page.locator('.time-entry')).toHaveCount(1);
   });
 
-  test('exports a real .xlsx file with no network request', async ({ page }) => {
+  test('exports a CSV file with no network request', async ({ page }) => {
     await page.goto('time/');
     await page.getByRole('button', { name: '+ New entry' }).click();
 
@@ -300,13 +292,19 @@ test.describe('time tracking', () => {
       page.getByRole('button', { name: 'Export to Excel' }).click(),
     ]).then(([event]) => event);
 
-    expect(download.suggestedFilename()).toMatch(/^time-entries-\d{4}-\d{2}-\d{2}\.xlsx$/);
+    expect(download.suggestedFilename()).toMatch(/^time-entries-\d{4}-\d{2}-\d{2}\.csv$/);
 
-    /* A ZIP container, which is what an .xlsx is. The unit tests check the parts. */
     const stream = await download.createReadStream();
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
-    expect(Buffer.concat(chunks).subarray(0, 2).toString('latin1')).toBe('PK');
+    const bytes = Buffer.concat(chunks);
+
+    /* The byte-order mark, without which Excel decodes the file as the system's
+       legacy code page and mangles every umlaut. It is checked here rather than
+       only in the unit test because `Blob.text()` strips it on decode, so this is
+       the one place the bytes that actually reach disk are visible. */
+    expect([...bytes.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
+    expect(bytes.toString('utf8')).toContain('Date,Start,End');
   });
 
   test('refuses to export nothing', async ({ page }) => {

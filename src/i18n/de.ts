@@ -20,7 +20,6 @@ export const de: Messages = {
   'accent.title': 'Akzentfarbe',
   'accent.hint':
     'Jeder Knopf, jeder Link und jede Hervorhebung nimmt diese Farbe an. Sie wird für den hellen und den dunklen Modus angepasst, damit Text in beiden gut lesbar bleibt.',
-  'accent.custom': 'Eigene Farbe',
   'accent.preset.ocean': 'Ozean',
   'accent.preset.teal': 'Petrol',
   'accent.preset.forest': 'Wald',
@@ -183,14 +182,13 @@ export const de: Messages = {
   'recipes.tab.shopping': 'Einkaufsliste',
   'recipes.collection.title': 'Die Sammlung',
   'recipes.collection.hint':
-    'Tipp ein Rezept an, um es auf die Einkaufsliste zu setzen. „Zubereitung“ zeigt die Zutaten für die oben eingestellte Personenzahl und die Schritte dazu. Neue Rezepte kommen in die App selbst – hier gibt es nichts einzutragen.',
+    'Tipp ein Rezept an, um die Zutaten für die oben eingestellte Personenzahl und die Schritte dazu zu sehen. „Zur Liste“ setzt es auf die Einkaufsliste. Neue Rezepte kommen in die App selbst – hier gibt es nichts einzutragen.',
   'recipes.selected.one': '{count} Rezept auf der Liste',
   'recipes.selected.other': '{count} Rezepte auf der Liste',
   'recipes.selectAll': 'Alle hinzufügen',
   'recipes.clearSelection': 'Liste leeren',
   'recipes.add': 'Zur Liste',
   'recipes.added': '✓ Auf der Liste',
-  'recipes.method': 'Zubereitung',
   'recipes.ingredients.one': 'Zutaten für {count} Person',
   'recipes.ingredients.other': 'Zutaten für {count} Personen',
   'recipes.steps': 'Schritte',

@@ -9,6 +9,7 @@
  */
 
 import {
+  boolean,
   integer,
   lenientArrayOf,
   maxLength,
@@ -96,10 +97,7 @@ const entryDecoder: Decoder<Entry> = objectOf({
   date: string,
   comment: withDefault(maxLength(string, MAX_COMMENT_LENGTH), ''),
   accumulated: withDefault(number, 0),
-  isStopped: withDefault(
-    (input) => (typeof input === 'boolean' ? { ok: true, value: input } : { ok: false, error: '' }),
-    false,
-  ),
+  isStopped: withDefault(boolean, false),
   sessions: withDefault(lenientArrayOf(sessionDecoder), []),
   active: activeDecoder,
 });
@@ -133,9 +131,7 @@ const legacyEntryDecoder = objectOf({
   comment: nullish(string),
   accumulated: nullish(number),
   elapsed: nullish(number), // version 1.0's name for the same field
-  isStopped: nullish((input) =>
-    typeof input === 'boolean' ? { ok: true, value: input } : { ok: false, error: '' },
-  ),
+  isStopped: nullish(boolean),
   sessions: withDefault(lenientArrayOf(sessionDecoder), []),
   runningSince: nullish(number),
 });
@@ -185,10 +181,7 @@ export function createCommentStore(): Store<string[]> {
 export function createDecimalPreferenceStore(): Store<boolean> {
   return defineStore({
     key: 'time.decimal',
-    decoder: (input) =>
-      typeof input === 'boolean'
-        ? { ok: true, value: input }
-        : { ok: false, error: 'expected a boolean' },
+    decoder: boolean,
     fallback: () => false,
     legacy: {
       /* 2.0 stored the string "1" or "0", not JSON. */

@@ -1,6 +1,6 @@
 # Notes for AI assistants working in this repository
 
-Read [`CONTRIBUTING.md`](CONTRIBUTING.md) first — it holds the actual conventions.
+Read [`README.md`](README.md) first — it holds the conventions and the security model.
 This file only lists the things that are easy to get wrong here.
 
 ## Commands
@@ -62,8 +62,11 @@ button.
   of identical slabs with nothing saying which one mattered. There is no
   `--shadow` any more; only `--shadow-lg`, for the modal and the number ring.
 - **The accent is spent on meaning, not decoration.** The primary action, the
-  current selection, focus, a digit the player entered. Not on a total of zero,
-  not on an unstarted clock, not on six tool icons. Readouts are `--text`.
+  current selection, focus, a digit the player entered — and the number the tool
+  computes: the cups of water, the hours tracked, the scaled ingredient amount.
+  A page that keeps its one colour for chrome reads as though the answer were an
+  afterthought. What it stays off is decoration: six tool icons, meal headings,
+  the fill behind a panel.
 - **Actions are grouped and ranked.** Use `.toolbar` with `.toolbar__group`,
   `.toolbar__divider` and `.toolbar__end` rather than dropping ten buttons into
   one `.cluster` in markup order. `.btn--danger` is neutral at rest and red only
@@ -71,6 +74,12 @@ button.
 - **No emoji in the interface.** [`shell/icons.ts`](src/shell/icons.ts) is one
   stroke weight on one grid in `currentColor`; emoji are a font the site does not
   control and arrive as whatever the operating system ships.
+- **Weigh a feature against its code.** The accent picker offered any colour the
+  operating system could produce and cost 350 lines of OKLCH conversion and
+  contrast search to keep legible; it is now six palettes in a table. The `.xlsx`
+  export cost a hand-rolled ZIP writer so a column could carry a number format;
+  it is now CSV. Neither guarantee was dropped — `build/accent.test.ts` still
+  checks every palette against WCAG — only the apparatus.
 
 ## Things that have bitten before
 

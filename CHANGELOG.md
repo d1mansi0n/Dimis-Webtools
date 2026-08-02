@@ -2,6 +2,55 @@
 
 ## Unreleased
 
+### About 2,500 lines were removed
+
+None of it changed what the site can do, beyond one narrowed setting. Each was a
+case of the code being more interesting than the feature it delivered.
+
+- **The accent picker offers six colours instead of any colour.** Behind it was a
+  350-line colour library: every preset was a _seed_, converted to OKLCH, chroma
+  clamped, then lightness binary-searched against the theme's surface until it
+  met 4.5:1 — at run time, on every page load, so that the operating system's
+  colour dialog could be offered too. The six were derived once, checked and
+  written out. The custom-colour field went with the library. The contrast
+  guarantee did not: `build/accent.test.ts` re-checks all twelve palettes against
+  the WCAG formula in twenty lines, so a hand-edited colour that fails still
+  fails the build.
+- **The spreadsheet export is a CSV.** Writing a real `.xlsx` meant a hand-rolled
+  ZIP container with its own CRC-32 table and central directory, plus a workbook
+  writer for the XML inside — about 800 lines with tests, so that one column
+  could carry a number format. German exports use comma decimals and semicolon
+  separators, which is the convention Excel itself uses for those locales, and
+  the file leads with a byte-order mark so Excel stops mangling umlauts.
+- **The 1.0/2.0 redirect stubs are gone.** Ten pages redirecting `SDK-v2.html`
+  and friends, for URLs nothing links to.
+- **`schema.ts` lost `optional`.** It accepted a missing field but rejected an
+  explicit `null`, and since JSON has no `undefined`, reaching for it instead of
+  `nullish` silently discarded every migrated record that had ever been paused.
+  With one function there is no wrong one to reach for. `time/model.ts` also
+  stopped hand-rolling a boolean decoder three times over.
+- **`CONTRIBUTING.md` and `SECURITY.md` folded into the README.** One file to
+  keep current instead of three that had begun to disagree.
+
+Every page got smaller: the hub by 1.5 kB gzipped, Time Tracking by 3.3 kB. The
+budgets in `PAGE_BUDGETS` were re-cut to match, because a budget with a fifth of
+the page spare is not a budget.
+
+### The interface picked its colour back up
+
+Following the redesign below, which had been too austere.
+
+- **The accent is back on the numbers a tool computes** — the cups of water, the
+  total elapsed, the Sudoku clock, the scaled ingredient amounts. Reserving the
+  site's one colour for buttons and focus rings left the pages looking drained
+  and the answers looking incidental.
+- **Working areas have a frame again.** A faint fill and a hairline on the panels
+  that are a tool's actual surface. Rules alone left each page reading as one
+  undifferentiated sheet.
+- **Tapping anywhere on a recipe opens it.** The name now lives inside the
+  `<summary>`, so the whole row is the disclosure control; previously the only
+  thing that opened a recipe was the word "Method".
+
 ### The interface was redesigned
 
 The palette and the contrast work behind it were already sound. What the pages

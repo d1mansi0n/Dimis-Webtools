@@ -23,22 +23,15 @@ export interface Tool {
   readonly id: ToolId;
   /** Which icon the hub card shows. Purely decorative, hidden from assistive tech. */
   readonly icon: IconName;
-  /**
-   * Old file names that used to serve this tool, from the 1.0 and 2.0 layouts.
-   * The build emits a redirect stub at each of these paths so existing
-   * bookmarks and links keep resolving.
-   */
-  readonly legacyPaths: readonly string[];
 }
 
 export const TOOLS: readonly Tool[] = [
-  { id: 'sudoku', icon: 'sudoku', legacyPaths: ['SDK-index.html', 'SDK-v2.html'] },
-  { id: 'rice', icon: 'rice', legacyPaths: ['rcc-index.html', 'rcc-v2.html'] },
-  { id: 'time', icon: 'time', legacyPaths: ['ZE-index.html', 'ZE-v2.html'] },
-  { id: 'sugar', icon: 'sugar', legacyPaths: ['ZR-index.html', 'ZR-v2.html'] },
-  { id: 'counter', icon: 'counter', legacyPaths: ['PC-index.html', 'PC-v2.html'] },
-  /* Added after the rewrite, so there is no 1.0/2.0 file name to redirect from. */
-  { id: 'recipes', icon: 'recipes', legacyPaths: [] },
+  { id: 'sudoku', icon: 'sudoku' },
+  { id: 'rice', icon: 'rice' },
+  { id: 'time', icon: 'time' },
+  { id: 'sugar', icon: 'sugar' },
+  { id: 'counter', icon: 'counter' },
+  { id: 'recipes', icon: 'recipes' },
 ] as const;
 
 /** Every page the site ships, hub first. Relative to the deployment base. */

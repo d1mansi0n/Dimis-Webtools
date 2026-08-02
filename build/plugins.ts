@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import type { Plugin, Rollup } from 'vite';
 import { contentSecurityPolicy } from './csp.js';
-import { PAGES, TOOLS } from '../src/config/site.js';
+import { PAGES } from '../src/config/site.js';
 
 /**
  * Injects the security meta tags into every page.
@@ -43,53 +43,6 @@ export function securityMeta(): Plugin {
       },
     },
   };
-}
-
-/**
- * Emits a redirect stub at each URL the old site used.
- *
- * The 1.0/2.0 files (`SDK-v2.html`, `rcc-index.html`, …) were live URLs that
- * people may have bookmarked. Rather than breaking them, every old path gets a
- * tiny page that forwards to the tool's new home. The stubs contain no inline
- * script — a `<meta http-equiv="refresh">` plus a real link works with the
- * strict CSP and without JavaScript.
- */
-export function legacyRedirects(base: string): Plugin {
-  return {
-    name: 'dwt:legacy-redirects',
-    apply: 'build',
-    generateBundle() {
-      for (const tool of TOOLS) {
-        const target = `${base}${tool.id}/`;
-        for (const legacyPath of tool.legacyPaths) {
-          this.emitFile({
-            type: 'asset',
-            fileName: legacyPath,
-            source: redirectPage(target),
-          });
-        }
-      }
-    },
-  };
-}
-
-function redirectPage(target: string): string {
-  const escaped = target.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="refresh" content="0; url=${escaped}" />
-    <meta name="robots" content="noindex" />
-    <link rel="canonical" href="${escaped}" />
-    <title>Moved</title>
-  </head>
-  <body>
-    <p>This tool has moved to <a href="${escaped}">${escaped}</a>.</p>
-  </body>
-</html>
-`;
 }
 
 /**
@@ -164,10 +117,7 @@ export function serviceWorkerManifest(base: string): Plugin {
       const assets = Object.keys(bundle)
         .filter(
           (fileName) =>
-            fileName !== 'sw.js' &&
-            !fileName.endsWith('.map') &&
-            !fileName.endsWith('.html') &&
-            !TOOLS.some((tool) => tool.legacyPaths.includes(fileName)),
+            fileName !== 'sw.js' && !fileName.endsWith('.map') && !fileName.endsWith('.html'),
         )
         .map((fileName) => `${base}${fileName}`);
 
@@ -225,14 +175,22 @@ export function serviceWorkerManifest(base: string): Plugin {
  * dependency, an unoptimised asset, a module imported into every page — clear it
  * immediately. `npm run build` prints the real figures.
  */
+/*
+ * About 8% over what each page currently weighs.
+ *
+ * They were re-cut after the colour library and the spreadsheet writer were
+ * removed: `time` had come in 5 kB under its old number, and a budget with a
+ * fifth of the page spare stops being a budget. Raising one is fine, it just has
+ * to be a decision — which is the whole point of the number being written down.
+ */
 const PAGE_BUDGETS: Readonly<Record<string, number>> = {
-  hub: 20_000,
-  rice: 21_000,
-  sugar: 23_000,
-  counter: 25_000,
-  time: 29_000,
-  sudoku: 30_500,
-  recipes: 33_500,
+  hub: 19_000,
+  rice: 20_000,
+  sugar: 22_000,
+  counter: 24_000,
+  time: 25_500,
+  sudoku: 29_500,
+  recipes: 32_000,
   /* Not a page, but every visitor downloads and runs it, so it is weighed on the
      same terms. It is measured before its precache manifest is pasted in — see
      `serviceWorkerManifest`, which runs after this — so the number reflects the

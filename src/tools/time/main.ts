@@ -10,11 +10,11 @@ import {
   toDecimalHours,
   toIsoDate,
 } from '../../core/format.js';
-import { intlTag, t } from '../../i18n/index.js';
+import { intlTag, locale, t } from '../../i18n/index.js';
 import { boot } from '../../shell/boot.js';
 import { icon } from '../../shell/icons.js';
 import { confirmDialog } from '../../shell/dialog.js';
-import { buildSheet, downloadWorkbook, exportFileName } from './export.js';
+import { buildRows, downloadCsv, exportFileName, toCsv } from './export.js';
 import {
   createCommentStore,
   createDecimalPreferenceStore,
@@ -439,7 +439,7 @@ boot({
         say(t('time.export.empty'), true);
         return;
       }
-      const sheet = buildSheet(
+      const rows = buildRows(
         entries,
         {
           sheet: t('time.export.sheet'),
@@ -454,7 +454,10 @@ boot({
         },
         (iso) => formatIsoDate(iso, intlTag()),
       );
-      downloadWorkbook(sheet, exportFileName(toIsoDate(new Date())));
+      /* German spreadsheets read "1.5" as fifteen hundred, so that locale gets
+         comma decimals and semicolon separators — the same pair Excel uses. */
+      const csv = toCsv(rows, { commaDecimal: locale() === 'de' });
+      downloadCsv(csv, exportFileName(toIsoDate(new Date())));
       say(t('time.export.done', { count: entries.length }));
     });
 

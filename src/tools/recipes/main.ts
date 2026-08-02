@@ -166,7 +166,19 @@ boot({
       const details = el(
         'details',
         { class: 'recipe__details', attrs: { open: openRecipes.has(recipe.id) } },
-        el('summary', { text: t('recipes.method') }),
+        /*
+         * The recipe's name lives inside the `<summary>`, so tapping anywhere
+         * along the row opens it — the whole row is the disclosure control.
+         * The name used to sit outside, and the only thing that opened a recipe
+         * was the word "Method", which is a small target and not the one anyone
+         * aims at. A heading is one of the two things `<summary>` is allowed to
+         * contain, so the outline keeps its `h3`.
+         */
+        el(
+          'summary',
+          { class: 'recipe__head' },
+          el('h3', { class: 'recipe__name', text: recipe.name[locale()] }),
+        ),
         el(
           'div',
           { class: 'stack recipe__body' },
@@ -215,17 +227,10 @@ boot({
        * the app bar; twenty-five of them down one page read as it rather more.
        * The names are descriptive on their own.
        */
-      return el(
-        'article',
-        { class: 'recipe' },
-        el(
-          'div',
-          { class: 'recipe__head' },
-          el('h3', { class: 'recipe__name', text: recipe.name[locale()] }),
-          toggle,
-        ),
-        details,
-      );
+      /* The Add button is a sibling of the `<details>`, not part of the summary:
+         nesting a button inside a disclosure control means one tap would both
+         add the recipe and open it. It is positioned back into the row visually. */
+      return el('article', { class: 'recipe' }, details, toggle);
     }
 
     /** Refresh the chosen-recipe count without rebuilding the panel around it. */

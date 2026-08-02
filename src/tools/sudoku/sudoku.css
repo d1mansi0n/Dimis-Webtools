@@ -29,13 +29,14 @@ body {
   gap: var(--space-2);
 }
 
-/* A clock, not a headline. Neutral and tabular, at the size of a heading rather
-   than of the page's one big readout. */
+/* A clock, not a headline: the accent, but at the size of a heading rather than
+   of the page's one big readout. */
 .sudoku-timer__value {
   font-size: var(--text-title);
   font-weight: var(--weight-bold);
   letter-spacing: var(--tracking-tight);
   font-variant-numeric: tabular-nums;
+  color: var(--accent);
 }
 
 .sudoku-hints {

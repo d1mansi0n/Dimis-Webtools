@@ -11,7 +11,6 @@ import {
   nullish,
   number,
   objectOf,
-  optional,
   string,
   tupleOf,
   withDefault,
@@ -97,15 +96,6 @@ describe('structures', () => {
     const decoder = objectOf({ inner: objectOf({ count: integer }) });
     const result = decoder({ inner: { count: 'nope' } });
     expect(result.ok ? '' : result.error).toBe('inner.count: expected a safe integer, got string');
-  });
-
-  it('treats a missing optional as undefined', () => {
-    const decoder = objectOf({ note: optional(string) });
-    expect(decoder({})).toEqual({ ok: true, value: { note: undefined } });
-  });
-
-  it('rejects an explicit null for an optional field', () => {
-    expect(objectOf({ note: optional(string) })({ note: null }).ok).toBe(false);
   });
 
   it('accepts both missing and null for a nullish field', () => {

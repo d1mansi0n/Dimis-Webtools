@@ -68,12 +68,32 @@
 }
 
 /*
- * A titled region of a page: a small uppercase label, a rule, then the content.
- * This is what replaced the card for grouping.
+ * A titled region of a page: a heading, a rule, then the content.
+ *
+ * `.section` on its own is just rhythm. `.panel` frames one — a faint fill and
+ * a hairline — for the areas that are a tool's actual working surface. Rules
+ * alone turned out to leave the page reading as one undifferentiated sheet;
+ * this is the middle ground between that and the six drop-shadowed slabs the
+ * redesign set out to remove.
  */
 .section {
   display: grid;
   gap: var(--space-3);
+}
+
+.panel {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+}
+
+@media (max-width: 30rem) {
+  /* Side padding costs more than it gives on a narrow screen: at 360px the
+     larger value spends a twelfth of the width on whitespace beside every row. */
+  .panel {
+    padding: var(--space-4);
+  }
 }
 
 .section__head {
@@ -462,20 +482,6 @@ a.appbar__brand:hover {
   flex: none;
 }
 
-.accent-custom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border);
-}
-
-.accent-custom label {
-  margin-bottom: 0;
-}
-
 /* ------------------------------------------------------------------ inputs */
 
 label {
@@ -641,11 +647,13 @@ input[type='checkbox'] {
 /*
  * A readout: one number a tool exists to produce, with its name underneath.
  *
- * The number is `--text`, not `--accent`. Everything used to be accent-coloured
- * — a total of zero, an unstarted clock, a percentage of nothing — which spent
- * the site's one colour on values that meant nothing yet and left it with
- * nothing to say when something did matter. The accent now marks the primary
- * action, the current selection and the focus ring, and that is all.
+ * The number carries the accent. The site's one colour belongs on the thing the
+ * tool is *for* — the cups of water, the hours tracked, the grams converted —
+ * as much as it belongs on the primary button, and a page that spends it only
+ * on chrome reads as though the answer were an afterthought.
+ *
+ * What it is still kept off is decoration: six tool icons on the hub, a row of
+ * meal headings, the fill behind a card.
  */
 .stat {
   background: var(--surface-sunken);
@@ -659,7 +667,7 @@ input[type='checkbox'] {
   font-weight: var(--weight-bold);
   letter-spacing: var(--tracking-tighter);
   line-height: 1.1;
-  color: var(--text);
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 

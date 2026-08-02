@@ -19,8 +19,8 @@ import { err, ok, type Result } from './result.js';
 /** Decodes unknown input into `T`, reporting the path at which it failed. */
 export type Decoder<T> = (input: unknown, path?: string) => Result<T>;
 
-/** The type a decoder produces. */
-export type Infer<D> = D extends Decoder<infer T> ? T : never;
+/** The type a decoder yields. Not exported: only `objectOf` below needs it. */
+type Infer<D> = D extends Decoder<infer T> ? T : never;
 
 const at = (path: string): string => (path === '' ? 'value' : path);
 
@@ -149,18 +149,15 @@ export function objectOf<S extends Record<string, Decoder<unknown>>>(
   };
 }
 
-/** Allow the value to be absent. Missing and `undefined` both decode to `undefined`. */
-export function optional<T>(inner: Decoder<T>): Decoder<T | undefined> {
-  return (input, path = '') => (input === undefined ? ok(undefined) : inner(input, path));
-}
-
 /**
  * Allow the value to be absent *or* explicitly `null`.
  *
- * The distinction is not academic: JSON has no `undefined`, so an optional field
- * that was ever assigned a "no value" sentinel comes back as `null`. Data written
- * by the 2.0 tools is full of `"runningSince": null`, and decoding it with
- * `optional` alone silently discarded the whole record.
+ * This is the only way to spell "may have no value", on purpose. There used to
+ * be an `optional` beside it that accepted a missing field but rejected an
+ * explicit `null` — and since JSON has no `undefined`, data written by the 2.0
+ * tools is full of `"runningSince": null`, so reaching for the wrong one of the
+ * two silently discarded every record that had ever been paused. With one
+ * function there is no wrong one to reach for.
  */
 export function nullish<T>(inner: Decoder<T>): Decoder<T | undefined> {
   return (input, path = '') =>

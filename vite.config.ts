@@ -3,7 +3,6 @@ import { fileURLToPath } from 'node:url';
 import {
   assertBundleBudget,
   assertNoInlineCode,
-  legacyRedirects,
   securityMeta,
   serviceWorkerManifest,
 } from './build/plugins.js';
@@ -35,7 +34,6 @@ export default defineConfig(({ command, isPreview }) => {
 
     plugins: [
       securityMeta(),
-      legacyRedirects(base),
       assertNoInlineCode(),
       assertBundleBudget(),
       serviceWorkerManifest(base),
