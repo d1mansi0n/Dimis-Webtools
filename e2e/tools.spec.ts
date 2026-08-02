@@ -274,6 +274,25 @@ test.describe('time tracking', () => {
     await expect(duration).toHaveValue(/^\d{2}:\d{2}:\d{2}$/);
   });
 
+  test('puts the newest entry at the top of the list', async ({ page }) => {
+    await page.goto('time/');
+
+    await page.getByRole('button', { name: '+ New entry' }).click();
+    await page.locator('.time-entry').first().getByPlaceholder('Add a comment').fill('first');
+
+    await page.getByRole('button', { name: '+ New entry' }).click();
+    await expect(page.locator('.time-entry')).toHaveCount(2);
+
+    /* The newest entry is the one being worked on, so it must not be pushed
+       below a day's worth of finished rows. */
+    const comments = page.getByPlaceholder('Add a comment');
+    await expect(comments.first()).toHaveValue('');
+    await expect(comments.nth(1)).toHaveValue('first');
+
+    await page.reload();
+    await expect(page.getByPlaceholder('Add a comment').nth(1)).toHaveValue('first');
+  });
+
   test('keeps entries across a reload', async ({ page }) => {
     await page.goto('time/');
     await page.getByRole('button', { name: '+ New entry' }).click();

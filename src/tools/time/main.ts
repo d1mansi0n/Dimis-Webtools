@@ -117,10 +117,19 @@ boot({
     }
     let rows = new Map<number, Row>();
 
+    /*
+     * Newest first, while `entries` stays in creation order.
+     *
+     * The list is the thing that is looked at during the day, and the entry
+     * being worked on is always the one just added — appending it below a long
+     * day's worth of finished rows put it off the bottom of the screen. Storage
+     * and the export keep chronological order, because a timesheet reads
+     * downwards.
+     */
     function render(): void {
       emptyMessage.hidden = entries.length > 0;
       rows = new Map();
-      entriesHost.replaceChildren(...entries.map(entryRow));
+      entriesHost.replaceChildren(...[...entries].reverse().map(entryRow));
       tick();
     }
 
