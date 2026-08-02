@@ -6,7 +6,7 @@
     <title>Time Tracking · Dimis Webtools</title>
     <meta
       name="description"
-      content="Track time with start, pause and stop, add comments by voice, and export everything to a spreadsheet."
+      content="Track time with start, pause and stop, add comments, and export everything to a spreadsheet."
     />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -38,17 +38,6 @@
           <div class="toolbar__group">
             <button class="btn" type="button" data-time="format"></button>
             <button class="btn" type="button" data-time="export"></button>
-          </div>
-          <!--
-            Dictation is a way of entering time rather than an action on it, so
-            it sits apart from the buttons that do things to the list.
-          -->
-          <div class="toolbar__group toolbar__end time-voice">
-            <button class="btn" type="button" data-time="voice"></button>
-            <select data-time="voiceLang">
-              <option value="en-US">English</option>
-              <option value="de-DE">Deutsch</option>
-            </select>
           </div>
         </div>
         <p class="msg" data-time="feedback" role="status" aria-live="polite"></p>

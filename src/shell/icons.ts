@@ -64,13 +64,6 @@ const PATHS: Readonly<Record<IconName, readonly string[]>> = {
   ],
   /* A crescent moon. */
   dark: ['M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z'],
-  /* A microphone on its stand: push to talk. */
-  microphone: [
-    'M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z',
-    'M5 11a7 7 0 0 0 14 0',
-    'M12 18v4',
-    'M8 22h8',
-  ],
   /* A tray with an arrow going into it: choosing a file. */
   upload: ['M12 3v11', 'M8 7l4-4 4 4', 'M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4'],
   /* The same tray with the arrow coming out: saving one. */

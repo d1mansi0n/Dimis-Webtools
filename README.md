@@ -7,7 +7,7 @@ tracking, no servers, and no third-party code at run time.
 | --------------------------- | ------------------------------------------------------------------------------------- |
 | [Sudoku](sudoku/)           | Puzzles with a timer, pencil notes, saved games and best times                        |
 | [Rice Cup Converter](rice/) | Cups of rice to cups of water, with presets per rice type                             |
-| [Time Tracking](time/)      | Start/pause/stop timers, voice control, export to a spreadsheet                       |
+| [Time Tracking](time/)      | Start/pause/stop timers, comments per entry, export to CSV                            |
 | [Sugar Calculator](sugar/)  | Grams of sugar as cubes, as a share of the WHO daily maximum, and as comparable foods |
 | [Picture Counter](counter/) | Mark and count objects in a photo, then save the annotated image                      |
 | [Recipes](recipes/)         | Pick what to cook; the shopping list adds it up by aisle and scales with the people   |

@@ -12,7 +12,6 @@ import {
 } from '../../core/format.js';
 import { intlTag, locale, t } from '../../i18n/index.js';
 import { boot } from '../../shell/boot.js';
-import { icon } from '../../shell/icons.js';
 import { confirmDialog } from '../../shell/dialog.js';
 import { buildRows, downloadCsv, exportFileName, toCsv } from './export.js';
 import {
@@ -36,7 +35,6 @@ import {
   totalElapsed,
   type Entry,
 } from './model.js';
-import { isVoiceSupported, SpeechController, type Command } from './voice.js';
 
 /** How long the delete button must be held. Matches the CSS fill animation. */
 const HOLD_TO_DELETE_MS = 1000;
@@ -70,8 +68,6 @@ boot({
     const totalValue = requireElement('[data-time="total"]');
     const feedback = requireElement('[data-time="feedback"]');
     const formatButton = requireElement<HTMLButtonElement>('[data-time="format"]');
-    const voiceButton = requireElement<HTMLButtonElement>('[data-time="voice"]');
-    const voiceLanguage = requireElement<HTMLSelectElement>('[data-time="voiceLang"]');
     const commentsList = requireElement('[data-time="commentsList"]');
     const clearCommentsButton = requireElement<HTMLButtonElement>('[data-time="clearComments"]');
     const suggestions = requireElement('#comment-suggestions');
@@ -88,9 +84,6 @@ boot({
     requireElement('[data-time="toggleComments"]').textContent = t('time.comments.toggle');
     clearCommentsButton.textContent = t('time.comments.clear');
     emptyMessage.textContent = t('time.empty');
-    voiceButton.replaceChildren(icon('microphone'), document.createTextNode(t('time.voice.push')));
-    voiceButton.title = t('time.voice.hold');
-    voiceLanguage.setAttribute('aria-label', t('time.voice.language'));
     updateFormatButton();
 
     /* ------------------------------------------------------------ persistence */
@@ -202,7 +195,7 @@ boot({
           controlButton(t('time.start'), entry.isStopped || running, () => {
             const before = runningEntry(entries);
             if (before !== undefined && before.id !== entry.id) {
-              say(t('time.voice.alreadyRunning'), true);
+              say(t('time.alreadyRunning'), true);
               return;
             }
             entries = start(entries, entry.id);
@@ -497,91 +490,6 @@ boot({
         renderStoredComments();
       });
     });
-
-    /* ----------------------------------------------------------------- voice */
-
-    if (!isVoiceSupported()) {
-      voiceButton.disabled = true;
-      voiceLanguage.disabled = true;
-      voiceButton.title = t('time.voice.unsupported');
-    } else {
-      const speech = new SpeechController({
-        onCommand: applyVoiceCommand,
-        onUnrecognised: () => {
-          /* Staying silent here would look like the microphone was not working;
-             the phrase simply was not one of ours. */
-          say(t('time.voice.noComment'), true);
-        },
-        onError: (error) => {
-          const messages: Record<string, string> = {
-            'no-speech': t('time.voice.noSpeech'),
-            'audio-capture': t('time.voice.noMic'),
-            'not-allowed': t('time.voice.denied'),
-          };
-          say(messages[error] ?? t('time.voice.error', { error }), true);
-        },
-        onListeningChange: (listening) => {
-          voiceButton.setAttribute('aria-pressed', String(listening));
-        },
-      });
-
-      speech.setLanguage(voiceLanguage.value);
-      voiceLanguage.addEventListener('change', () => {
-        speech.setLanguage(voiceLanguage.value);
-      });
-
-      voiceButton.addEventListener('pointerdown', () => {
-        speech.begin();
-      });
-      for (const type of ['pointerup', 'pointerleave', 'pointercancel'] as const) {
-        voiceButton.addEventListener(type, () => {
-          speech.end();
-        });
-      }
-    }
-
-    function applyVoiceCommand(command: Command): void {
-      if (command.kind === 'newEntry') {
-        entries = [...entries, createEntry()];
-        persist();
-        render();
-        say(t('time.voice.added'));
-        return;
-      }
-
-      /* Target the running entry, or failing that the most recent open one. */
-      const target =
-        runningEntry(entries) ?? [...entries].reverse().find((entry) => !entry.isStopped);
-      if (target === undefined) {
-        say(t('time.voice.noTarget'), true);
-        return;
-      }
-
-      switch (command.kind) {
-        case 'comment':
-          if (command.text === '') {
-            say(t('time.voice.noComment'), true);
-            return;
-          }
-          entries = setComment(entries, target.id, command.text);
-          say(t('time.voice.comment', { text: command.text }));
-          break;
-        case 'start':
-          entries = start(entries, target.id);
-          say(t('time.voice.started'));
-          break;
-        case 'pause':
-          entries = pause(entries, target.id, formatTimeOfDay);
-          say(t('time.voice.paused'));
-          break;
-        case 'stop':
-          entries = stop(entries, target.id, formatTimeOfDay);
-          say(t('time.voice.stopped'));
-          break;
-      }
-      persist();
-      render();
-    }
 
     /* ------------------------------------------------------------------ loop */
 

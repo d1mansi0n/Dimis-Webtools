@@ -18,25 +18,6 @@ body {
   text-align: right;
 }
 
-/* ----------------------------------------------------------------- toolbar */
-
-.time-voice select {
-  /* Two selects reading "English" used to sit on the same screen — the page
-     language in the app bar and the dictation language here — with nothing to
-     say they meant different things. This one is now inside the microphone's
-     own group and sized as its companion rather than as a peer. */
-  font-size: var(--text-small);
-  min-height: 2.125rem;
-}
-
-/* Listening. Red because the microphone is live, which is the one state on this
-   page where the colour is the message rather than decoration. */
-.time-voice .btn[aria-pressed='true'] {
-  background: var(--danger);
-  border-color: var(--danger);
-  color: var(--text-on-danger);
-}
-
 /* ----------------------------------------------------------------- entries */
 
 .time-entries {

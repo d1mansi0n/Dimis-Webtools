@@ -269,7 +269,7 @@ describe('rememberComment', () => {
     expect(rememberComment(['a'], '   ')).toEqual(['a']);
   });
 
-  it('caps the list so voice dictation cannot grow it without bound', () => {
+  it('caps the list so it cannot grow without bound', () => {
     let comments: string[] = [];
     for (let index = 0; index < MAX_COMMENTS + 50; index++) {
       comments = rememberComment(comments, `comment ${String(index)}`);

@@ -289,7 +289,7 @@ test.describe('time tracking', () => {
 
     const download = await Promise.all([
       page.waitForEvent('download'),
-      page.getByRole('button', { name: 'Export to Excel' }).click(),
+      page.getByRole('button', { name: 'Export to CSV' }).click(),
     ]).then(([event]) => event);
 
     expect(download.suggestedFilename()).toMatch(/^time-entries-\d{4}-\d{2}-\d{2}\.csv$/);
@@ -309,7 +309,7 @@ test.describe('time tracking', () => {
 
   test('refuses to export nothing', async ({ page }) => {
     await page.goto('time/');
-    await page.getByRole('button', { name: 'Export to Excel' }).click();
+    await page.getByRole('button', { name: 'Export to CSV' }).click();
     await expect(page.locator('[data-time="feedback"]')).toContainText('no entries');
   });
 });

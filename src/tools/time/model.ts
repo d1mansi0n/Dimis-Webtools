@@ -23,7 +23,7 @@ import {
 import { defineStore, type Store } from '../../core/storage.js';
 import { legacyDateToIso, toIsoDate } from '../../core/format.js';
 
-/** Longest comment we will store. Voice dictation can otherwise append forever. */
+/** Longest comment we will store, so a pasted wall of text cannot fill storage. */
 export const MAX_COMMENT_LENGTH = 500;
 
 /** Most remembered comment suggestions. Oldest are dropped first. */

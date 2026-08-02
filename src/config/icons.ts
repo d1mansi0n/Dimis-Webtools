@@ -18,7 +18,6 @@ export type IconName =
   | 'system'
   | 'light'
   | 'dark'
-  | 'microphone'
   | 'upload'
   | 'download'
   | 'eye'
