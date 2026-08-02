@@ -44,6 +44,34 @@ Never claim work is done without running `npm run verify`. It is fast.
   translated, which is intended.
 - **No unvalidated `localStorage` reads.** Use `defineStore` with a schema.
 
+## The design system
+
+Everything visual comes from [`src/styles/tokens.css`](src/styles/tokens.css) and
+[`components.css`](src/styles/components.css). A tool's own stylesheet is for the
+things only that tool has — a Sudoku board, a canvas stage — not for another
+button.
+
+- **No ad-hoc font sizes.** Use `--text-display/title/heading/body/small/micro`
+  and `--text-readout`. The pages previously used nine sizes between 0.72 and
+  0.95rem, no two of which are far enough apart to read as different, which is a
+  lot of decisions adding up to no hierarchy.
+- **A card is rare.** Sections are separated by a rule (`.section` with a
+  `.section__head`), and lists are rows on rules (`.rows`, or a `+` sibling
+  border). Every section of every tool used to be a bordered, shadowed white
+  card on a grey page, which is what made the site read as generated: a column
+  of identical slabs with nothing saying which one mattered. There is no
+  `--shadow` any more; only `--shadow-lg`, for the modal and the number ring.
+- **The accent is spent on meaning, not decoration.** The primary action, the
+  current selection, focus, a digit the player entered. Not on a total of zero,
+  not on an unstarted clock, not on six tool icons. Readouts are `--text`.
+- **Actions are grouped and ranked.** Use `.toolbar` with `.toolbar__group`,
+  `.toolbar__divider` and `.toolbar__end` rather than dropping ten buttons into
+  one `.cluster` in markup order. `.btn--danger` is neutral at rest and red only
+  under the pointer, so a destructive action never outshouts the primary one.
+- **No emoji in the interface.** [`shell/icons.ts`](src/shell/icons.ts) is one
+  stroke weight on one grid in `currentColor`; emoji are a font the site does not
+  control and arrive as whatever the operating system ships.
+
 ## Things that have bitten before
 
 - **The Sudoku worker URL must be imported as `./generator.worker.ts?worker&url`.**
@@ -93,10 +121,13 @@ Never claim work is done without running `npm run verify`. It is fast.
 - **An author `display` beats `[hidden]`.** Setting `element.hidden = true` does
   nothing to an element the stylesheet gives a `display` to — the user agent's
   `[hidden] { display: none }` is a weaker cascade origin, so it always loses.
-  The stylesheet has to say it itself. This shipped in the Picture Counter, where
-  the "choose an image" prompt went on sitting over the picture that had just
-  loaded, and nobody noticed because the overlay is `pointer-events: none` and so
-  never swallowed a tap.
+  The stylesheet has to say it itself. This shipped twice: in the Picture
+  Counter, where the "choose an image" prompt went on sitting over the picture
+  that had just loaded, and in the Sugar Calculator, whose comparison list stayed
+  on the page after the field was cleared. `components.css` now states it once
+  for every layout class it defines, so anything built from `.stack`, `.section`,
+  `.cluster`, `.toolbar` or `.rows` hides correctly; a tool that invents its own
+  `display` still has to say so itself, as `.recipes-panel` does.
 - **Playwright's WebKit refuses offline navigations before the service worker
   sees them.** `context.setOffline(true)` followed by a navigation fails with
   "WebKit encountered an internal error" however complete the cache is, so three

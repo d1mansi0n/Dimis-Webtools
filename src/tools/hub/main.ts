@@ -31,16 +31,17 @@ function toolCard(tool: (typeof TOOLS)[number]): HTMLElement {
     {},
     el(
       'a',
-      { class: 'tool-card', attrs: { href: `${tool.id}/` } },
+      { class: 'tool-link', attrs: { href: `${tool.id}/` } },
       /* Decoration; the tool's name right beside it is the real label, which is
          why the icon itself is `aria-hidden`. */
-      el('span', { class: 'tool-card__icon' }, icon(tool.icon, { size: 22 })),
+      el('span', { class: 'tool-link__icon' }, icon(tool.icon, { size: 22 })),
       el(
         'span',
-        { class: 'tool-card__body' },
-        el('span', { class: 'tool-card__name', text: t(`tool.${tool.id}.name`) }),
-        el('span', { class: 'tool-card__desc', text: t(`tool.${tool.id}.desc`) }),
+        { class: 'tool-link__body' },
+        el('span', { class: 'tool-link__name', text: t(`tool.${tool.id}.name`) }),
+        el('span', { class: 'tool-link__desc', text: t(`tool.${tool.id}.desc`) }),
       ),
+      el('span', { class: 'tool-link__go' }, icon('forward', { size: 16 })),
     ),
   );
 }

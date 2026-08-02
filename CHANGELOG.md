@@ -2,6 +2,42 @@
 
 ## Unreleased
 
+### The interface was redesigned
+
+The palette and the contrast work behind it were already sound. What the pages
+_did_ with them was not: every section of every tool was a bordered, shadowed
+white card on a grey page, so each screen read as a column of identical slabs
+with nothing saying which of them mattered.
+
+- **Sections are separated by a rule, not by a card.** Cards are now rare — a
+  dialog, the Picture Counter's stage — and lists are rows on hairlines. The hub
+  went from six white slabs to a two-column index; Recipes lost twenty-five of
+  them and about a quarter of its height.
+- **There is a type scale.** Six sizes with stated weights and tracking, and
+  nothing may invent a seventh. The pages previously used nine sizes between
+  0.72 and 0.95rem, no two far enough apart to read as different.
+- **Actions are grouped and ranked.** Sudoku's ten buttons were one wrapping row
+  in markup order, so "Reset" arrived at the same weight as "Check"; they are now
+  the four a player reaches for, then the five that manage the game. The Picture
+  Counter's eleven controls are in the three groups they fall into. A destructive
+  action is neutral at rest and red only under the pointer, instead of drawing
+  the most urgent outline on the page next to the button you came to press.
+- **The accent means something again.** It marks the primary action, the current
+  selection and focus — not a total of zero, not a clock reading 00:01, not six
+  decorative tiles. On the Sudoku board it now distinguishes a digit you entered
+  from a given, which let the board drop the scattered grey fills and the black
+  gridlines for a clean grey grid.
+- **The recipes no longer carry emoji.** Emoji are a font the site does not
+  control, which is why `shell/icons.ts` exists; twenty-five of them down one
+  page was the single loudest thing on the site.
+- **The app bar spans the page and stays put.** It names the site, is the way
+  back to the hub, and gathers the three settings into one group — the accent
+  control used to read as an unexplained coloured dot floating above the page.
+- Fixed: the Sugar Calculator's comparison list stayed on screen after the field
+  was cleared. `.stack` sets `display`, which beats the user agent's `[hidden]`
+  rule, so hiding it did nothing. `components.css` now states this once for every
+  layout class it defines rather than leaving it to be rediscovered a third time.
+
 ### Sudoku will now help, and says when it did
 
 - **A hint fills in one correct digit.** It lands on the cell with the fewest

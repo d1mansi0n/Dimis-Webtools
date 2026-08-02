@@ -51,7 +51,7 @@ const AA_TEXT = 4.5;
  */
 export const THEME_SURFACE: Readonly<Record<ThemeMode, string>> = {
   light: '#ffffff',
-  dark: '#1a1a1a',
+  dark: '#1c1c1c',
 };
 
 /**

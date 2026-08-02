@@ -2,11 +2,20 @@
 
 /* ------------------------------------------------------------------ layout */
 
+/*
+ * The content column.
+ *
+ * The gutter lives here rather than on `body` because the app bar above is
+ * full-bleed: its rule has to reach both edges of the viewport, while the text
+ * under it has to stop short of them.
+ */
 .page {
-  max-width: var(--page-width, 640px);
+  max-width: var(--page-width);
   margin: 0 auto;
+  padding: var(--space-5) var(--gutter) var(--space-7);
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-5);
+  align-content: start;
 }
 
 .stack {
@@ -21,50 +30,139 @@
   align-items: center;
 }
 
+/*
+ * Every layout class above sets `display`, and an author `display` beats the
+ * user agent's `[hidden] { display: none }` — that rule comes from a weaker
+ * cascade origin, so it always loses. Setting `element.hidden = true` on one of
+ * these therefore changed the attribute and nothing on the screen.
+ *
+ * This has already shipped twice: the Picture Counter's "choose an image"
+ * prompt went on sitting over the picture that had just loaded, and the Sugar
+ * Calculator's comparison list stayed on the page after the field was cleared.
+ * Stating it once here is what stops it being rediscovered a third time.
+ */
+.stack[hidden],
+.cluster[hidden],
+.section[hidden],
+.toolbar[hidden],
+.toolbar__group[hidden],
+.rows[hidden],
+.row[hidden] {
+  display: none;
+}
+
+/*
+ * A card.
+ *
+ * Rare now, and that is the point. Every section of every tool used to be one,
+ * so the pages read as a column of identical slabs with nothing to say which of
+ * them mattered. A card is for content that is genuinely a distinct object on
+ * the page — the Picture Counter's stage, a dialog — and everything else is
+ * separated by a rule instead.
+ */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-5);
-  box-shadow: var(--shadow);
+  padding: var(--space-4);
 }
 
-@media (max-width: 30rem) {
-  /* Side padding costs more than it gives on a narrow screen: at 360px the old
-     value spent a twelfth of the width on whitespace beside every list row. */
-  .card {
-    padding: var(--space-4);
-  }
+/*
+ * A titled region of a page: a small uppercase label, a rule, then the content.
+ * This is what replaced the card for grouping.
+ */
+.section {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+
+/*
+ * The heading block at the top of every page: title, one line of explanation,
+ * and a rule that separates the two from the tool itself. It sits outside the
+ * first group of controls — when the title lived inside the same box as the
+ * toolbar, the two read as one undifferentiated pile.
+ */
+.page-header {
+  display: grid;
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.page-header--hero h1 {
+  font-size: var(--text-display);
 }
 
 .lead {
   color: var(--text-muted);
-  font-size: 0.95rem;
+  max-width: 60ch;
 }
 
 .note {
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: var(--text-small);
+}
+
+/* A small uppercase label. The only place the site shouts, and it is quiet
+   about it: micro size, muted colour, wide tracking. */
+.label {
+  font-size: var(--text-micro);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--text-muted);
 }
 
 /* ------------------------------------------------------------------ appbar */
 
+/*
+ * The app bar spans the viewport and is separated from the page by a rule, so
+ * the page has an edge at the top instead of controls floating in whitespace.
+ * It sticks, because on the long pages — Recipes, a full day of tracked time —
+ * the way back and the settings were otherwise a scroll away.
+ */
 .appbar {
-  max-width: var(--page-width, 640px);
-  margin: 0 auto var(--space-4);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.appbar__inner {
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  min-height: var(--bar-height);
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  font-size: 0.85rem;
 }
 
-.appbar__home {
-  color: var(--text-muted);
+/* The site's name, and on a tool page the way back to the hub. */
+.appbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
   text-decoration: none;
   border-radius: var(--radius-sm);
+  min-height: 2rem;
 }
 
-.appbar__home:hover {
+a.appbar__brand:hover {
   color: var(--accent);
 }
 
@@ -72,13 +170,37 @@
   margin-left: auto;
 }
 
+/*
+ * The settings, in one bordered group.
+ *
+ * They used to be three bare controls with transparent borders, which left the
+ * accent button reading as an unexplained coloured dot floating above the page
+ * rather than as something that could be pressed. Enclosing them says "these
+ * are controls, and they belong together" without giving each one a box.
+ */
+.appbar__settings {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+}
+
+.appbar__settings .btn--icon {
+  min-height: 1.875rem;
+  min-width: 1.875rem;
+  border-radius: var(--radius-pill);
+}
+
 /* ----------------------------------------------------------------- buttons */
 
 .btn {
   font: inherit;
-  font-size: 0.88rem;
-  font-weight: 600;
-  padding: 0.5rem 0.9rem;
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  padding: 0.4rem 0.75rem;
   /* A flex row so a button carrying an icon *and* a label lays them out side by
      side and vertically centred. As inline-block the icon was a block element in
      a line box, which stacked it above the text. */
@@ -91,13 +213,13 @@
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
+  white-space: nowrap;
   transition:
     background-color var(--transition),
     border-color var(--transition),
-    color var(--transition),
-    transform var(--transition);
-  /* Meets the 24x24 minimum target size of WCAG 2.2 Success Criterion 2.5.8. */
-  min-height: 2.25rem;
+    color var(--transition);
+  /* Comfortably past the 24x24 minimum target size of WCAG 2.2 SC 2.5.8. */
+  min-height: 2.125rem;
 }
 
 .btn:hover:not(:disabled) {
@@ -106,14 +228,8 @@
   background: var(--accent-soft);
 }
 
-/* A press that moves. One pixel is enough to feel, and `transform` is the one
-   property that animates without touching layout or paint. */
-.btn:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
 .btn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -129,10 +245,16 @@
   color: var(--text-on-accent);
 }
 
+/*
+ * A destructive action.
+ *
+ * Neutral at rest and red only under the pointer. A red outline is how the old
+ * pages drew "Clear all entries", which put the most visually urgent control on
+ * the page next to the one the user actually came to press. The label already
+ * says what it does, and colour was never carrying that meaning on its own.
+ */
 .btn--danger {
   color: var(--danger);
-  border-color: var(--danger);
-  background: transparent;
 }
 
 .btn--danger:hover:not(:disabled) {
@@ -153,9 +275,15 @@
   border-color: transparent;
 }
 
+.btn--sm {
+  font-size: var(--text-small);
+  padding: 0.25rem 0.6rem;
+  min-height: 1.875rem;
+}
+
 .btn--icon {
-  padding: 0.35rem;
-  min-width: 2.25rem;
+  padding: 0.3rem;
+  min-width: 2.125rem;
   line-height: 1;
 }
 
@@ -163,6 +291,119 @@
   background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent);
+}
+
+/*
+ * A segmented control: mutually exclusive or closely related toggles drawn as
+ * one object with internal dividers, rather than as loose pills that happen to
+ * be adjacent. One border around the group is the whole point — it says the
+ * choices belong to each other.
+ */
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.segmented .btn {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.segmented .btn + .btn {
+  border-left: 1px solid var(--border-strong);
+}
+
+.segmented .btn:hover:not(:disabled) {
+  background: var(--surface-sunken);
+  color: var(--text);
+}
+
+.segmented .btn[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Segments share one outline, so an inset ring keeps it inside the group. */
+.segmented .btn:focus-visible {
+  outline-offset: -3px;
+}
+
+/* ----------------------------------------------------------------- toolbar */
+
+/*
+ * A row of actions with a stated hierarchy.
+ *
+ * The tools used to put every button they had into one wrapping `.cluster`, so
+ * "New game", "Save", "Hint" and "Reset" all arrived at the same weight in
+ * whatever order the markup happened to list them. A toolbar is groups: the
+ * primary action first, related actions gathered behind a divider, and anything
+ * that is a setting rather than an action pushed to the end.
+ */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.toolbar__group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.toolbar__end {
+  margin-left: auto;
+}
+
+/* Hidden once the row wraps: a vertical rule between two groups that have
+   ended up on different lines separates nothing. */
+.toolbar__divider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 1.5rem;
+  background: var(--border);
+}
+
+@media (max-width: 34rem) {
+  .toolbar__divider {
+    display: none;
+  }
+
+  .toolbar__end {
+    margin-left: 0;
+  }
+}
+
+/* ------------------------------------------------------------------- rows */
+
+/*
+ * A list whose items are separated by rules rather than by being individual
+ * cards. Six white boxes with six drop shadows is how the hub used to list six
+ * tools; a rule does the same work with none of the noise.
+ */
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+.rows > li + li,
+.rows > .row + .row {
+  border-top: 1px solid var(--border);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  min-width: 0;
 }
 
 /* ------------------------------------------------------------------- icons */
@@ -185,8 +426,8 @@
  */
 .accent-dot {
   display: block;
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 0.9rem;
+  height: 0.9rem;
   border-radius: var(--radius-pill);
   background: var(--accent);
   border: 1px solid var(--border-strong);
@@ -207,11 +448,12 @@
   align-items: center;
   gap: var(--space-2);
   text-align: left;
+  justify-content: flex-start;
 }
 
 .accent-swatch__dot {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.15rem;
+  height: 1.15rem;
   border-radius: var(--radius-pill);
   /* Set per swatch from script, because each one previews a different colour.
      The fallback keeps the dot visible if that ever fails to run. */
@@ -226,6 +468,8 @@
   justify-content: space-between;
   gap: var(--space-3);
   margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
 }
 
 .accent-custom label {
@@ -236,21 +480,22 @@
 
 label {
   display: block;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
   margin-bottom: var(--space-1);
 }
 
 .input,
 select {
   font: inherit;
-  padding: 0.6rem 0.75rem;
+  font-size: var(--text-body);
+  padding: 0.45rem 0.6rem;
   color: var(--text);
   background: var(--surface-sunken);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   width: 100%;
-  min-height: 2.5rem;
+  min-height: 2.25rem;
 }
 
 .input:focus,
@@ -266,7 +511,7 @@ select:focus {
 }
 
 .input--numeric {
-  font-size: 1.15rem;
+  font-size: var(--text-heading);
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
@@ -275,9 +520,24 @@ select {
   width: auto;
 }
 
+/* A select that sits inside another bordered group — the app bar's settings —
+   and so must not draw a second box of its own. */
+.select--bare {
+  border-color: transparent;
+  background: transparent;
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  min-height: 1.875rem;
+  padding: 0 0.25rem;
+}
+
+.select--bare:hover {
+  color: var(--accent);
+}
+
 input[type='color'] {
-  width: 2.75rem;
-  height: 2.25rem;
+  width: 2.5rem;
+  height: 2.125rem;
   padding: 2px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
@@ -318,12 +578,12 @@ input[type='range'] {
 .checkbox input[type='checkbox'] {
   appearance: none;
   margin: 0;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.25rem;
+  height: 1.25rem;
   border: 1.5px solid var(--border-strong);
-  /* Not `--radius-sm`: 8px on a 21px box rounds it most of the way to a circle,
+  /* Not `--radius`: 8px on a 20px box rounds it most of the way to a circle,
      and a circle reads as a radio button. */
-  border-radius: 6px;
+  border-radius: 5px;
   background: var(--surface);
   cursor: pointer;
   transition:
@@ -342,8 +602,8 @@ input[type='range'] {
 
 .checkbox__tick {
   position: absolute;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: var(--weight-bold);
   line-height: 1;
   color: var(--text-on-accent);
   opacity: 0;
@@ -358,39 +618,56 @@ input[type='range'] {
 /* Anything not wrapped in `.checkbox` keeps the native control, tinted. */
 input[type='checkbox'] {
   accent-color: var(--control);
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1.1rem;
+  height: 1.1rem;
   cursor: pointer;
 }
 
 /* ------------------------------------------------------------- data display */
 
 .badge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--accent);
-  background: var(--accent-soft);
+  font-size: var(--text-micro);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  padding: 0.25rem 0.6rem;
+  padding: 0.2rem 0.55rem;
   white-space: nowrap;
 }
 
+/*
+ * A readout: one number a tool exists to produce, with its name underneath.
+ *
+ * The number is `--text`, not `--accent`. Everything used to be accent-coloured
+ * — a total of zero, an unstarted clock, a percentage of nothing — which spent
+ * the site's one colour on values that meant nothing yet and left it with
+ * nothing to say when something did matter. The accent now marks the primary
+ * action, the current selection and the focus ring, and that is all.
+ */
 .stat {
-  background: var(--accent-soft);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-3);
 }
 
 .stat__value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--accent);
+  font-size: var(--text-readout);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tighter);
+  line-height: 1.1;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
 .stat__label {
-  font-size: 0.78rem;
+  font-size: var(--text-micro);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
   color: var(--text-muted);
 }
 
@@ -406,8 +683,8 @@ input[type='checkbox'] {
  * anyone who cannot distinguish the hues.
  */
 .msg {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
   min-height: 1.25em;
 }
 
@@ -426,7 +703,9 @@ input[type='checkbox'] {
 .empty {
   text-align: center;
   color: var(--text-muted);
-  padding: var(--space-5) 0;
+  padding: var(--space-6) var(--space-4);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
 }
 
 /* ------------------------------------------------------------------ dialog */
@@ -448,6 +727,10 @@ dialog {
   overflow: auto;
 }
 
+dialog h2 {
+  margin-bottom: var(--space-2);
+}
+
 dialog::backdrop {
   background: rgb(0 0 0 / 45%);
 }
@@ -456,19 +739,19 @@ dialog::backdrop {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2);
-  margin-top: var(--space-4);
+  margin-top: var(--space-5);
 }
 
 /* ------------------------------------------------------------------ footer */
 
 .site-footer {
-  max-width: var(--page-width, 640px);
-  margin: var(--space-6) auto 0;
-  text-align: center;
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: var(--space-5) var(--gutter) var(--space-7);
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: var(--text-small);
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .site-footer a {

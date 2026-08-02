@@ -53,8 +53,6 @@ export interface RecipeIngredient {
 export interface Recipe {
   readonly id: string;
   readonly meal: Meal;
-  /** Decorative only; the name beside it is the label. */
-  readonly icon: string;
   readonly name: Localised;
   readonly ingredients: readonly RecipeIngredient[];
   readonly steps: Readonly<Record<Locale, readonly string[]>>;
@@ -556,7 +554,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'porridge-berries',
     meal: 'breakfast',
-    icon: '🥣',
     name: {
       de: 'Porridge mit Beeren & Walnüssen',
       en: 'Porridge with berries & walnuts',
@@ -584,7 +581,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'tofu-scramble-spinach',
     meal: 'breakfast',
-    icon: '🍳',
     name: { de: 'Tofu-Rührei mit Spinat', en: 'Tofu scramble with spinach' },
     ingredients: [
       { id: 'silken-tofu', perPerson: 180 },
@@ -610,7 +606,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'yoghurt-bowl-apple',
     meal: 'breakfast',
-    icon: '🍏',
     name: { de: 'Joghurt-Bowl mit Apfel', en: 'Yoghurt bowl with apple' },
     ingredients: [
       { id: 'plant-yoghurt', perPerson: 250 },
@@ -634,7 +629,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'overnight-oats-banana',
     meal: 'breakfast',
-    icon: '🫙',
     name: { de: 'Overnight Oats mit Banane', en: 'Overnight oats with banana' },
     ingredients: [
       { id: 'oats', perPerson: 60 },
@@ -658,7 +652,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'bread-avocado-hummus',
     meal: 'breakfast',
-    icon: '🥑',
     name: { de: 'Brot mit Avocado & Hummus', en: 'Bread with avocado & hummus' },
     ingredients: [
       { id: 'bread', perPerson: 100 },
@@ -687,7 +680,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'chickpea-omelette',
     meal: 'breakfast',
-    icon: '🫓',
     name: { de: 'Kichererbsen-Omelett', en: 'Chickpea omelette' },
     ingredients: [
       { id: 'chickpea-flour', perPerson: 70 },
@@ -716,7 +708,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'lentil-vegetable-stew',
     meal: 'lunch',
-    icon: '🍲',
     name: { de: 'Linsen-Gemüse-Eintopf', en: 'Lentil and vegetable stew' },
     ingredients: [
       { id: 'lentils', perPerson: 120 },
@@ -742,7 +733,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'roast-vegetables-quinoa',
     meal: 'lunch',
-    icon: '🍠',
     name: {
       de: 'Ofengemüse mit Kichererbsen & Quinoa',
       en: 'Roast vegetables with chickpeas & quinoa',
@@ -772,7 +762,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'pasta-lentil-bolognese',
     meal: 'lunch',
-    icon: '🍝',
     name: {
       de: 'Nudeln mit Tomaten-Linsen-Bolognese',
       en: 'Pasta with tomato and lentil bolognese',
@@ -801,7 +790,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'quinoa-salad-feta',
     meal: 'lunch',
-    icon: '🥙',
     name: { de: 'Quinoa-Salat mit Feta', en: 'Quinoa salad with feta' },
     ingredients: [
       { id: 'quinoa', perPerson: 75 },
@@ -829,7 +817,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'coconut-curry',
     meal: 'lunch',
-    icon: '🍛',
     name: { de: 'Gemüse-Kokos-Curry', en: 'Vegetable coconut curry' },
     ingredients: [
       { id: 'bell-pepper', perPerson: 1 },
@@ -856,7 +843,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'baked-tofu-vegetables',
     meal: 'lunch',
-    icon: '🥔',
     name: { de: 'Gebackener Tofu mit Ofengemüse', en: 'Baked tofu with roast vegetables' },
     ingredients: [
       { id: 'firm-tofu', perPerson: 180 },
@@ -880,7 +866,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'stuffed-peppers',
     meal: 'lunch',
-    icon: '🫑',
     name: { de: 'Gefüllte Paprika', en: 'Stuffed peppers' },
     ingredients: [
       { id: 'bell-pepper', perPerson: 2 },
@@ -907,7 +892,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'vegetable-soup-chickpeas',
     meal: 'dinner',
-    icon: '🥣',
     name: { de: 'Gemüsesuppe mit Kichererbsen', en: 'Vegetable soup with chickpeas' },
     ingredients: [
       { id: 'carrots', perPerson: 120 },
@@ -933,7 +917,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'wrap-hummus',
     meal: 'dinner',
-    icon: '🌯',
     name: { de: 'Vollkorn-Wrap mit Hummus', en: 'Wholemeal wrap with hummus' },
     ingredients: [
       { id: 'wrap', perPerson: 1 },
@@ -958,7 +941,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'squash-carrot-soup',
     meal: 'dinner',
-    icon: '🎃',
     name: { de: 'Kürbis-Möhren-Suppe', en: 'Squash and carrot soup' },
     ingredients: [
       { id: 'squash', perPerson: 230 },
@@ -984,7 +966,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'white-bean-salad',
     meal: 'dinner',
-    icon: '🥗',
     name: { de: 'Salat mit weißen Bohnen', en: 'Salad with white beans' },
     ingredients: [
       { id: 'white-beans', perPerson: 0.7 },
@@ -1011,7 +992,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'tofu-stir-fry',
     meal: 'dinner',
-    icon: '🍚',
     name: { de: 'Gemüsepfanne mit Tofu', en: 'Vegetable stir-fry with tofu' },
     ingredients: [
       { id: 'firm-tofu', perPerson: 180 },
@@ -1037,7 +1017,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'tofu-scramble-evening',
     meal: 'dinner',
-    icon: '🍳',
     name: {
       de: 'Tofu-Rührei mit Spinat (abends)',
       en: 'Tofu scramble with spinach (evening)',
@@ -1065,7 +1044,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'nuts-apple',
     meal: 'snack',
-    icon: '🍎',
     name: { de: 'Nüsse & Apfel', en: 'Nuts & apple' },
     ingredients: [
       { id: 'nuts', perPerson: 25 },
@@ -1079,7 +1057,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'yoghurt-berries',
     meal: 'snack',
-    icon: '🫐',
     name: { de: 'Joghurt & Beeren', en: 'Yoghurt & berries' },
     ingredients: [
       { id: 'plant-yoghurt', perPerson: 180 },
@@ -1093,7 +1070,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'veg-sticks-hummus',
     meal: 'snack',
-    icon: '🥕',
     name: { de: 'Gemüsesticks & Hummus', en: 'Veg sticks & hummus' },
     ingredients: [
       { id: 'carrots', perPerson: 60 },
@@ -1108,7 +1084,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'banana-peanut-butter',
     meal: 'snack',
-    icon: '🍌',
     name: { de: 'Banane & Erdnussmus', en: 'Banana & peanut butter' },
     ingredients: [
       { id: 'bananas', perPerson: 1 },
@@ -1122,7 +1097,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'trail-mix',
     meal: 'snack',
-    icon: '🥜',
     name: { de: 'Studentenfutter', en: 'Trail mix' },
     ingredients: [{ id: 'trail-mix', perPerson: 35 }],
     steps: {
@@ -1133,7 +1107,6 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: 'hummus-cherry-edamame',
     meal: 'snack',
-    icon: '🫛',
     name: { de: 'Hummus, Cherrytomaten & Edamame', en: 'Hummus, cherry tomatoes & edamame' },
     ingredients: [
       { id: 'hummus', perPerson: 35 },

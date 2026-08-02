@@ -1,24 +1,30 @@
 body {
-  --page-width: 30rem;
+  --page-width: 44rem;
 }
 
 /*
- * The rice-bowl illustration, restored from version 1.0.
+ * The converter.
  *
- * Full-bleed across the card rather than behind the page: as a background it
- * sat under the whole converter and the text on top of it only became readable
- * once a translucent white panel was laid over the lot. Here nothing is written
- * over it, so it costs no contrast anywhere.
- *
- * The negative margins cancel the card's own padding so the image reaches the
- * card's edges; the radius matches the card's, minus the border it sits inside.
+ * One column on a phone, two once the picture has somewhere to go that is not
+ * on top of the control. The illustration used to be a full-bleed banner across
+ * the top of the card: the first thing on the page, above the one number the
+ * tool exists to take.
  */
+.rice-converter {
+  display: grid;
+  gap: var(--space-5);
+  align-items: center;
+}
+
+.rice-controls {
+  gap: var(--space-4);
+}
+
 .rice-banner {
   display: block;
-  width: calc(100% + 2 * var(--space-5));
+  width: 100%;
   height: auto;
-  margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-5)) 0;
-  border-radius: calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px) 0 0;
+  border-radius: var(--radius-lg);
 }
 
 /*
@@ -37,43 +43,90 @@ body {
   filter: brightness(0.85);
 }
 
+@media (min-width: 40rem) {
+  .rice-converter {
+    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+  }
+}
+
+/* One object: minus, value, plus behind a single border, rather than three
+   controls with three borders and two gaps between them. */
 .stepper {
   display: flex;
-  gap: var(--space-2);
+  align-items: stretch;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+  max-width: 16rem;
 }
 
 .stepper__button {
-  flex: 0 0 2.875rem;
-  font-size: 1.3rem;
-  font-weight: 700;
+  flex: 0 0 2.5rem;
+  font-size: var(--text-heading);
+  font-weight: var(--weight-bold);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
+.stepper__button:focus-visible {
+  outline-offset: -3px;
+}
+
+/* Sunken, unlike the buttons either side of it. The field starts empty, and
+   with the stepper's single border around all three a transparent middle read
+   as a gap in the control rather than as somewhere to type. */
+.stepper .input {
+  border: 0;
+  border-radius: 0;
+  background: var(--surface-sunken);
+}
+
+/*
+ * The answer.
+ *
+ * A sunken well rather than an accent-tinted panel with accent-coloured digits:
+ * the number is the point, and it reads better as ink on a quiet ground than as
+ * colour on colour.
+ */
 .rice-result {
-  background: var(--accent-soft);
-  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   padding: var(--space-4);
-  text-align: center;
 }
 
 .rice-result__value {
   display: block;
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: var(--accent);
+  font-size: var(--text-readout);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tighter);
   line-height: 1.1;
 }
 
 .rice-settings {
   margin-top: var(--space-4);
+  max-width: 26rem;
+}
+
+.rice-ratio {
+  max-width: 10rem;
 }
 
 .rice-presets__label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: var(--space-1);
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--space-2);
 }
 
 summary {
   cursor: pointer;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-small);
+  color: var(--text-muted);
+  width: fit-content;
+}
+
+summary:hover {
+  color: var(--accent);
 }

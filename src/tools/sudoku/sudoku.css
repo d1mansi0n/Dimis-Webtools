@@ -2,7 +2,22 @@ body {
   --page-width: 34rem;
 }
 
+/* Tighter than the default page rhythm: the board, the buttons that act on it
+   and the message about it are one thing, not four sections. */
+.page {
+  gap: var(--space-4);
+}
+
+.sudoku-header {
+  display: grid;
+  gap: var(--space-3);
+}
+
 .sudoku-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
   justify-content: space-between;
 }
 
@@ -12,6 +27,20 @@ body {
 
 .sudoku-timer {
   gap: var(--space-2);
+}
+
+/* A clock, not a headline. Neutral and tabular, at the size of a heading rather
+   than of the page's one big readout. */
+.sudoku-timer__value {
+  font-size: var(--text-title);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.sudoku-hints {
+  gap: var(--space-1);
+  color: var(--text-muted);
 }
 
 /* ------------------------------------------------------------------- grid */
@@ -29,12 +58,21 @@ body {
   display: contents;
 }
 
+/*
+ * The board.
+ *
+ * Grey lines, not black ones. The outer border and the box separators were
+ * `--text`, which drew the board in the same ink as the digits inside it and
+ * left the grid competing with the puzzle for attention. `--border-strong` is
+ * the same value the site uses for anything whose edge has to be identifiable,
+ * and it clears the 3:1 the non-text contrast criterion asks for.
+ */
 .sudoku-grid {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   aspect-ratio: 1;
   width: 100%;
-  border: 2px solid var(--text);
+  border: 2px solid var(--border-strong);
   border-radius: var(--radius-sm);
   overflow: hidden;
   /* The cell handlers manage selection; no browser gesture should intercept. */
@@ -59,19 +97,32 @@ body {
 
 /* The heavier lines that separate the nine boxes. */
 .sudoku-cell[data-box-right] {
-  border-right-color: var(--text);
+  border-right-color: var(--border-strong);
   border-right-width: 2px;
 }
 
 .sudoku-cell[data-box-bottom] {
-  border-bottom-color: var(--text);
+  border-bottom-color: var(--border-strong);
   border-bottom-width: 2px;
 }
 
+/*
+ * A given digit is bold; a digit the player entered is in the accent.
+ *
+ * The givens used to be marked by a grey fill instead, which tinted roughly a
+ * third of the board in a scattered pattern and made a clean grid look like a
+ * damaged one. Weight and colour carry the same distinction and leave the board
+ * white. Nothing is being said by colour alone here — the two are also bold and
+ * regular, and a given cell refuses focus and keystrokes besides.
+ */
 .sudoku-cell[data-given] {
-  font-weight: 700;
-  background: var(--surface-sunken);
+  font-weight: var(--weight-bold);
   cursor: default;
+}
+
+.sudoku-cell:not([data-given]) .sudoku-cell__value {
+  color: var(--accent);
+  font-weight: var(--weight-semibold);
 }
 
 .sudoku-cell[data-selected] {
@@ -131,7 +182,9 @@ body {
   line-height: 1;
   display: grid;
   place-items: center;
-  color: var(--accent);
+  /* Muted, now that an entered digit is the accent: a cell full of pencil marks
+     should not read as loudly as a digit somebody has committed to. */
+  color: var(--text-muted);
   visibility: hidden;
 }
 

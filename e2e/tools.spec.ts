@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { ACCENT_PRESETS, DEFAULT_ACCENT } from '../src/config/accent.js';
 import { TOOLS } from '../src/config/site.js';
 import { derivePalette } from '../src/core/color.js';
@@ -66,10 +66,10 @@ test.describe('hub', () => {
     await page.goto('');
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dimis Webtools');
-    await expect(page.locator('.tool-card')).toHaveCount(TOOLS.length);
+    await expect(page.locator('.tool-link')).toHaveCount(TOOLS.length);
 
     for (const tool of TOOLS) {
-      await expect(page.locator(`.tool-card[href="${tool.id}/"]`)).toBeVisible();
+      await expect(page.locator(`.tool-link[href="${tool.id}/"]`)).toBeVisible();
     }
   });
 
@@ -316,11 +316,21 @@ test.describe('time tracking', () => {
   });
 });
 
+/*
+ * The marker count is drawn as a readout: the figure and the word "markers" are
+ * separate elements, because only the figure is at readout size and the live
+ * region is on the figure alone. Asserting on the pair keeps these tests reading
+ * as what the user sees rather than as what the markup happens to be.
+ */
+function markerCount(page: Page): Locator {
+  return page.locator('.counter-header__count');
+}
+
 test.describe('picture counter', () => {
   test('starts with an empty canvas and a prompt', async ({ page }) => {
     await page.goto('counter/');
     await expect(page.locator('[data-counter="overlay"]')).toBeVisible();
-    await expect(page.locator('[data-counter="count"]')).toHaveText('0 markers');
+    await expect(markerCount(page)).toHaveText('0 markers');
   });
 
   test('takes the prompt away once a picture is on the canvas', async ({ page }) => {
@@ -368,13 +378,13 @@ test.describe('picture counter', () => {
        and be read as picking it up rather than adding another. */
     const centreY = box.y + box.height / 2;
     await page.mouse.click(box.x + box.width / 2 - 80, centreY);
-    await expect(page.locator('[data-counter="count"]')).toHaveText('1 marker');
+    await expect(markerCount(page)).toHaveText('1 marker');
 
     await page.mouse.click(box.x + box.width / 2 + 80, centreY);
-    await expect(page.locator('[data-counter="count"]')).toHaveText('2 markers');
+    await expect(markerCount(page)).toHaveText('2 markers');
 
     await page.getByRole('button', { name: 'Undo last' }).click();
-    await expect(page.locator('[data-counter="count"]')).toHaveText('1 marker');
+    await expect(markerCount(page)).toHaveText('1 marker');
   });
 
   test('ignores a tap on the empty space beside the image', async ({ page }) => {
@@ -396,7 +406,7 @@ test.describe('picture counter', () => {
        is flips between the desktop and mobile viewports. A corner is outside the
        picture either way. */
     await page.mouse.click(box.x + 2, box.y + 2);
-    await expect(page.locator('[data-counter="count"]')).toHaveText('0 markers');
+    await expect(markerCount(page)).toHaveText('0 markers');
   });
 
   test('rejects a file that is not an image', async ({ page }) => {
@@ -782,7 +792,7 @@ test.describe('recipes and shopping list', () => {
     await expect(own).toBeVisible();
     /* Filed under Fruit, so it sits in that card and nowhere else. */
     await expect(
-      page.locator('.card', { hasText: 'Fruit' }).locator('.recipes-item--own'),
+      page.locator('.section', { hasText: 'Fruit' }).locator('.recipes-item--own'),
     ).toHaveCount(1);
 
     await own.locator('input[type="checkbox"]').check();

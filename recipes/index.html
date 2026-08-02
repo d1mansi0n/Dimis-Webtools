@@ -16,45 +16,54 @@
     <a class="skip-link" href="#main"></a>
     <header class="appbar"></header>
     <main id="main" class="page">
-      <section class="card stack">
+      <div class="page-header">
         <h1 data-recipes="title"></h1>
         <p class="lead" data-recipes="lead"></p>
+      </div>
 
-        <div class="recipes-persons">
-          <span class="recipes-persons__label" id="recipes-persons-label"></span>
-          <div class="stepper" role="group" aria-labelledby="recipes-persons-label">
-            <button class="btn stepper__button" type="button" data-recipes="personsMinus">
-              &minus;
-            </button>
-            <output class="recipes-persons__count numeric" data-recipes="personsCount">1</output>
-            <button class="btn stepper__button" type="button" data-recipes="personsPlus">+</button>
+      <div class="stack">
+        <div class="toolbar">
+          <!--
+            Two toggle buttons rather than an ARIA tablist: `aria-pressed` plus
+            `aria-controls` describes this accurately without owing the keyboard
+            behaviour — arrow-key roving focus — that `role="tab"` promises. They
+            are drawn as one segmented control because that is what they are: a
+            choice between two views, not two loose buttons that happen to be
+            adjacent.
+          -->
+          <div class="segmented">
+            <button
+              class="btn recipes-tab"
+              type="button"
+              id="recipes-tab-recipes"
+              aria-controls="recipes-panel-recipes"
+              aria-pressed="true"
+            ></button>
+            <button
+              class="btn recipes-tab"
+              type="button"
+              id="recipes-tab-shopping"
+              aria-controls="recipes-panel-shopping"
+              aria-pressed="false"
+            ></button>
+          </div>
+
+          <div class="toolbar__group toolbar__end recipes-persons">
+            <span class="recipes-persons__label" id="recipes-persons-label"></span>
+            <div class="stepper" role="group" aria-labelledby="recipes-persons-label">
+              <button class="btn stepper__button" type="button" data-recipes="personsMinus">
+                &minus;
+              </button>
+              <output class="recipes-persons__count numeric" data-recipes="personsCount">1</output>
+              <button class="btn stepper__button" type="button" data-recipes="personsPlus">
+                +
+              </button>
+            </div>
           </div>
         </div>
 
-        <!--
-          Two toggle buttons rather than an ARIA tablist: `aria-pressed` plus
-          `aria-controls` describes this accurately without owing the keyboard
-          behaviour — arrow-key roving focus — that `role="tab"` promises.
-        -->
-        <div class="recipes-tabs">
-          <button
-            class="btn recipes-tab"
-            type="button"
-            id="recipes-tab-recipes"
-            aria-controls="recipes-panel-recipes"
-            aria-pressed="true"
-          ></button>
-          <button
-            class="btn recipes-tab"
-            type="button"
-            id="recipes-tab-shopping"
-            aria-controls="recipes-panel-shopping"
-            aria-pressed="false"
-          ></button>
-        </div>
-
         <p class="msg" data-recipes="feedback" role="status"></p>
-      </section>
+      </div>
 
       <div class="recipes-panel" id="recipes-panel-recipes"></div>
 

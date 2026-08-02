@@ -84,6 +84,10 @@ const PATHS: Readonly<Record<IconName, readonly string[]>> = {
   pause: ['M9 5v14', 'M15 5v14'],
   /* A single sugar cube, repeated to visualise an amount. */
   cube: ['M12 2 3 7v10l9 5 9-5V7l-9-5z', 'M3 7l9 5 9-5', 'M12 12v10'],
+  /* Chevrons. `back` sits in the app bar beside the site name; `forward` marks a
+     hub row as somewhere the tap leads, which a bare row does not say on its own. */
+  back: ['M15 5l-7 7 7 7'],
+  forward: ['M9 5l7 7-7 7'],
 };
 
 export interface IconOptions {

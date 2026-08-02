@@ -22,7 +22,7 @@
  * text (4.5:1) in both themes, and `--border-strong` — the outline that makes a
  * button or a text field identifiable as one — meets the 3:1 the non-text
  * criterion asks for against all three surfaces, not just the lightest. The
- * lighter `--border` is decorative and used for card edges and rules, where
+ * lighter `--border` is decorative and used for rules and card edges, where
  * nothing is being identified by it.
  *
  * `--control` is deliberately lighter than `--accent`: it tints checkboxes and
@@ -41,11 +41,20 @@
 :root {
   color-scheme: light dark;
 
-  /* Surfaces */
-  --bg: #f4f4f4;
+  /*
+   * Surfaces.
+   *
+   * The page itself is `--surface`, not a grey. It used to be a grey with white
+   * cards floating on it, and because every section of every tool was a card,
+   * the result was a column of identical white slabs and no signal about which
+   * of them mattered. Separation is now a hairline rule or a border, and a fill
+   * is reserved for the few things that genuinely are recessed — an input, a
+   * selected row, the sunken well behind a readout.
+   */
+  --bg: #ffffff;
   --surface: #ffffff;
-  --surface-sunken: #efefef;
-  --border: #e2e2e2;
+  --surface-sunken: #f4f4f4;
+  --border: #e4e4e4;
   --border-strong: #878787;
 
   /* Text */
@@ -68,20 +77,18 @@
   --danger-soft: #fdecea;
   --text-on-danger: #ffffff;
 
-  /* Elevation, used sparingly. A card is separated from the page by its border
-     and its surface, not by a drop shadow; `--shadow` is a hairline contact
-     shadow that stops the border reading as a drawn box, and nothing more.
-     `--shadow-lg` is for the one thing that genuinely floats — a modal. */
-  --shadow: 0 1px 2px rgb(0 0 0 / 4%);
+  /* Elevation, used sparingly. Nothing on a page is raised above the page: a
+     border and a rule say where a thing begins, which is all that was ever being
+     asked of a drop shadow. `--shadow-lg` is for the two things that genuinely
+     float — a modal and the Sudoku number ring. */
   --shadow-lg: 0 16px 40px -12px rgb(0 0 0 / 25%);
 
-  /* Shape and rhythm. Restrained on purpose: at 18px a card corner curves far
-     enough to read as a phone mock-up rather than as a panel, and the same is
-     true of a 12px button. These are the radii of an application, not of a
-     landing page. */
-  --radius-sm: 6px;
-  --radius: 8px;
-  --radius-lg: 12px;
+  /* Shape. Restrained on purpose: at 18px a card corner curves far enough to
+     read as a phone mock-up rather than as a panel, and the same is true of a
+     12px button. These are the radii of an application, not of a landing page. */
+  --radius-sm: 5px;
+  --radius: 7px;
+  --radius-lg: 10px;
   --radius-pill: 999px;
 
   --space-1: 0.25rem;
@@ -90,10 +97,59 @@
   --space-4: 1rem;
   --space-5: 1.5rem;
   --space-6: 2rem;
+  --space-7: 3rem;
+
+  /*
+   * Type scale.
+   *
+   * Six sizes, and nothing may invent a seventh. The old pages set a font size
+   * ad hoc wherever one was wanted — 0.95, 0.92, 0.88, 0.85, 0.82, 0.8, 0.78,
+   * 0.75, 0.72 all appeared — which is a lot of decisions that add up to no
+   * hierarchy at all, because no two of those steps are far enough apart to be
+   * read as different. The ratios here are wide enough to be seen.
+   *
+   * `--text-body` is 15px rather than 16px. These are dense tool screens with a
+   * lot of controls per view, and the whole scale is set from this one value, so
+   * anyone who needs it larger gets a proportionate page by changing the browser
+   * font size — which is why every size below is in `rem`.
+   */
+  --text-display: 1.75rem;
+  --text-title: 1.375rem;
+  --text-heading: 1.0625rem;
+  --text-body: 0.9375rem;
+  --text-small: 0.8125rem;
+  --text-micro: 0.6875rem;
+
+  /* The one big readout a tool is allowed: the water total, the sugar count,
+     the elapsed clock. */
+  --text-readout: 2rem;
+
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Large text needs negative tracking to hold together and small uppercase
+     needs positive tracking to stay readable. Both are here so neither is
+     guessed at per rule. */
+  --tracking-tight: -0.02em;
+  --tracking-tighter: -0.03em;
+  --tracking-label: 0.07em;
 
   --font-sans:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-numeric: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  /*
+   * Layout.
+   *
+   * `--page-width` is the default measure; a tool overrides it on `body` when
+   * its content genuinely needs more room. `--gutter` is the space between the
+   * content and the edge of a phone, which should not be the same on a 320px
+   * screen as on a desktop.
+   */
+  --page-width: 44rem;
+  --gutter: clamp(1rem, 4vw, 2rem);
+  --bar-height: 3.25rem;
 
   --focus-ring: 3px solid var(--accent);
   --focus-offset: 2px;
@@ -104,16 +160,17 @@
 /*
  * Dark theme.
  *
- * Declared once in a custom property block and applied from both selectors
- * below, so the two can no longer drift apart the way the old duplicated blocks
- * did.
+ * The two selectors below carry the same declarations on purpose and have to be
+ * changed together: one supplies the default from the device preference, the
+ * other is the explicit override, and a media query cannot be merged into a
+ * selector list with a rule outside it.
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #111111;
-    --surface: #1a1a1a;
-    --surface-sunken: #141414;
-    --border: #2e2e2e;
+    --bg: #131313;
+    --surface: #1c1c1c;
+    --surface-sunken: #191919;
+    --border: #2b2b2b;
     --border-strong: #6b6b6b;
 
     --text: #ececec;
@@ -135,17 +192,16 @@
        on it sat at 2:1. Mirrors how `--text-on-accent` flips. */
     --text-on-danger: #141414;
 
-    --shadow: 0 1px 2px rgb(0 0 0 / 50%);
     --shadow-lg: 0 16px 40px -12px rgb(0 0 0 / 70%);
   }
 }
 
 /* Explicit dark, regardless of what the device prefers. */
 :root[data-theme='dark'] {
-  --bg: #111111;
-  --surface: #1a1a1a;
-  --surface-sunken: #141414;
-  --border: #2e2e2e;
+  --bg: #131313;
+  --surface: #1c1c1c;
+  --surface-sunken: #191919;
+  --border: #2b2b2b;
   --border-strong: #6b6b6b;
 
   --text: #ececec;
@@ -165,6 +221,5 @@
   --danger-soft: #3a1a1a;
   --text-on-danger: #141414;
 
-  --shadow: 0 1px 2px rgb(0 0 0 / 50%);
   --shadow-lg: 0 16px 40px -12px rgb(0 0 0 / 70%);
 }

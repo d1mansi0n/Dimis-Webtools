@@ -16,24 +16,54 @@
     <a class="skip-link" href="#main"></a>
     <header class="appbar"></header>
     <main id="main" class="page">
-      <section class="card stack">
+      <!--
+        Title on the left, marker count on the right — it is the number this
+        tool produces, and it used to be a small pill wedged between the upload
+        button and a colour swatch in the middle of a row of eleven controls.
+      -->
+      <div class="page-header counter-header">
         <h1 data-counter="title"></h1>
-        <div class="cluster">
-          <label
-            class="btn btn--primary counter-upload"
-            for="counter-file"
-            data-counter="upload"
-          ></label>
-          <input id="counter-file" type="file" accept="image/*" class="visually-hidden" />
+        <p class="counter-header__count">
+          <span class="stat__value numeric" data-counter="count" role="status" aria-live="polite"
+            >0</span
+          >
+          <span class="stat__label" data-counter="countLabel"></span>
+        </p>
+      </div>
 
-          <span class="badge" data-counter="count" role="status" aria-live="polite"></span>
+      <!--
+        Eleven controls, in the three groups they actually fall into: what to
+        count, how the marker looks, and how the view is positioned. They used
+        to be one wrapping row in markup order, so "Clear all" sat beside a zoom
+        button and the colour picker sat beside the file input.
+      -->
+      <div class="stack">
+        <div class="toolbar">
+          <div class="toolbar__group">
+            <label
+              class="btn btn--primary counter-upload"
+              for="counter-file"
+              data-counter="upload"
+            ></label>
+            <input id="counter-file" type="file" accept="image/*" class="visually-hidden" />
+            <button class="btn" type="button" data-counter="save"></button>
+          </div>
 
-          <span class="cluster">
+          <span class="toolbar__divider" aria-hidden="true"></span>
+
+          <div class="toolbar__group">
+            <button class="btn" type="button" data-counter="undo"></button>
+            <button class="btn btn--danger" type="button" data-counter="clear"></button>
+          </div>
+        </div>
+
+        <div class="toolbar counter-settings">
+          <div class="toolbar__group">
             <label for="counter-color" data-counter="colorLabel"></label>
             <input id="counter-color" type="color" value="#ff0000" />
-          </span>
+          </div>
 
-          <span class="cluster">
+          <div class="toolbar__group">
             <label for="counter-size" data-counter="sizeLabel"></label>
             <input id="counter-size" type="range" min="10" max="100" step="1" value="20" />
             <input
@@ -46,37 +76,34 @@
               aria-hidden="true"
               tabindex="-1"
             />
-          </span>
+          </div>
 
-          <span class="cluster">
+          <div class="toolbar__group toolbar__end">
             <span class="counter-group-label" data-counter="zoomLabel"></span>
-            <button class="btn btn--icon" type="button" data-counter="zoomOut">&minus;</button>
-            <button class="btn btn--icon" type="button" data-counter="zoomIn">+</button>
-            <button class="btn" type="button" data-counter="fit"></button>
-          </span>
+            <div class="segmented">
+              <button class="btn btn--icon" type="button" data-counter="zoomOut">&minus;</button>
+              <button class="btn btn--icon" type="button" data-counter="zoomIn">+</button>
+              <button class="btn" type="button" data-counter="fit"></button>
+            </div>
 
-          <span class="cluster">
             <span class="checkbox">
               <input id="counter-lock" type="checkbox" />
               <span class="checkbox__tick" aria-hidden="true">&check;</span>
             </span>
             <label for="counter-lock" data-counter="lockLabel"></label>
-          </span>
-
-          <button class="btn" type="button" data-counter="undo"></button>
-          <button class="btn btn--danger" type="button" data-counter="clear"></button>
-          <button class="btn" type="button" data-counter="save"></button>
+          </div>
         </div>
-        <p class="msg msg--err" data-counter="error" role="status"></p>
-      </section>
 
-      <section class="card counter-stage-card">
+        <p class="msg msg--err" data-counter="error" role="status"></p>
+      </div>
+
+      <div class="counter-stage-card">
         <div class="counter-stage" data-counter="stage">
           <canvas data-counter="canvas" hidden></canvas>
           <p class="counter-overlay" data-counter="overlay"></p>
         </div>
         <p class="note" data-counter="help"></p>
-      </section>
+      </div>
     </main>
   </body>
 </html>

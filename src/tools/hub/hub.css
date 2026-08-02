@@ -1,67 +1,113 @@
+body {
+  --page-width: 52rem;
+}
+
+/*
+ * The tool list.
+ *
+ * Rows on rules, not six cards. Every tool used to be a bordered, shadowed,
+ * rounded white slab on a grey page, which spent a great deal of ink saying
+ * "these six things are separate" — something a hairline already says — and
+ * left the list looking like a template rather than an index.
+ */
 .tool-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: var(--space-3);
 }
 
-.tool-card {
+.tool-link {
   display: flex;
   align-items: center;
   gap: var(--space-4);
   text-decoration: none;
-  background: var(--surface);
   color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  box-shadow: var(--shadow);
+  padding: var(--space-4) var(--space-3);
+  margin: 0 calc(-1 * var(--space-3));
+  border-radius: var(--radius);
   /* No lift on hover. A row that jumps a couple of pixels under the cursor is
-     the sort of motion that reads as a demo; the border and the surface say
-     "this is the one" without moving the page. */
+     the sort of motion that reads as a demo; the fill says "this is the one"
+     without moving the page. */
   transition:
     background-color var(--transition),
-    border-color var(--transition);
+    color var(--transition);
 }
 
-.tool-card:hover {
-  border-color: var(--border-strong);
+.tool-list > li + li .tool-link {
+  box-shadow: 0 -1px 0 var(--border);
+}
+
+.tool-link:hover {
   background: var(--surface-sunken);
 }
 
-.tool-card__icon {
-  flex: 0 0 2.75rem;
-  height: 2.75rem;
+.tool-link__icon {
+  flex: none;
   display: grid;
   place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
   /* Neutral, not accent-tinted. The accent is the site's one colour and it is
      worth spending on things that mean something — a primary action, a focus
-     ring, a live value — rather than on six decorative tiles. */
-  background: var(--surface-sunken);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+     ring, the current selection — rather than on six decorative tiles. */
   color: var(--text-muted);
+  transition: color var(--transition);
 }
 
-.tool-card:hover .tool-card__icon {
+.tool-link:hover .tool-link__icon,
+.tool-link:hover .tool-link__name {
   color: var(--accent);
-  border-color: var(--accent);
 }
 
-.tool-card__body {
+.tool-link__body {
   display: grid;
-  gap: 0.15rem;
+  gap: 0.1rem;
   min-width: 0;
+  flex: 1;
 }
 
-.tool-card__name {
-  font-size: 1.05rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+.tool-link__name {
+  font-size: var(--text-heading);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  transition: color var(--transition);
 }
 
-.tool-card__desc {
+.tool-link__desc {
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: var(--text-small);
+}
+
+/* The chevron says the row leads somewhere. It is decorative — the whole row is
+   one link with the tool's name in it — so it is dimmer than the text and
+   `aria-hidden` like every other icon. */
+.tool-link__go {
+  flex: none;
+  color: var(--border-strong);
+  transition: color var(--transition);
+}
+
+.tool-link:hover .tool-link__go {
+  color: var(--accent);
+}
+
+/*
+ * Two columns once there is room for two.
+ *
+ * The list is six short rows: on a desktop it used to run down the middle of
+ * the window and leave the lower two thirds of the page empty. The rules
+ * between rows are drawn by each row's own top shadow, so the first row of each
+ * column has to drop it explicitly — with exactly two columns that is the first
+ * two items.
+ */
+@media (min-width: 46rem) {
+  .tool-list {
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--space-6);
+  }
+
+  .tool-list > li:nth-child(-n + 2) .tool-link {
+    box-shadow: none;
+  }
 }

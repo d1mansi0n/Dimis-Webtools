@@ -1,16 +1,17 @@
 body {
-  --page-width: 35rem;
+  --page-width: 38rem;
 }
 
 .sugar-input-row {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  max-width: 14rem;
 }
 
 .sugar-unit {
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 .sugar-stats {
@@ -19,8 +20,10 @@ body {
   gap: var(--space-3);
 }
 
+/* The cube strip keeps the accent: it is a picture of the number above it, and
+   a row of forty grey outlines would read as an ingredient list rather than as
+   a quantity. */
 .sugar-cubes {
-  margin-top: var(--space-3);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -30,7 +33,7 @@ body {
 
 .sugar-cubes__overflow {
   margin-left: var(--space-2);
-  font-size: 0.8rem;
+  font-size: var(--text-small);
   color: var(--text-muted);
 }
 
@@ -40,22 +43,24 @@ body {
   padding: 0;
 }
 
+/* Rows on rules rather than zebra stripes: a striped list of six is a lot of
+   fill for a table nobody has to track a row across. */
 .sugar-compare li {
   display: flex;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: 0.45rem 0.55rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.92rem;
+  padding: var(--space-2) var(--space-1);
+  font-size: var(--text-body);
 }
 
-.sugar-compare li:nth-child(odd) {
-  background: var(--surface-sunken);
+.sugar-compare li + li {
+  border-top: 1px solid var(--border);
 }
 
+/* The nearest everyday food is the answer to "is that a lot?", so it is the one
+   row here that earns the accent. */
 .sugar-compare li[data-closest] {
-  background: var(--accent-soft);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   color: var(--accent);
 }
 

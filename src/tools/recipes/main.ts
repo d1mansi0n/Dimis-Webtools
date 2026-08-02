@@ -141,7 +141,7 @@ boot({
       const chosen = selected.has(recipe.id);
 
       const toggle = el('button', {
-        class: 'btn',
+        class: ['btn', 'btn--sm', 'recipe__toggle'],
         attrs: { type: 'button', 'aria-pressed': chosen },
         text: chosen ? t('recipes.added') : t('recipes.add'),
         on: {
@@ -205,17 +205,22 @@ boot({
         else openRecipes.delete(recipe.id);
       });
 
+      /*
+       * A row on a rule, and no picture.
+       *
+       * Every recipe used to carry an emoji, which is a font the site does not
+       * control — flat two-colour glyphs beside shaded three-dimensional ones,
+       * on no common grid, in nobody's stroke weight, none of them taking the
+       * text colour. `shell/icons.ts` exists because that read as clip art in
+       * the app bar; twenty-five of them down one page read as it rather more.
+       * The names are descriptive on their own.
+       */
       return el(
         'article',
-        { class: 'card recipe' },
+        { class: 'recipe' },
         el(
           'div',
           { class: 'recipe__head' },
-          el('span', {
-            class: 'recipe__icon',
-            attrs: { 'aria-hidden': 'true' },
-            text: recipe.icon,
-          }),
           el('h3', { class: 'recipe__name', text: recipe.name[locale()] }),
           toggle,
         ),
@@ -237,10 +242,10 @@ boot({
 
       const summary = el(
         'section',
-        { class: 'card stack' },
+        { class: 'section' },
         el(
           'div',
-          { class: 'recipes-summary' },
+          { class: 'section__head' },
           el('h2', { text: t('recipes.collection.title') }),
           selectionBadge,
         ),
@@ -249,7 +254,7 @@ boot({
           'div',
           { class: 'cluster' },
           el('button', {
-            class: 'btn',
+            class: ['btn', 'btn--sm'],
             attrs: { type: 'button' },
             text: t('recipes.selectAll'),
             on: {
@@ -261,7 +266,7 @@ boot({
             },
           }),
           el('button', {
-            class: 'btn',
+            class: ['btn', 'btn--sm', 'btn--danger'],
             attrs: { type: 'button' },
             text: t('recipes.clearSelection'),
             on: {
@@ -278,9 +283,13 @@ boot({
       const sections = MEAL_ORDER.map((meal) =>
         el(
           'section',
-          { class: 'stack' },
-          el('h2', { class: 'recipes-meal', text: t(`recipes.meal.${meal}`) }),
-          ...recipesOf(meal).map(recipeCard),
+          { class: 'section' },
+          el(
+            'div',
+            { class: 'section__head' },
+            el('h2', { class: 'label', text: t(`recipes.meal.${meal}`) }),
+          ),
+          el('div', { class: 'recipes-list' }, ...recipesOf(meal).map(recipeCard)),
         ),
       );
 
@@ -403,8 +412,8 @@ boot({
 
       return el(
         'section',
-        { class: 'card stack' },
-        el('div', { class: 'recipes-summary' }, el('h2', { text: options.title }), count),
+        { class: 'section' },
+        el('div', { class: 'section__head' }, el('h2', { text: options.title }), count),
         options.note !== undefined && el('p', { class: 'note', text: options.note }),
         el('ul', { class: 'recipes-items' }, ...options.rows),
         action !== undefined && el('div', { class: 'recipes-card-actions' }, resetButton(action)),
@@ -462,7 +471,7 @@ boot({
 
       const meta = el(
         'section',
-        { class: 'card stack' },
+        { class: 'stack recipes-meta' },
         el('div', { class: 'recipes-progress', attrs: { 'aria-hidden': 'true' } }, progressFill),
         progressLabel,
         el(
@@ -533,13 +542,7 @@ boot({
       shoppingPanel.replaceChildren(
         meta,
         ...(countEntries(groups) === 0
-          ? [
-              el(
-                'section',
-                { class: 'card' },
-                el('p', { class: 'empty', text: t('recipes.empty') }),
-              ),
-            ]
+          ? [el('p', { class: 'empty', text: t('recipes.empty') })]
           : [...groupCards, resetIngredients]),
         addOwnItemCard(),
         staplesCard,
@@ -670,10 +673,10 @@ boot({
 
       return el(
         'section',
-        { class: 'card stack recipes-own' },
+        { class: 'section recipes-own' },
         el(
           'div',
-          { class: 'recipes-summary' },
+          { class: 'section__head' },
           el('h2', { text: t('recipes.custom.title') }),
           el('span', {
             class: 'recipes-count numeric',

@@ -45,17 +45,43 @@ export function mountAppBar(options: AppBarOptions): void {
     showTheme();
   });
 
-  /* On the hub the left slot stays empty: it used to repeat the site name a
-     few pixels above the `<h1>` that already says it. Elsewhere it is the way
-     back, which is the only thing in this bar that is not a setting. */
+  /* The bar always names the site, and on a tool page that name is also the way
+     back to the hub. An empty left slot is what left the settings looking like
+     three controls adrift in the whitespace above the page. */
   replaceChildren(
     host,
-    options.showHomeLink &&
-      el('a', { class: 'appbar__home', attrs: { href: '../' }, text: `← ${t('nav.home')}` }),
-    el('span', { class: 'appbar__spacer' }),
-    themeButton,
-    accentButton(),
-    languageSwitcher(),
+    el(
+      'div',
+      { class: 'appbar__inner' },
+      brand(options.showHomeLink),
+      el('span', { class: 'appbar__spacer' }),
+      el('div', { class: 'appbar__settings' }, themeButton, accentButton(), languageSwitcher()),
+    ),
+  );
+}
+
+/**
+ * The site's name at the left of the bar, which is also the way back to the hub.
+ *
+ * Absent on the hub itself: the page's own display heading says the same words
+ * twenty pixels below, and a link there would point at the page it is already
+ * on. The bar's rule is what stops the settings reading as adrift there, which
+ * is the job the old empty left slot was failing at.
+ *
+ * The chevron and the accessible name both say "back", because the visible word
+ * is the site's name rather than a direction.
+ */
+function brand(showHomeLink: boolean): HTMLElement | false {
+  if (!showHomeLink) return false;
+
+  return el(
+    'a',
+    {
+      class: 'appbar__brand',
+      attrs: { href: '../', 'aria-label': t('nav.home') },
+    },
+    icon('back', { size: 16 }),
+    el('span', { text: t('app.name') }),
   );
 }
 
@@ -93,6 +119,7 @@ function accentButton(): HTMLElement {
  */
 function languageSwitcher(): HTMLElement {
   const select = el('select', {
+    class: 'select--bare',
     attrs: { 'aria-label': t('nav.language') },
     children: LOCALES.map((code) =>
       el('option', {

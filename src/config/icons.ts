@@ -24,4 +24,6 @@ export type IconName =
   | 'eye'
   | 'play'
   | 'pause'
-  | 'cube';
+  | 'cube'
+  | 'back'
+  | 'forward';

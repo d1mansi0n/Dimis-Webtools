@@ -83,6 +83,8 @@ boot({
     requireElement('[data-time="export"]').textContent = t('time.export');
     requireElement('[data-time="clear"]').textContent = t('time.clearAll');
     requireElement('[data-time="totalLabel"]').textContent = t('time.total');
+    requireElement('[data-time="entriesTitle"]').textContent = t('time.entries.title');
+    requireElement('[data-time="commentsTitle"]').textContent = t('time.comments.title');
     requireElement('[data-time="toggleComments"]').textContent = t('time.comments.toggle');
     clearCommentsButton.textContent = t('time.comments.clear');
     emptyMessage.textContent = t('time.empty');
@@ -164,12 +166,18 @@ boot({
       });
 
       const deleteButton = el('button', {
-        class: ['btn', 'time-entry__delete'],
+        class: ['btn', 'btn--sm', 'time-entry__delete'],
         attrs: { type: 'button', title: t('time.delete.hint') },
         text: t('time.delete'),
       });
       attachHoldToDelete(deleteButton, entry.id);
 
+      /*
+       * The entry's own text first, its controls second. The controls used to
+       * come first in the markup and sat in a column down the left, which put
+       * four buttons of chrome in front of the thing the row is actually about
+       * — the date, the total and the comment.
+       */
       const root = el(
         'div',
         {
@@ -178,7 +186,19 @@ boot({
         },
         el(
           'div',
-          { class: 'time-entry__controls' },
+          { class: 'time-entry__body' },
+          el('p', {
+            class: 'time-entry__date',
+            text: `${formatIsoDate(entry.date, intlTag())}${entry.isStopped ? ` · ${t('time.finished')}` : ''}`,
+          }),
+          elapsed,
+          duration?.field,
+          sessions,
+          comment,
+        ),
+        el(
+          'div',
+          { class: 'time-entry__actions' },
           controlButton(t('time.start'), entry.isStopped || running, () => {
             const before = runningEntry(entries);
             if (before !== undefined && before.id !== entry.id) {
@@ -212,20 +232,8 @@ boot({
             persist();
             render();
           }),
+          deleteButton,
         ),
-        el(
-          'div',
-          { class: 'time-entry__body' },
-          el('p', {
-            class: 'time-entry__date',
-            text: `${formatIsoDate(entry.date, intlTag())}${entry.isStopped ? ` · ${t('time.finished')}` : ''}`,
-          }),
-          elapsed,
-          duration?.field,
-          sessions,
-          comment,
-        ),
-        deleteButton,
       );
 
       rows.set(entry.id, { elapsed, duration: duration?.input, sessions, root });
@@ -284,7 +292,7 @@ boot({
 
     function controlButton(label: string, disabled: boolean, onClick: () => void): HTMLElement {
       return el('button', {
-        class: 'btn',
+        class: ['btn', 'btn--sm'],
         attrs: { type: 'button', disabled },
         text: label,
         on: { click: onClick },

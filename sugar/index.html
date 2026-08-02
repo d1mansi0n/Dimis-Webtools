@@ -16,28 +16,29 @@
     <a class="skip-link" href="#main"></a>
     <header class="appbar"></header>
     <main id="main" class="page">
-      <section class="card stack">
+      <div class="page-header">
         <h1 data-sugar="title"></h1>
         <p class="lead" data-sugar="lead"></p>
-        <div>
-          <label for="sugar-grams" data-sugar="inputLabel"></label>
-          <div class="sugar-input-row">
-            <input
-              class="input"
-              id="sugar-grams"
-              type="number"
-              inputmode="decimal"
-              min="0"
-              step="any"
-              autocomplete="off"
-            />
-            <span class="sugar-unit" aria-hidden="true">g</span>
-          </div>
-          <p class="msg msg--warn" id="sugar-hint" role="status"></p>
-        </div>
-      </section>
+      </div>
 
-      <section class="card" id="sugar-result" hidden>
+      <div>
+        <label for="sugar-grams" data-sugar="inputLabel"></label>
+        <div class="sugar-input-row">
+          <input
+            class="input"
+            id="sugar-grams"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="any"
+            autocomplete="off"
+          />
+          <span class="sugar-unit" aria-hidden="true">g</span>
+        </div>
+        <p class="msg msg--warn" id="sugar-hint" role="status"></p>
+      </div>
+
+      <div class="stack" id="sugar-result" hidden>
         <div class="sugar-stats">
           <div class="stat">
             <p class="stat__value numeric" data-sugar="cubes">–</p>
@@ -49,13 +50,13 @@
           </div>
         </div>
         <p class="sugar-cubes" data-sugar="cubeStrip" aria-hidden="true"></p>
-      </section>
+      </div>
 
-      <section class="card stack" id="sugar-compare" hidden>
-        <div>
+      <section class="section" id="sugar-compare" hidden>
+        <div class="section__head">
           <h2 data-sugar="compareTitle"></h2>
-          <p class="note" data-sugar="compareNote"></p>
         </div>
+        <p class="note" data-sugar="compareNote"></p>
         <ul class="sugar-compare" data-sugar="compareList"></ul>
       </section>
     </main>

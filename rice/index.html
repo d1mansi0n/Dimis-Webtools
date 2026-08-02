@@ -16,14 +16,48 @@
     <a class="skip-link" href="#main"></a>
     <header class="appbar"></header>
     <main id="main" class="page">
-      <section class="card stack">
-        <!--
-          Decorative only, hence the empty `alt`: the illustration says nothing
-          the heading below it does not. It is a banner inside the card rather
-          than the full-page background version 1.0 used, which needed a
-          translucent panel laid over it before the text was legible. The
-          intrinsic size is declared so the layout does not jump when it loads.
-        -->
+      <div class="page-header">
+        <h1 data-rice="title"></h1>
+        <p class="lead" data-rice="lead"></p>
+      </div>
+
+      <!--
+        The converter: cups in on the left, cups of water out on the right, with
+        the illustration alongside them once there is room. It used to be a
+        full-bleed banner across the top of a card, which put a 39 kB picture
+        above the fold and pushed the one control the tool has below it.
+
+        The image is decorative, hence the empty `alt`: it says nothing the
+        heading does not. The intrinsic size is declared so the layout does not
+        jump when it loads.
+      -->
+      <div class="rice-converter">
+        <div class="stack rice-controls">
+          <div>
+            <label for="rice-cups" data-rice="cupsLabel"></label>
+            <div class="stepper">
+              <button class="btn stepper__button" type="button" data-rice="minus">&minus;</button>
+              <input
+                class="input input--numeric"
+                id="rice-cups"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                max="100"
+                step="0.5"
+                autocomplete="off"
+              />
+              <button class="btn stepper__button" type="button" data-rice="plus">+</button>
+            </div>
+          </div>
+
+          <div class="rice-result">
+            <output class="rice-result__value numeric" id="rice-water" for="rice-cups">0.00</output>
+            <p class="stat__label" data-rice="resultLabel"></p>
+          </div>
+          <p class="note" data-rice="total"></p>
+        </div>
+
         <img
           class="rice-banner"
           src="../src/tools/rice/rice-bowl.webp"
@@ -32,35 +66,9 @@
           height="419"
           decoding="async"
         />
-        <h1 data-rice="title"></h1>
-        <p class="lead" data-rice="lead"></p>
+      </div>
 
-        <div>
-          <label for="rice-cups" data-rice="cupsLabel"></label>
-          <div class="stepper">
-            <button class="btn stepper__button" type="button" data-rice="minus">&minus;</button>
-            <input
-              class="input input--numeric"
-              id="rice-cups"
-              type="number"
-              inputmode="decimal"
-              min="0"
-              max="100"
-              step="0.5"
-              autocomplete="off"
-            />
-            <button class="btn stepper__button" type="button" data-rice="plus">+</button>
-          </div>
-        </div>
-
-        <div class="rice-result">
-          <output class="rice-result__value numeric" id="rice-water" for="rice-cups">0.00</output>
-          <p class="stat__label" data-rice="resultLabel"></p>
-        </div>
-        <p class="note" data-rice="total"></p>
-      </section>
-
-      <section class="card">
+      <section class="section rice-settings-section">
         <details>
           <summary data-rice="settings"></summary>
           <div class="stack rice-settings">
@@ -71,7 +79,7 @@
             <div>
               <label for="rice-ratio" data-rice="customLabel"></label>
               <input
-                class="input"
+                class="input rice-ratio"
                 id="rice-ratio"
                 type="number"
                 inputmode="decimal"

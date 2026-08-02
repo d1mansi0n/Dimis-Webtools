@@ -16,42 +16,74 @@
     <a class="skip-link" href="#main"></a>
     <header class="appbar"></header>
     <main id="main" class="page">
-      <section class="card stack">
+      <!--
+        Title, difficulty and clock in one bar. The clock used to be the largest
+        accent-coloured thing on the page from the moment it read 00:01, which
+        spent the site's one colour on a number nobody is looking at.
+      -->
+      <div class="page-header sudoku-header">
         <h1 data-sudoku="title"></h1>
-
-        <div class="cluster sudoku-status">
+        <div class="sudoku-status">
           <span class="cluster">
             <label for="sudoku-difficulty" data-sudoku="difficultyLabel"></label>
             <select id="sudoku-difficulty"></select>
           </span>
           <span class="cluster sudoku-timer">
-            <span class="stat__value numeric" data-sudoku="timer">00:00</span>
+            <span class="sudoku-timer__value numeric" data-sudoku="timer">00:00</span>
             <button class="btn btn--icon" type="button" data-sudoku="pause"></button>
           </span>
         </div>
+      </div>
 
-        <div class="sudoku-grid-wrapper" data-sudoku="wrapper">
-          <div class="sudoku-grid" data-sudoku="grid" role="grid"></div>
-          <p class="sudoku-paused" data-sudoku="pausedOverlay"></p>
+      <div class="sudoku-grid-wrapper" data-sudoku="wrapper">
+        <div class="sudoku-grid" data-sudoku="grid" role="grid"></div>
+        <p class="sudoku-paused" data-sudoku="pausedOverlay"></p>
+      </div>
+
+      <!--
+        Two rows, because these ten buttons are not ten peers. The first row is
+        what a player reaches for with a puzzle in front of them; the second
+        manages the game itself. They used to be one wrapping pile in markup
+        order, so "Reset" arrived at the same weight as "Check".
+      -->
+      <div class="stack sudoku-actions">
+        <div class="toolbar">
+          <div class="toolbar__group">
+            <button class="btn" type="button" data-sudoku="undo"></button>
+            <button class="btn" type="button" data-sudoku="check"></button>
+            <button class="btn" type="button" data-sudoku="hint"></button>
+            <button class="btn" type="button" data-sudoku="notes"></button>
+          </div>
+          <div class="toolbar__group toolbar__end">
+            <button
+              class="btn btn--icon"
+              type="button"
+              data-sudoku="validation"
+              aria-pressed="true"
+            ></button>
+          </div>
         </div>
 
-        <div class="cluster">
-          <button class="btn btn--primary" type="button" data-sudoku="new"></button>
-          <button class="btn" type="button" data-sudoku="save"></button>
-          <button class="btn" type="button" data-sudoku="load"></button>
-          <button class="btn" type="button" data-sudoku="best"></button>
-          <button class="btn" type="button" data-sudoku="reset"></button>
-          <button class="btn" type="button" data-sudoku="undo"></button>
-          <button class="btn" type="button" data-sudoku="check"></button>
-          <button class="btn" type="button" data-sudoku="hint"></button>
-          <button class="btn" type="button" data-sudoku="notes"></button>
-          <button class="btn" type="button" data-sudoku="validation" aria-pressed="true"></button>
+        <div class="toolbar">
+          <div class="toolbar__group">
+            <button class="btn btn--primary" type="button" data-sudoku="new"></button>
+          </div>
+          <span class="toolbar__divider" aria-hidden="true"></span>
+          <div class="toolbar__group">
+            <button class="btn" type="button" data-sudoku="save"></button>
+            <button class="btn" type="button" data-sudoku="load"></button>
+            <button class="btn" type="button" data-sudoku="best"></button>
+            <button class="btn btn--danger" type="button" data-sudoku="reset"></button>
+          </div>
         </div>
+      </div>
 
-        <p class="msg" data-sudoku="message" role="status" aria-live="polite"></p>
+      <p class="msg" data-sudoku="message" role="status" aria-live="polite"></p>
+
+      <div class="stack sudoku-hints">
         <p class="note" data-sudoku="radialHint"></p>
         <p class="note sudoku-kb-hint" data-sudoku="kbHint"></p>
-      </section>
+      </div>
     </main>
 
     <!--

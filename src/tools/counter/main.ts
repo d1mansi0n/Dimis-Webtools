@@ -59,6 +59,7 @@ boot({
     const canvas = requireElement<HTMLCanvasElement>('[data-counter="canvas"]');
     const overlay = requireElement('[data-counter="overlay"]');
     const countBadge = requireElement('[data-counter="count"]');
+    const countLabel = requireElement('[data-counter="countLabel"]');
     const errorMessage = requireElement('[data-counter="error"]');
     const fileInput = requireElement<HTMLInputElement>('#counter-file');
     const colorInput = requireElement<HTMLInputElement>('#counter-color');
@@ -180,8 +181,16 @@ boot({
       );
     }
 
+    /*
+     * The count is the number this tool produces, so it is drawn as a readout —
+     * the figure large, the word beneath it — rather than as one pill in a row
+     * of controls. The two halves are separate elements because only the figure
+     * should be at readout size, and the live region is on the figure alone so
+     * a screen reader announces "7" rather than the whole block each time.
+     */
     function updateCount(): void {
-      countBadge.textContent = plural('counter.markers', markers.length);
+      countBadge.textContent = String(markers.length);
+      countLabel.textContent = plural('counter.markers.unit', markers.length);
     }
 
     function fail(message: string): void {

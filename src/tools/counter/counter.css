@@ -1,5 +1,19 @@
 body {
-  --page-width: 60rem;
+  --page-width: 64rem;
+}
+
+.counter-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.counter-header__count {
+  display: grid;
+  gap: 0.1rem;
+  text-align: right;
 }
 
 .counter-upload {
@@ -8,22 +22,27 @@ body {
   cursor: pointer;
 }
 
-.counter-size-number {
-  width: 4rem;
-  padding: 0.35rem 0.4rem;
-  text-align: center;
-  font-size: 0.85rem;
-  min-height: auto;
+/* The second row is settings rather than actions, so it is quieter than the
+   first: labels muted, controls at their small size. */
+.counter-settings label,
+.counter-group-label {
+  font-size: var(--text-small);
+  color: var(--text-muted);
+  font-weight: var(--weight-semibold);
+  margin-bottom: 0;
 }
 
-.counter-group-label {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  font-weight: 600;
+.counter-size-number {
+  width: 3.5rem;
+  padding: 0.25rem 0.35rem;
+  text-align: center;
+  font-size: var(--text-small);
+  min-height: 1.875rem;
 }
 
 .counter-stage-card {
-  padding: var(--space-2);
+  display: grid;
+  gap: var(--space-2);
 }
 
 .counter-stage {
@@ -32,7 +51,7 @@ body {
   min-height: 20rem;
   height: 62vh;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   display: flex;
   justify-content: center;
@@ -64,7 +83,7 @@ body {
   align-items: center;
   gap: var(--space-2);
   color: var(--text-muted);
-  font-size: 1.05rem;
+  font-size: var(--text-body);
   pointer-events: none;
   text-align: center;
   padding: var(--space-4);
@@ -84,4 +103,14 @@ body {
 .counter-overlay[hidden],
 .counter-stage canvas[hidden] {
   display: none;
+}
+
+@media (max-width: 36rem) {
+  .counter-header {
+    align-items: flex-start;
+  }
+
+  .counter-header__count {
+    text-align: left;
+  }
 }

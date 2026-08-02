@@ -1,65 +1,100 @@
 body {
-  --page-width: 48rem;
+  --page-width: 50rem;
 }
 
-.time-voice {
+/* ------------------------------------------------------------------ header */
+
+.time-header {
   display: flex;
-  gap: var(--space-2);
-  align-items: center;
-  margin-left: auto;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
 }
 
+.time-header__total {
+  display: grid;
+  gap: 0.1rem;
+  text-align: right;
+}
+
+/* ----------------------------------------------------------------- toolbar */
+
+.time-voice select {
+  /* Two selects reading "English" used to sit on the same screen — the page
+     language in the app bar and the dictation language here — with nothing to
+     say they meant different things. This one is now inside the microphone's
+     own group and sized as its companion rather than as a peer. */
+  font-size: var(--text-small);
+  min-height: 2.125rem;
+}
+
+/* Listening. Red because the microphone is live, which is the one state on this
+   page where the colour is the message rather than decoration. */
 .time-voice .btn[aria-pressed='true'] {
   background: var(--danger);
   border-color: var(--danger);
   color: var(--text-on-danger);
 }
 
+/* ----------------------------------------------------------------- entries */
+
 .time-entries {
   display: grid;
-  gap: var(--space-3);
 }
 
+/*
+ * One entry.
+ *
+ * A row on a rule, not a card. A day of tracked time was a column of eight
+ * bordered, shadowed white boxes on a white page, which is a lot of drawing to
+ * say something a hairline says on its own.
+ */
 .time-entry {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1fr auto;
   gap: var(--space-3) var(--space-4);
   align-items: start;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3) var(--space-4);
-  box-shadow: var(--shadow);
+  padding: var(--space-4) 0;
 }
 
+.time-entry + .time-entry {
+  border-top: 1px solid var(--border);
+}
+
+/* Running entries are tinted rather than outlined: with no card there is no
+   border to recolour, and a tint reads at a glance down a long list. The box
+   shadow bleeds the tint into the gutter the row would otherwise stop at. */
 .time-entry[data-running] {
-  border-color: var(--ok);
+  background: var(--ok-soft);
+  box-shadow: 0 0 0 var(--space-3) var(--ok-soft);
+  border-radius: var(--radius-sm);
 }
 
-.time-entry__controls {
+.time-entry__actions {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.time-entry__controls .btn {
-  padding: 0.35rem 0.8rem;
-  font-size: 0.8rem;
-  min-width: 5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  max-width: 12rem;
 }
 
 .time-entry__body {
   min-width: 0;
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
 }
 
 .time-entry__date {
-  font-size: 0.78rem;
+  font-size: var(--text-small);
   color: var(--text-muted);
 }
 
 .time-entry__elapsed {
-  font-size: 1.35rem;
-  font-weight: 700;
+  font-size: var(--text-title);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
   font-variant-numeric: tabular-nums;
 }
 
@@ -74,32 +109,33 @@ body {
  */
 .time-entry__duration-field {
   display: grid;
-  gap: 0;
+  gap: var(--space-1);
   max-width: 11rem;
 }
 
 .time-entry__duration {
-  font-size: 1.2rem;
-  font-weight: 700;
-  padding: 0.15rem 0.45rem;
+  font-size: var(--text-heading);
+  font-weight: var(--weight-bold);
+  padding: 0.2rem 0.5rem;
 }
 
 .time-entry__sessions {
-  font-size: 0.75rem;
+  font-size: var(--text-small);
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .time-entry__sessions [data-live] {
   color: var(--ok);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 .time-entry__comment {
   width: 100%;
-  margin-top: var(--space-2);
-  font-size: 0.85rem;
-  padding: 0.4rem 0.6rem;
+  max-width: 26rem;
+  font-size: var(--text-small);
+  padding: 0.35rem 0.6rem;
+  min-height: 2rem;
 }
 
 /*
@@ -112,7 +148,11 @@ body {
   position: relative;
   overflow: hidden;
   color: var(--danger);
-  border-color: transparent;
+}
+
+.time-entry__delete:hover:not(:disabled) {
+  color: var(--danger);
+  border-color: var(--danger);
   background: var(--danger-soft);
 }
 
@@ -135,25 +175,34 @@ body {
   }
 }
 
+/* ---------------------------------------------------------------- comments */
+
 .time-comment {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: var(--space-3);
-  padding: 0.4rem 0.55rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.88rem;
+  padding: var(--space-2) 0;
+  font-size: var(--text-body);
 }
 
-.time-comment:nth-child(odd) {
-  background: var(--surface-sunken);
+.time-comment + .time-comment {
+  border-top: 1px solid var(--border);
 }
 
 .time-comment .btn {
-  padding: 0.15rem 0.55rem;
-  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  font-size: var(--text-small);
+  color: var(--text-muted);
+  border-color: transparent;
+  background: transparent;
+  min-height: 1.75rem;
+}
+
+.time-comment .btn:hover {
   color: var(--danger);
-  min-height: auto;
+  background: var(--danger-soft);
+  border-color: transparent;
 }
 
 @media (max-width: 36rem) {
@@ -161,12 +210,16 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .time-entry__controls {
-    flex-direction: row;
-    flex-wrap: wrap;
+  .time-entry__actions {
+    justify-content: flex-start;
+    max-width: none;
   }
 
-  .time-voice {
-    margin-left: 0;
+  .time-header {
+    align-items: flex-start;
+  }
+
+  .time-header__total {
+    text-align: left;
   }
 }
